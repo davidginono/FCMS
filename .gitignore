@@ -1,0 +1,8 @@
+target/
+node_modules/
+.idea/
+.vscode/
+*.log
+*.war
+*.class
+src/main/resources/static/css/app.css.map

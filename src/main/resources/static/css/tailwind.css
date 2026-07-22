@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@source "../../../webapp/WEB-INF/jsp/**/*.jsp";
+@source "../../../webapp/WEB-INF/jsp/**/*.jspf";
+@source "../../java/**/*.java";
+
+@theme {
+  --font-sans: Inter, ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --color-fcms-ink: #172033;
+  --color-fcms-muted: #657083;
+  --color-fcms-line: #d9e1ec;
+  --color-fcms-panel: #ffffff;
+  --color-fcms-bg: #f6f8fb;
+  --color-fcms-brand: #1f6feb;
+  --color-fcms-brand-dark: #174ea6;
+  --color-fcms-success: #138a5b;
+  --color-fcms-warning: #b87900;
+}
+
+@layer base {
+  body {
+    background: var(--color-fcms-bg);
+    color: var(--color-fcms-ink);
+    font-family: var(--font-sans);
+  }
+}
+
+@layer components {
+  .fcms-shell {
+    @apply min-h-screen bg-fcms-bg text-fcms-ink;
+  }
+
+  .fcms-sidebar-link {
+    @apply flex items-center rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-fcms-brand;
+  }
+
+  .fcms-panel {
+    @apply rounded-lg border border-fcms-line bg-white shadow-sm;
+  }
+
+  .fcms-button-primary {
+    @apply inline-flex items-center justify-center rounded-md bg-fcms-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-fcms-brand-dark focus:outline-none focus:ring-2 focus:ring-fcms-brand focus:ring-offset-2;
+  }
+
+  .fcms-table {
+    @apply min-w-full divide-y divide-slate-200 text-sm;
+  }
+
+  .fcms-table th {
+    @apply bg-slate-50 px-4 py-3 text-left text-xs font-semibold uppercase tracking-normal text-slate-500;
+  }
+
+  .fcms-table td {
+    @apply px-4 py-3 text-slate-700;
+  }
+}

@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: fcms-postgres
+    environment:
+      POSTGRES_DB: fcms
+      POSTGRES_USER: fcms
+      POSTGRES_PASSWORD: fcms
+    ports:
+      - "55432:5432"
+    volumes:
+      - fcms-postgres-data:/var/lib/postgresql
+
+volumes:
+  fcms-postgres-data:
