@@ -2,7 +2,7 @@
 <%@ include file="/WEB-INF/jsp/shared/header.jspf" %>
 <div class="app-page-header">
 <h1 class="app-page-title">
-<c:out value="${formTitle}"/>
+<spring:message code="${formAction==category.route?'common.create':'common.edit'}"/> <spring:message code="client.category.${category.tableName}"/>
 </h1>
 </div>
 <c:url var="saveUrl" value="${formAction}" />
@@ -61,7 +61,7 @@
 <form:select id="paymentStatusId" path="paymentStatusId">
 <c:forEach items="${paymentStatuses}" var="option">
 <form:option value="${option.id}">
-<c:out value="${option.name}" />
+<spring:message code="status.${fn:toUpperCase(option.name)}" text="${option.name}" htmlEscape="true"/>
 </form:option>
 </c:forEach>
 </form:select>

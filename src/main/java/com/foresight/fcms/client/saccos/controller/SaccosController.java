@@ -1,5 +1,7 @@
 package com.foresight.fcms.client.saccos.controller;
 
+import static com.foresight.fcms.shared.view.CsvText.quote;
+
 import com.foresight.fcms.client.saccos.dto.SaccosFilter;
 import com.foresight.fcms.client.saccos.dto.SaccosForm;
 import com.foresight.fcms.client.saccos.dto.SaccosRowDto;
@@ -257,6 +259,7 @@ public class SaccosController {
     public void exportCsv(
             @ModelAttribute("filter") SaccosFilter filter, HttpServletResponse response)
             throws IOException {
+        var rows = saccosService.exportSaccos(filter);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType("text/csv");
         response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"saccos.csv\"");
@@ -267,15 +270,15 @@ public class SaccosController {
                             + " Fee,Android Fee,Android Cost,System Reinstall Fee,Bulk SMS,Hosting"
                             + " Fee,ESS,Cloud Backup Fee,Cloud Backup Cost,Financial Year,Payment"
                             + " Status,Status,Invoice");
-            for (SaccosRowDto row : saccosService.exportSaccos(filter)) {
+            for (SaccosRowDto row : rows) {
                 writer.println(
-                        csv(row.saccosName())
+                        quote(row.saccosName())
                                 + ","
                                 + row.entryDate()
                                 + ","
                                 + row.expireDate()
                                 + ","
-                                + csv(row.region())
+                                + quote(row.region())
                                 + ","
                                 + row.annualFee()
                                 + ","
@@ -309,13 +312,13 @@ public class SaccosController {
                                 + ","
                                 + row.cloudBackupCost()
                                 + ","
-                                + csv(row.financialYear())
+                                + quote(row.financialYear())
                                 + ","
-                                + csv(row.paymentStatus())
+                                + quote(row.paymentStatus())
                                 + ","
-                                + csv(row.operationalStatus())
+                                + quote(row.operationalStatus())
                                 + ","
-                                + csv(row.invoiceStatus()));
+                                + quote(row.invoiceStatus()));
             }
         }
     }
@@ -335,7 +338,11 @@ public class SaccosController {
         filter.setPaymentStatusId(1L);
         var export = saccosService.exportSaccosWithTotals(filter);
         byte[] pdf =
-                pdfService.paymentSummaryPdf("Paid SACCOS", export.rows(), export.totals(), true);
+                pdfService.paymentSummaryPdf(
+                        "Paid SACCOS - " + export.selectedFinancialYearLabel(),
+                        export.rows(),
+                        export.totals(),
+                        true);
         return pdf("paid-saccos.pdf", pdf);
     }
 
@@ -368,19 +375,19 @@ public class SaccosController {
                 HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"saccos-report.csv\"");
         try (PrintWriter writer = response.getWriter()) {
             if (!report.reportType().isFull()) {
-                writer.println("No,Saccos Name," + csv(report.reportType().getLabel()));
+                writer.println("No,Saccos Name," + quote(report.reportType().getLabel()));
                 int index = 1;
                 for (SaccosRowDto row : report.rows()) {
                     writer.println(
                             index++
                                     + ","
-                                    + csv(row.saccosName())
+                                    + quote(row.saccosName())
                                     + ","
                                     + report.reportType().rowValue(row));
                 }
                 writer.println(
                         ","
-                                + csv("Grand Total")
+                                + quote("Grand Total")
                                 + ","
                                 + report.reportType().totalValue(report.totals()));
                 return;
@@ -395,7 +402,7 @@ public class SaccosController {
                 writer.println(
                         index++
                                 + ","
-                                + csv(row.saccosName())
+                                + quote(row.saccosName())
                                 + ","
                                 + row.annualFee()
                                 + ","
@@ -474,10 +481,5 @@ public class SaccosController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
                 .body(bytes);
-    }
-
-    private String csv(String value) {
-        String safeValue = value == null ? "" : value;
-        return "\"" + safeValue.replace("\"", "\"\"") + "\"";
     }
 }

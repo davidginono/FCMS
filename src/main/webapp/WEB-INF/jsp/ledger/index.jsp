@@ -1,36 +1,13 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ include file="/WEB-INF/jsp/shared/header.jspf" %>
-<div class="app-page-header">
-<h1 class="app-page-title">
-<spring:message code="${kind.title}" />
-</h1>
-</div>
-<dl class="fcms-details">
-<div>
-<dt>
-<spring:message code="ledger.balance" />
-</dt>
-<dd>
-<c:out value="${balance.amount()}" />
-</dd>
-</div>
-<c:if test="${kind.name()=='BULK'}">
-<div>
-<dt>
-<spring:message code="ledger.unitBalance" />
-</dt>
-<dd>
-<c:out value="${balance.units()}" />
-</dd>
-</div>
-</c:if>
-</dl>
-<section class="erp-table-wrap" data-resource-table="${resourceKey}" data-table-selection="single" data-table-page-size="${query.size}" data-table-page-size-options="10 25 50 100">
+<section class="erp-table-wrap" data-resource-table="${resourceKey}" data-table-selection="single" data-table-wrap data-table-page-size="${query.size}" data-table-page-size-options="10 25 50 100">
 <div class="app-table-titlebar">
 <h2>
 <spring:message code="${kind.title}" />
 </h2>
 <c:url var="pdfUrl" value="${baseUrl}/print.pdf">
+<c:param name="ownerId" value="${query.ownerId}"/>
+<c:param name="clientId" value="${query.clientId}"/>
 <c:param name="search" value="${query.search}"/>
 <c:param name="status" value="${query.status}"/>
 <c:param name="from" value="${query.from}"/>
@@ -38,7 +15,7 @@
 <c:param name="sort" value="${query.sort}"/>
 <c:param name="direction" value="${query.direction}"/>
 </c:url>
-<a class="app-btn btn-neutral" href="<c:out value='${pdfUrl}'/>">
+<a class="app-btn btn-neutral" data-table-export="pdf" href="<c:out value='${pdfUrl}'/>">
 <spring:message code="common.pdf" />
 </a>
 <a class="app-btn btn-neutral" href="<c:url value='${baseUrl}/reconciliation'/>"><spring:message code="ledger.reconciliation"/></a>
@@ -85,7 +62,7 @@
 <tbody>
 <c:forEach items="${records.rows()}" var="row">
 <tr>
-<td>
+<td data-table-date>
 <c:out value="${appTime:display(row.date())}" />
 </td>
 <td>
@@ -97,13 +74,13 @@
 <td>
 <c:out value="${row.description()}" />
 </td>
-<td>
+<td data-table-number>
 <c:out value="${row.amount()}" />
 </td>
-<td>
+<td data-table-number>
 <c:out value="${row.units()}" />
 </td>
-<td>
+<td data-table-number>
 <c:out value="${row.balance()}" />
 </td>
 <td>

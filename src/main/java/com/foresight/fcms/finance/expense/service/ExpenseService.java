@@ -48,13 +48,15 @@ public class ExpenseService {
     }
 
     @Transactional(readOnly = true)
-    public RegisterPage<ExpenseView> list(RegisterQuery q) {
+    public RegisterPage<ExpenseView> list(ExpenseQuery q) {
         var a = access.require("expense.read");
         q.validate();
         return RegisterPage.of(
                 db.query(
                         SELECT
-                                + " where (? or e.user_id=?) and lower(e.description||'"
+                                + " where (? or e.user_id=?) and (?::bigint is null or e.user_id=?)"
+                                + " and (?='' or e.financial_year=?) and (?='' or e.category=?)"
+                                + " and lower(e.description||'"
                                 + " '||e.category) like ? escape '!' and (?='' or s.name=?) and"
                                 + " (?::date is null or e.date_created>=?::date) and (?::date is"
                                 + " null or e.date_created<=?::date) order by "
@@ -80,6 +82,12 @@ public class ExpenseService {
                         this::row,
                         a.has("expense.approve"),
                         a.id(),
+                        q.getOwnerId(),
+                        q.getOwnerId(),
+                        q.getYear(),
+                        q.getYear(),
+                        q.getCategory(),
+                        q.getCategory(),
                         q.pattern(),
                         q.getStatus(),
                         q.getStatus(),
@@ -289,7 +297,7 @@ public class ExpenseService {
                 Boolean.TRUE.equals(
                         db.queryForObject(
                                 "select exists(select 1 from expense_legacy_payment_candidates"
-                                    + " where expense_id=?)",
+                                        + " where expense_id=?)",
                                 Boolean.class,
                                 id)));
     }
@@ -355,9 +363,11 @@ public class ExpenseService {
                 q);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(
+            readOnly = true,
+            isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
     public java.util.List<com.foresight.fcms.finance.expense.dto.ExpenseView> report(
-            RegisterQuery query) {
+            ExpenseQuery query) {
         access.require("expense.read");
         int original = query.getPage();
         int size = query.getSize();

@@ -1,0 +1,259 @@
+legacy_root_file,capability,native_workspace,relationship
+Petty_print_filter_dates.php,Petty cash,/finance/petty-cash,workflow
+account.php,Account self-service,/account /account/password,workflow
+active_users.php,User administration,/admin/users,workflow
+add_amcos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+add_contract.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+add_expenses.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+add_income.php,Other income,/finance/income,workflow
+add_leaves.php,Staff leave,/leaves,workflow
+add_microfinance.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+add_other_client.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+add_report.php,Staff activities and group reports,/staff-reports,workflow
+add_saccoss.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+add_tasks.php,Tasks,/tasks,workflow
+add_union.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+add_user.php,User administration,/admin/users,workflow
+admin.php,Dashboards,/dashboard,workflow
+admin2.php,Dashboards,/dashboard,workflow
+admin3.php,Dashboards,/dashboard,workflow
+admin_add_report.php,Staff activities and group reports,/staff-reports,workflow
+admin_client_menu.php,Shared source helpers,JSP components / owning services,reference helper
+admin_navigation.php,Shared source helpers,JSP components / owning services,reference helper
+admin_sidebar.php,Shared source helpers,JSP components / owning services,reference helper
+all_cat.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+all_microfinance_report.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+all_other_report.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+all_report.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+all_statement.php,Consolidated reporting,/reports,workflow
+all_task.php,Tasks,/tasks,workflow
+all_union_report.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+alltask_report.php,Tasks,/tasks,workflow
+alltasks.php,Tasks,/tasks,workflow
+amcos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+amcos_update_contract.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+android_report.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+backup.php,System backups,/backups,workflow
+bulk.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+bulk_credit.php,Bulk SMS accounting,/finance/bulk-sms,workflow
+bulk_debit.php,Bulk SMS accounting,/finance/bulk-sms,workflow
+bulk_filter_dates.php,Bulk SMS accounting,/finance/bulk-sms,workflow
+bulk_filter_input.php,Bulk SMS accounting,/finance/bulk-sms,workflow
+bulk_report.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+bulk_sms.php,Bulk SMS accounting,/finance/bulk-sms,workflow
+category_details.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+change_password.php,Account self-service,/account /account/password,workflow
+change_profile.php,Account self-service,/account /account/password,workflow
+client_activity.php,Client lifecycle,/clients/{family}/{id}/edit,retired unsafe mutation (source returns410)
+client_delete.php,Client lifecycle,/clients/{family}/{id}/archive,workflow
+client_delete_notice.php,Shared source helpers,JSP components / owning services,reference helper
+client_lifecycle.php,Shared source helpers,JSP components / owning services,reference helper
+client_register_form.php,Shared source helpers,JSP components / owning services,reference helper
+client_workspace.php,Shared source helpers,JSP components / owning services,reference helper
+cloud_backup.php,Cloud backup accounting,/finance/cloud-backup,workflow
+cloud_deposit.php,Cloud backup accounting,/finance/cloud-backup,workflow
+cloud_withdraw.php,Cloud backup accounting,/finance/cloud-backup,workflow
+connect.php,Shared source helpers,JSP components / owning services,reference helper
+delete_amcos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+delete_bulk.php,Bulk SMS accounting,/finance/bulk-sms,workflow
+delete_cloud.php,Cloud backup accounting,/finance/cloud-backup,workflow
+delete_contract.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+delete_dialog.php,Shared source helpers,JSP components / owning services,reference helper
+delete_dialog2.php,Shared source helpers,JSP components / owning services,reference helper
+delete_dialog3.php,Shared source helpers,JSP components / owning services,reference helper
+delete_expenses.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+delete_group.php,Staff activities and group reports,/staff-reports,workflow
+delete_income.php,Other income,/finance/income,workflow
+delete_microfinance.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+delete_others.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+delete_petty.php,Petty cash,/finance/petty-cash,workflow
+delete_report.php,Staff activities and group reports,/staff-reports,workflow
+delete_saccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+delete_task.php,Tasks,/tasks,workflow
+delete_union.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+delete_user.php,User administration,/admin/users,workflow
+delete_user_dialog.php,Shared source helpers,JSP components / owning services,reference helper
+deposit.php,Petty cash,/finance/petty-cash,workflow
+download_backup.php,System backups,/backups,workflow
+download_tamplate.php,SACCOS CSV,/clients/saccos/export.csv,workflow
+edit_group_report.php,Staff activities and group reports,/staff-reports,workflow
+edit_report.php,Staff activities and group reports,/staff-reports,workflow
+expenses.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+expenses_report.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+fetch.php,Contracts,/clients/{family}/{id}/contract,authorized resource replacement
+fetchimage.php,Account self-service,/account/photo,authorized resource replacement
+filtered_all_cat.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+filtered_exp_result.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+filtered_staff.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+filtered_year.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+forgot_password.php,Authentication and recovery,/login /logout /password/forgot /password/reset,workflow
+fpdf_report_helpers.php,Shared source helpers,JSP components / owning services,reference helper
+hosting_report.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+hostingfee.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+inactive_users.php,User administration,/admin/users,workflow
+income.php,Other income,/finance/income,workflow
+income_statement.php,Consolidated reporting,/reports,workflow
+index.php,Authentication and recovery,/login /logout /password/forgot /password/reset,workflow
+invoice_billing_fields.php,Shared source helpers,JSP components / owning services,reference helper
+invoice_item_fields.php,Shared source helpers,JSP components / owning services,reference helper
+invoice_pdf.php,Sales documents,/sales/prospects /sales/invoices,workflow
+invoices.php,Sales documents,/sales/prospects /sales/invoices,workflow
+leaves.php,Staff leave,/leaves,workflow
+logout.php,Authentication and recovery,/login /logout /password/forgot /password/reset,workflow
+micro_delete_dialog.php,Shared source helpers,JSP components / owning services,reference helper
+micro_fetch.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+micro_update_contract.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+microfinance.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+microfinance_report.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+mobile.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+mobile_report.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+other_client.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+other_report.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+other_revenues.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+others_delete_dialog.php,Shared source helpers,JSP components / owning services,reference helper
+others_update_contract.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+paid_cloud_backup.php,Cloud backup billing,/finance/cloud-backup/billing,workflow
+paid_cloud_backup_excel.php,Cloud backup billing,/finance/cloud-backup/billing,workflow
+paidmicrofinance.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+paidsaccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+paidunion.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+password_request.php,Authentication and recovery,/login /logout /password/forgot /password/reset,workflow
+petty_cash.php,Petty cash,/finance/petty-cash,workflow
+print_all_cat.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+print_amcos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+print_bulk.php,Bulk SMS accounting,/finance/bulk-sms,workflow
+print_cashpetty.php,Petty cash,/finance/petty-cash,workflow
+print_cloud.php,Cloud backup accounting,/finance/cloud-backup,workflow
+print_expenses_report.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+print_filter_dates.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+print_filter_exp.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+print_filter_report.php,Staff activities and group reports,/staff-reports,workflow
+print_filtered_exp.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+print_filtered_income_year.php,Consolidated reporting,/reports,workflow
+print_filtered_year.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+print_invoice.php,Sales documents,/sales/prospects /sales/invoices,workflow
+print_microfinance.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+print_microfinance_report.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+print_other_report.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+print_otherclients.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+print_paid_cloud_backup.php,Cloud backup billing,/finance/cloud-backup/billing,workflow
+print_paidsaccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+print_prospect_proforma.php,Sales documents,/sales/prospects /sales/invoices,workflow
+print_reportbyclient.php,Staff activities and group reports,/staff-reports,workflow
+print_reportbystaff.php,Staff activities and group reports,/staff-reports,workflow
+print_saccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+print_saccos_excel.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+print_saccosreport.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+print_saccosreport_excel.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+print_staff.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+print_staff_report.php,Staff activities and group reports,/staff-reports,workflow
+print_task.php,Tasks,/tasks,workflow
+print_task_report.php,Tasks,/tasks,workflow
+print_union.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+print_unionreport.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+print_unpaid_cloud_backup.php,Cloud backup billing,/finance/cloud-backup/billing,workflow
+print_unpaidsaccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+printall_task.php,Tasks,/tasks,workflow
+prospects.php,Sales documents,/sales/prospects /sales/invoices,workflow
+reinstall.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+reinstall_report.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+report.php,Staff activities and group reports,/staff-reports,workflow
+reset_password.php,Authentication and recovery,/login /logout /password/forgot /password/reset,workflow
+reset_password2.php,Authentication and recovery,/login /logout /password/forgot /password/reset,workflow
+role.php,User administration,/admin/users,workflow
+saccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+saccos_revenues.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+search_amcos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+search_expenses.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+search_leaves.php,Staff leave,/leaves,workflow
+search_microfinance.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+search_report.php,Staff activities and group reports,/staff-reports,workflow
+search_saccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+search_task.php,Tasks,/tasks,workflow
+search_union.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+search_users.php,User administration,/admin/users,workflow
+send_otp.php,Authentication and recovery,/login /logout /password/forgot /password/reset,workflow
+staff_report.php,Staff activities and group reports,/staff-reports,workflow
+status.php,User administration,/admin/users,workflow
+sysinstall_report.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+system_backup.php,System backups,/backups,workflow
+systeminstallfee.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+task_report.php,Tasks,/tasks,workflow
+training_report.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+trainingfee.php,Client fee reports,/clients/{family}?view=revenue&reportType={fee},workflow
+union.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+union_fetch.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+union_report.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+union_revenues.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+union_update_contract.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+unpaid_cloud_backup.php,Cloud backup billing,/finance/cloud-backup/billing,workflow
+unpaid_cloud_backup_excel.php,Cloud backup billing,/finance/cloud-backup/billing,workflow
+unpaidmicrofinance.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+unpaidsaccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+unpaidunion.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+update_amcos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+update_cloud.php,Cloud backup accounting,/finance/cloud-backup,workflow
+update_contract.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+update_expenses.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+update_income.php,Other income,/finance/income,workflow
+update_leave.php,Staff leave,/leaves,workflow
+update_microfinance.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+update_other_client.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+update_petty (1).php,Petty cash,/finance/petty-cash,workflow
+update_petty.php,Petty cash,/finance/petty-cash,workflow
+update_report.php,Staff activities and group reports,/staff-reports,workflow
+update_saccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+update_tasks.php,Tasks,/tasks,workflow
+update_union.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+update_user.php,User administration,/admin/users,workflow
+updates_bulk.php,Bulk SMS accounting,/finance/bulk-sms,workflow
+upload_tamplate.php,SACCOS CSV,/clients/saccos/import,workflow
+user_account.php,Account self-service,/account /account/password,workflow
+user_add_expenses.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+user_add_microfinance.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_add_otherclient.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_add_saccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_all_amcos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_all_microfinance.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_all_saccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_all_union.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_amcos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_change_password.php,Account self-service,/account /account/password,workflow
+user_change_profile.php,Account self-service,/account /account/password,workflow
+user_dashboard.php,Dashboards,/dashboard,workflow
+user_delete_expenses.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+user_delete_group.php,Staff activities and group reports,/staff-reports,workflow
+user_delete_report.php,Staff activities and group reports,/staff-reports,workflow
+user_edit_group_report.php,Staff activities and group reports,/staff-reports,workflow
+user_edit_report.php,Staff activities and group reports,/staff-reports,workflow
+user_expenses.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+user_filter_year.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+user_filtered_year.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+user_leaves.php,Staff leave,/leaves,workflow
+user_micro_update_contract.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_microfinance.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_other_client.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_other_expenses.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+user_others_update_contract.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_paidsaccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_saccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_search_saccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_staff_report.php,Staff activities and group reports,/staff-reports,workflow
+user_tasks.php,Tasks,/tasks,workflow
+user_union.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_unpaidsaccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_update_contract.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_update_expenses.php,Expenses and categories,/finance/expenses /finance/expenses/categories,workflow
+user_update_leave.php,Staff leave,/leaves,workflow
+user_update_microfinance.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_update_otherclient.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_update_saccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+user_update_task.php,Tasks,/tasks,workflow
+users.php,User administration,/admin/users,workflow
+verify_otp.php,Authentication and recovery,/login /logout /password/forgot /password/reset,workflow
+view_amcos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+view_microfinance.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+view_others.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+view_saccos.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+view_union.php,Five client registers / lifecycle / revenue,/clients/{saccos|amcos|unions|microfinance|others},workflow
+withdraw.php,Petty cash,/finance/petty-cash,workflow

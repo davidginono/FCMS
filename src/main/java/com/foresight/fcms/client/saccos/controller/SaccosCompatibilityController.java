@@ -147,6 +147,21 @@ public class SaccosCompatibilityController {
         return "redirect:/clients/saccos/revenues/export.csv";
     }
 
+    @GetMapping("/upload_tamplate.php")
+    public String legacyImport() {
+        return "redirect:/clients/saccos/import";
+    }
+
+    @RequestMapping(
+            value = "/download_tamplate.php",
+            method = {RequestMethod.GET, RequestMethod.POST})
+    public String legacyDownload(
+            @RequestParam(name = "fyear_id", required = false) Long financialYearId,
+            RedirectAttributes redirectAttributes) {
+        addYear(redirectAttributes, financialYearId, null);
+        return "redirect:/clients/saccos/export.csv";
+    }
+
     private void addYear(RedirectAttributes attributes, Long financialYearId, String fyear) {
         if (financialYearId != null) {
             attributes.addAttribute("financialYearId", financialYearId);

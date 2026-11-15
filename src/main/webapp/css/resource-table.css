@@ -1,5 +1,6 @@
 /* Console table: only the data canvas owns horizontal scrolling. */
 .aws-console [data-resource-table] { min-width:0; max-width:100%; overflow:visible; }
+.aws-console [data-resource-table] > .resource-table-summary {padding:10px 20px;border-bottom:1px solid #eaeded;font-variant-numeric:tabular-nums;}
 .aws-console [data-resource-table] > .app-table-titlebar { flex-wrap:wrap; background:#fafafa !important; gap:8px 16px; padding:16px 20px 12px; border-bottom:0 !important; }
 .aws-console .app-table-titlebar :is(h2,h3),.aws-console [data-dashboard-widget][data-table-summary-count] > .erp-panel-header :is(h2,h3,.erp-panel-title) { margin:0; font-size:20px!important; font-weight:700; line-height:28px; text-transform:none !important; letter-spacing:normal; }
 .aws-console [data-resource-table] .resource-table-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:6px; margin-left:auto; min-width:0; padding:0 !important; }
@@ -162,3 +163,44 @@
 .resource-table-retry {margin-left:12px;}
 
 .aws-console .app-table-titlebar .app-table-count,.aws-console [data-table-summary-count] > .erp-panel-header .app-table-count {font-size:20px;line-height:28px;font-weight:400;color:#545b64;}
+
+/* Let each register's columns determine its canvas instead of forcing every table to 96rem. */
+.aws-console [data-resource-table]:not([data-table-presentation="statement"]) .erp-table {
+    min-width:100%; width:100%;
+}
+.aws-console [data-resource-table]:not([data-table-presentation="statement"]) .erp-table th {vertical-align:middle;}
+.aws-console [data-resource-table] .resource-table-sort {gap:8px;}
+.aws-console [data-resource-table].resource-table-wrap-lines .erp-table :is(th,td) {
+    white-space:normal; overflow-wrap:anywhere;
+}
+.aws-console [data-resource-table].resource-table-wrap-lines .erp-table td {
+    min-width:6rem; max-width:28rem; vertical-align:top;
+}
+.aws-console [data-resource-table] .erp-table .resource-table-selection {min-width:40px; width:40px; max-width:40px;}
+.aws-console [data-resource-table] .erp-table td[data-table-number] {
+    white-space:nowrap; font-variant-numeric:tabular-nums;
+}
+.aws-console [data-resource-table] .erp-table td[data-table-date] {white-space:nowrap;}
+.aws-console [data-resource-table] .erp-table-scroll:has(tbody>tr:only-child>td[colspan]) {
+    min-height:100px;
+}
+.aws-console [data-resource-table] .erp-table tbody>tr:only-child>td[colspan] {
+    padding:28px 16px!important; color:#545b64; text-align:center!important;
+}
+@media (min-width:1024px) {
+    .aws-console .resource-table-filters>label:has(input[type=search]) {flex-grow:2!important;}
+}
+@media (max-width:767px) {
+    .aws-console .resource-table-tools {gap:12px;}
+    .aws-console .resource-table-filters>label {flex-basis:calc(50% - 8px);}
+    .aws-console .resource-table-filters>label:has(input[type=search]) {flex-basis:100%;}
+    .aws-console .resource-table-utilities {margin-left:auto;}
+}
+
+.aws-console [data-resource-table]:not([data-table-presentation="statement"]) .erp-table-scroll {
+    min-height:0;
+}
+.aws-console [data-resource-table] .erp-table-scroll:has(tbody>tr:only-child>td[colspan]) {
+    min-height:100px;
+}
+.aws-console [data-resource-table] .erp-table-scroll:focus-visible {outline:2px solid #0073bb;outline-offset:-2px;}

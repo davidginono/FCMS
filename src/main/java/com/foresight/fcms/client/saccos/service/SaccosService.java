@@ -38,6 +38,7 @@ public class SaccosService {
     private final SaccosStorageService storageService;
     private final JdbcTemplate jdbcTemplate;
     private final org.springframework.transaction.support.TransactionTemplate writes;
+    private final jakarta.validation.Validator validator;
 
     public SaccosService(
             com.foresight.fcms.audit.service.AuditService audit,
@@ -47,7 +48,8 @@ public class SaccosService {
             FinancialYearRepository financialYearRepository,
             SaccosStorageService storageService,
             JdbcTemplate jdbcTemplate,
-            org.springframework.transaction.PlatformTransactionManager transactions) {
+            org.springframework.transaction.PlatformTransactionManager transactions,
+            jakarta.validation.Validator validator) {
         this.audit = audit;
         this.access = access;
         this.saccosRepository = saccosRepository;
@@ -56,6 +58,7 @@ public class SaccosService {
         this.storageService = storageService;
         this.jdbcTemplate = jdbcTemplate;
         this.writes = new org.springframework.transaction.support.TransactionTemplate(transactions);
+        this.validator = validator;
     }
 
     @Transactional(readOnly = true)
@@ -72,6 +75,30 @@ public class SaccosService {
         return new SaccosListResult(page, totals, yearId);
     }
 
+    private Sort exportSort(SaccosFilter filter) {
+        String property =
+                java.util.Map.of(
+                                "name",
+                                "saccosName",
+                                "region",
+                                "region",
+                                "entryDate",
+                                "entryDate",
+                                "expireDate",
+                                "expireDate",
+                                "annualFee",
+                                "annualFee",
+                                "amount",
+                                "amount",
+                                "financialYear",
+                                "financialYear.fyear",
+                                "paymentStatus",
+                                "status.name")
+                        .getOrDefault(filter.getSort(), "saccosName");
+        return Sort.by(Sort.Direction.fromString(filter.getDirection()), property)
+                .and(Sort.by("id"));
+    }
+
     @Transactional(readOnly = true)
     public long countSaccos() {
         access.require("client.read");
@@ -82,18 +109,23 @@ public class SaccosService {
     public List<SaccosRowDto> exportSaccos(SaccosFilter filter) {
         access.require("client.export");
         Long yearId = resolveFinancialYearId(filter.getFinancialYearId());
-        return saccosRepository
-                .findForExport(
-                        yearId,
-                        filter.getPaymentStatusId(),
-                        searchPattern(filter.normalizedSearch()),
-                        PageRequest.of(0, 1001, Sort.by("saccosName").ascending()))
-                .stream()
-                .map(SaccosRowDto::from)
-                .toList();
+        var rows =
+                saccosRepository
+                        .findForExport(
+                                yearId,
+                                filter.getPaymentStatusId(),
+                                searchPattern(filter.normalizedSearch()),
+                                PageRequest.of(0, 1001, exportSort(filter)))
+                        .stream()
+                        .map(SaccosRowDto::from)
+                        .toList();
+        if (rows.size() > 1000) throw new IllegalArgumentException("error.narrowReport");
+        return rows;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(
+            readOnly = true,
+            isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
     public SaccosListExport exportSaccosWithTotals(SaccosFilter filter) {
         access.require("client.export");
         Long yearId = resolveFinancialYearId(filter.getFinancialYearId());
@@ -104,13 +136,16 @@ public class SaccosService {
                                 yearId,
                                 filter.getPaymentStatusId(),
                                 search,
-                                PageRequest.of(0, 1001, Sort.by("saccosName").ascending()))
+                                PageRequest.of(0, 1001, exportSort(filter)))
                         .stream()
                         .map(SaccosRowDto::from)
                         .toList();
         if (rows.size() > 1000) throw new IllegalArgumentException("error.narrowReport");
         return new SaccosListExport(
-                rows, summarize(yearId, filter.getPaymentStatusId(), search), yearId);
+                rows,
+                summarize(yearId, filter.getPaymentStatusId(), search),
+                yearId,
+                financialYearLabel(yearId));
     }
 
     @Transactional(readOnly = true)
@@ -147,26 +182,107 @@ public class SaccosService {
         String stored = storageService.storeContract(contractFile);
         var registered = new java.util.concurrent.atomic.AtomicBoolean();
         try {
-            return writes.execute(
-                    status -> {
-                        storageService.discardOnRollback(stored);
-                        registered.set(true);
-                        var actor = access.require("client.write");
-                        Saccos saccos = new Saccos();
-                        applyForm(saccos, form, stored);
-                        Long id = saccosRepository.save(saccos).getId();
-                        audit.record(
-                                actor.id(),
-                                "client.create",
-                                "saccos",
-                                id,
-                                "Client created; contract=" + stored);
-                        return id;
-                    });
+            return writes.execute(status -> {
+                storageService.discardOnRollback(stored);
+                registered.set(true);
+                var actor = access.require("client.write");
+                return createRecord(form, stored, actor.id());
+            });
         } catch (RuntimeException e) {
             if (!registered.get()) storageService.discardUncommitted(stored);
             throw e;
         }
+    }
+
+    private Long createRecord(SaccosForm form, String stored, long actor) {
+        Saccos saccos = new Saccos();
+        applyForm(saccos, form, stored);
+        Long id = saccosRepository.save(saccos).getId();
+        audit.record(actor, "client.create", "saccos", id, "Client created; contract=" + stored);
+        return id;
+    }
+
+    public record ImportReferences(Map<Long, String> years, Map<Long, String> statuses) {
+        public ImportReferences {
+            years = Map.copyOf(years);
+            statuses = Map.copyOf(statuses);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public ImportReferences importReferences(
+            java.util.Set<Long> ids,
+            java.util.Set<String> labels,
+            java.util.Set<Long> statuses,
+            java.util.Set<String> codes) {
+        var actor = access.require("client.import");
+        actor.require("client.read");
+        actor.require("client.write");
+        if (ids.size() + labels.size() > 100 || statuses.size() + codes.size() > 100)
+            throw new IllegalArgumentException("error.invalid");
+        var years = new java.util.HashMap<Long, String>();
+        financialYearRepository
+                .findByIdInOrFyearIn(ids, labels)
+                .forEach(y -> years.put(y.getId(), y.getFyear()));
+        var values = new java.util.HashMap<Long, String>();
+        clientStatusRepository
+                .importChoices(statuses, codes)
+                .forEach(s -> values.put(s.getId(), s.getName()));
+        return new ImportReferences(years, values);
+    }
+
+    /** Lock reviewed references in stable order until the caller's batch transaction completes. */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public ImportReferences lockImportReferences(
+            java.util.Set<Long> years, java.util.Set<Long> statuses) {
+        var actor = access.require("client.import");
+        actor.require("client.read");
+        actor.require("client.write");
+        if (years.isEmpty() || years.size() > 100 || statuses.isEmpty() || statuses.size() > 100)
+            throw new IllegalArgumentException("error.invalid");
+        var yearValues = new java.util.HashMap<Long, String>();
+        financialYearRepository
+                .lockImportYears(years)
+                .forEach(y -> yearValues.put(y.getId(), y.getFyear()));
+        var statusValues = new java.util.HashMap<Long, String>();
+        clientStatusRepository
+                .lockImportStatuses(statuses)
+                .forEach(s -> statusValues.put(s.getId(), s.getName()));
+        return new ImportReferences(yearValues, statusValues);
+    }
+
+    /** Importer owns the surrounding locked-batch transaction; there is no file operation here. */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public List<Long> createImportedSaccos(List<SaccosForm> forms) {
+        var actor = access.require("client.import");
+        actor.require("client.read");
+        actor.require("client.write");
+        if (forms == null || forms.isEmpty() || forms.size() > 100)
+            throw new IllegalArgumentException("error.invalid");
+        for (var f : forms)
+            if (f == null
+                    || !validator.validate(f).isEmpty()
+                    || f.getSaccosName().length() > 255
+                    || f.getRegion().length() > 255
+                    || !"ACTIVE".equals(f.getOperationalStatus())
+                    || !"NO".equals(f.getInvoiceStatus())
+                    || f.getExpireDate() != null && f.getExpireDate().isBefore(f.getEntryDate()))
+                throw new IllegalArgumentException("error.invalid");
+        // Warm the bounded reference sets in this transaction, avoiding per-row database loads.
+        var years =
+                forms.stream()
+                        .map(SaccosForm::getFinancialYearId)
+                        .collect(java.util.stream.Collectors.toSet());
+        var statuses =
+                forms.stream()
+                        .map(SaccosForm::getPaymentStatusId)
+                        .collect(java.util.stream.Collectors.toSet());
+        if (financialYearRepository.findAllById(years).size() != years.size()
+                || clientStatusRepository.findAllById(statuses).size() != statuses.size())
+            throw new IllegalArgumentException("error.invalid");
+        var ids = new ArrayList<Long>();
+        for (var f : forms) ids.add(createRecord(f, null, actor.id()));
+        return List.copyOf(ids);
     }
 
     public void updateSaccos(Long id, SaccosForm form, MultipartFile contractFile) {
@@ -174,29 +290,24 @@ public class SaccosService {
         String stored = storageService.storeContract(contractFile);
         var registered = new java.util.concurrent.atomic.AtomicBoolean();
         try {
-            writes.executeWithoutResult(
-                    status -> {
-                        storageService.discardOnRollback(stored);
-                        registered.set(true);
-                        var actor = access.require("client.write");
-                        Saccos saccos = loadEntity(id);
-                        if (saccos.getVersion() != form.getVersion())
-                            throw new org.springframework.dao.OptimisticLockingFailureException(
-                                    "stale");
-                        String previous = saccos.getContractFile();
-                        applyForm(saccos, form, stored);
-                        audit.record(
-                                actor.id(),
-                                "client.update",
-                                "saccos",
-                                id,
-                                stored == null
-                                        ? "Version " + form.getVersion() + " updated"
-                                        : "Contract replaced; before="
-                                                + previous
-                                                + "; after="
-                                                + stored);
-                    });
+            writes.executeWithoutResult(status -> {
+                storageService.discardOnRollback(stored);
+                registered.set(true);
+                var actor = access.require("client.write");
+                Saccos saccos = loadEntity(id);
+                if (saccos.getVersion() != form.getVersion())
+                    throw new org.springframework.dao.OptimisticLockingFailureException("stale");
+                String previous = saccos.getContractFile();
+                applyForm(saccos, form, stored);
+                audit.record(
+                        actor.id(),
+                        "client.update",
+                        "saccos",
+                        id,
+                        stored == null
+                                ? "Version " + form.getVersion() + " updated"
+                                : "Contract replaced; before=" + previous + "; after=" + stored);
+            });
         } catch (RuntimeException e) {
             if (!registered.get()) storageService.discardUncommitted(stored);
             throw e;
@@ -228,7 +339,9 @@ public class SaccosService {
         return financialYearRepository.findAllByOrderByFyearDesc();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(
+            readOnly = true,
+            isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
     public SaccosReportResult revenueReport(
             Long financialYearId, Long paymentStatusId, String reportType) {
         access.require("client.read");
@@ -405,7 +518,10 @@ public class SaccosService {
             Page<SaccosRowDto> page, SaccosTotals totals, Long selectedFinancialYearId) {}
 
     public record SaccosListExport(
-            List<SaccosRowDto> rows, SaccosTotals totals, Long selectedFinancialYearId) {}
+            List<SaccosRowDto> rows,
+            SaccosTotals totals,
+            Long selectedFinancialYearId,
+            String selectedFinancialYearLabel) {}
 
     public record SaccosReportResult(
             List<SaccosRowDto> rows,

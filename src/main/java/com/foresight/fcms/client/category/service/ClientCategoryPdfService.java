@@ -1,114 +1,146 @@
 package com.foresight.fcms.client.category.service;
 
-import com.foresight.fcms.client.category.dto.ClientCategoryRowDto;
-import com.foresight.fcms.client.category.dto.ClientCategoryTotals;
-import com.foresight.fcms.client.category.model.ClientCategory;
-import com.foresight.fcms.client.category.model.ClientCategoryReportType;
-import com.lowagie.text.Document;
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.Element;
-import com.lowagie.text.Font;
-import com.lowagie.text.FontFactory;
-import com.lowagie.text.PageSize;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.Phrase;
-import com.lowagie.text.pdf.PdfPCell;
-import com.lowagie.text.pdf.PdfPTable;
-import com.lowagie.text.pdf.PdfWriter;
+import com.foresight.fcms.client.category.dto.*;
+import com.foresight.fcms.client.category.model.*;
+import com.foresight.fcms.report.service.ClientReportPdfService;
 
 import org.springframework.stereotype.Service;
 
-import java.awt.Color;
-import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDate;
+import java.util.*;
 
 @Service
 public class ClientCategoryPdfService {
+    private final ClientReportPdfService pdf;
 
-    private static final DateTimeFormatter PRINTED_AT =
-            DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
+    public ClientCategoryPdfService(ClientReportPdfService pdf) {
+        this.pdf = pdf;
+    }
 
     public byte[] listPdf(
-            ClientCategory category, List<ClientCategoryRowDto> rows, ClientCategoryTotals totals) {
-        return writePdf(
-                PageSize.A3.rotate(),
-                document -> {
-                    addTitle(document, category.getTitle() + " Register");
-                    List<String> headers = listHeaders(category);
-                    PdfPTable table = table(headers.size());
-                    addHeader(table, headers);
-                    int index = 1;
-                    for (ClientCategoryRowDto row : rows) {
-                        addCells(table, listValues(category, index++, row));
-                    }
-                    addCells(table, listTotals(category, totals));
-                    document.add(table);
-                    addPrintedAt(document);
-                });
+            ClientCategory category,
+            List<ClientCategoryRowDto> source,
+            ClientCategoryTotals totals) {
+        return listPdf(
+                category,
+                source,
+                totals,
+                source.isEmpty() ? "All Years" : source.getFirst().financialYear());
     }
 
-    public byte[] revenuePdf(ClientCategoryService.ClientCategoryReportResult report) {
-        if (!report.reportType().isFull()) {
-            return singleColumnReportPdf(report);
+    public byte[] listPdf(
+            ClientCategory category,
+            List<ClientCategoryRowDto> source,
+            ClientCategoryTotals totals,
+            String yearLabel) {
+        var rows = new ArrayList<List<String>>();
+        if (category == ClientCategory.MICROFINANCE || category == ClientCategory.OTHERS) {
+            for (var row : source)
+                rows.add(
+                        List.of(
+                                Integer.toString(rows.size() + 1),
+                                row.clientName(),
+                                text(row.entryDate()),
+                                text(row.expireDate()),
+                                row.region(),
+                                money(row.annualFee()),
+                                money(row.amount()),
+                                money(row.trainingFee()),
+                                money(row.systemInstallFee()),
+                                money(row.systemReinstallFee()),
+                                money(row.androidFee()),
+                                row.financialYear(),
+                                pdf.label(row.paymentStatus())));
+            return pdf.render(
+                    "CLIENT_" + category.name() + "_REGISTER",
+                    category == ClientCategory.OTHERS
+                            ? pdf.label("client.otherRegisterYear") + " " + pdf.label(yearLabel)
+                            : category.getTitle() + " Register",
+                    List.of(
+                            "No",
+                            category.getNameLabel(),
+                            "Entry Date",
+                            "Expire Date",
+                            "Region",
+                            "Annual Fee",
+                            "Amount Paid",
+                            "Training Fee",
+                            "Install Fee",
+                            "Reinstall Fee",
+                            "Android Fee",
+                            "Year",
+                            "Payment"),
+                    rows,
+                    List.of(),
+                    category == ClientCategory.MICROFINANCE
+                            ? List.of(
+                                    8f, 52f, 18f, 19f, 28f, 18f, 21f, 19f, 21f, 21f, 20f, 14f, 14f)
+                            : List.of(
+                                    10f, 52f, 18f, 19f, 30f, 20f, 21f, 20f, 18f, 22f, 20f, 13f,
+                                    13f));
         }
-        return writePdf(
-                PageSize.A3.rotate(),
-                document -> {
-                    addTitle(
-                            document,
-                            report.category().getTitle()
-                                    + " Report - "
-                                    + report.selectedFinancialYearLabel()
-                                    + " - "
-                                    + report.selectedPaymentStatusLabel());
-                    List<String> headers = revenueHeaders(report.category());
-                    PdfPTable table = table(headers.size());
-                    addHeader(table, headers);
-                    int index = 1;
-                    for (ClientCategoryRowDto row : report.rows()) {
-                        addCells(table, revenueValues(report.category(), index++, row));
-                    }
-                    addCells(table, revenueTotals(report.category(), report.totals()));
-                    document.add(table);
-                    addPrintedAt(document);
-                });
+        for (var row : source) rows.add(listValues(category, rows.size() + 1, row));
+        var headers = listHeaders(category);
+        var widths =
+                category == ClientCategory.AMCOS
+                        ? List.of(
+                                8f, 42f, 17f, 17f, 17f, 13f, 16f, 16f, 18f, 18f, 16f, 15f, 18f, 14f,
+                                15f, 13f, 17f)
+                        : List.of(
+                                8f, 38f, 16f, 16f, 16f, 12f, 15f, 15f, 13f, 14f, 16f, 16f, 15f, 14f,
+                                17f, 13f, 14f, 13f, 14f);
+        return pdf.render(
+                "CLIENT_" + category.name() + "_REGISTER",
+                pdf.title(category.getTitle() + " Report").toUpperCase(java.util.Locale.ROOT),
+                headers,
+                rows,
+                List.of(),
+                widths);
     }
 
-    private byte[] singleColumnReportPdf(ClientCategoryService.ClientCategoryReportResult report) {
-        ClientCategoryReportType type = report.reportType();
-        return writePdf(
-                PageSize.A4,
-                document -> {
-                    addTitle(
-                            document,
-                            type.getLabel()
-                                    + " - "
-                                    + report.selectedFinancialYearLabel()
-                                    + " - "
-                                    + report.selectedPaymentStatusLabel());
-                    PdfPTable table = table(3);
-                    addHeader(
-                            table,
-                            List.of("No", report.category().getNameLabel(), type.getLabel()));
-                    int index = 1;
-                    for (ClientCategoryRowDto row : report.rows()) {
-                        addCells(
-                                table,
-                                List.of(
-                                        String.valueOf(index++),
-                                        text(row.clientName()),
-                                        money(type.rowValue(row))));
-                    }
-                    addCells(
-                            table,
-                            List.of("Grand Total", "", money(type.totalValue(report.totals()))));
-                    document.add(table);
-                    addPrintedAt(document);
-                });
+    public byte[] revenuePdf(ClientCategoryService.ClientCategoryReportResult source) {
+        var rows = new ArrayList<List<String>>();
+        var category = source.category();
+        var type = source.reportType();
+        String title =
+                category.getTitle()
+                        + " Report - "
+                        + source.selectedFinancialYearLabel()
+                        + " - "
+                        + pdf.label(source.selectedPaymentStatusLabel());
+        if (!type.isFull()) {
+            for (var row : source.rows())
+                rows.add(
+                        List.of(
+                                Integer.toString(rows.size() + 1),
+                                row.clientName(),
+                                money(type.rowValue(row))));
+            return pdf.render(
+                    "CLIENT_SINGLE",
+                    pdf.label(type.getLabel())
+                            + " - "
+                            + source.selectedFinancialYearLabel()
+                            + " - "
+                            + pdf.label(source.selectedPaymentStatusLabel()),
+                    List.of("No", category.getNameLabel(), type.getLabel()),
+                    rows,
+                    List.of("Grand Total", "", money(type.totalValue(source.totals()))),
+                    List.of(15f, 190f, 60f));
+        }
+        for (var row : source.rows()) rows.add(revenueValues(category, rows.size() + 1, row));
+        var headers = revenueHeaders(category);
+        return pdf.render(
+                "CLIENT_" + category.name() + "_REVENUE",
+                title,
+                headers,
+                rows,
+                revenueTotals(category, source.totals()),
+                (category == ClientCategory.MICROFINANCE || category == ClientCategory.OTHERS)
+                        ? List.of(10f, 62f, 20f, 30f, 30f, 20f, 20f, 20f, 20f, 20f, 20f)
+                        : List.of(
+                                8f, 45f, 16f, 16f, 14f, 15f, 18f, 18f, 16f, 16f, 18f, 15f, 15f, 16f,
+                                15f));
     }
 
     private List<String> listHeaders(ClientCategory category) {
@@ -120,12 +152,13 @@ public class ClientCategoryPdfService {
                                 "Entry Date",
                                 "Expire Date",
                                 "Region",
+                                "Contract",
                                 "Annual Fee",
                                 "Amount Paid"));
-        if (category.isWithholdingTaxSupported()) {
+        if (category == ClientCategory.UNIONS) {
             headers.add("W-H TAX");
         }
-        if (category.isCommissionSupported()) {
+        if (category == ClientCategory.UNIONS) {
             headers.add("Commission");
         }
         headers.addAll(
@@ -149,12 +182,13 @@ public class ClientCategoryPdfService {
                                 text(row.entryDate()),
                                 text(row.expireDate()),
                                 text(row.region()),
+                                pdf.label(row.hasContractFile() ? "common.yes" : "common.no"),
                                 money(row.annualFee()),
                                 money(row.amount())));
-        if (category.isWithholdingTaxSupported()) {
+        if (category == ClientCategory.UNIONS) {
             values.add(money(row.withholdingTax()));
         }
-        if (category.isCommissionSupported()) {
+        if (category == ClientCategory.UNIONS) {
             values.add(money(row.commission()));
         }
         values.addAll(
@@ -170,41 +204,7 @@ public class ClientCategoryPdfService {
         if (category.isHostingSupported()) {
             values.add(money(row.hostingFee()));
         }
-        values.addAll(List.of(text(row.financialYear()), text(row.paymentStatus())));
-        return values;
-    }
-
-    private List<String> listTotals(ClientCategory category, ClientCategoryTotals totals) {
-        List<String> values =
-                new ArrayList<>(
-                        List.of(
-                                "Total (" + totals.totalRows() + ")",
-                                "",
-                                "",
-                                "",
-                                "",
-                                money(totals.annualFee()),
-                                money(totals.amount())));
-        if (category.isWithholdingTaxSupported()) {
-            values.add(money(totals.withholdingTax()));
-        }
-        if (category.isCommissionSupported()) {
-            values.add(money(totals.commission()));
-        }
-        values.addAll(
-                List.of(
-                        money(totals.programmerCost()),
-                        money(totals.systemInstallFee()),
-                        money(totals.trainingFee()),
-                        money(totals.androidFee()),
-                        money(totals.systemReinstallFee())));
-        if (category.isBulkSmsSupported()) {
-            values.add(money(totals.bulkSmsFee()));
-        }
-        if (category.isHostingSupported()) {
-            values.add(money(totals.hostingFee()));
-        }
-        values.addAll(List.of("", ""));
+        values.addAll(List.of(text(row.financialYear()), pdf.label(text(row.paymentStatus()))));
         return values;
     }
 
@@ -293,73 +293,13 @@ public class ClientCategoryPdfService {
         return values;
     }
 
-    private byte[] writePdf(com.lowagie.text.Rectangle pageSize, PdfBody body) {
-        try {
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-            Document document = new Document(pageSize, 16, 16, 18, 18);
-            PdfWriter.getInstance(document, output);
-            document.open();
-            body.write(document);
-            document.close();
-            return output.toByteArray();
-        } catch (DocumentException exception) {
-            throw new IllegalStateException("Could not generate client category PDF", exception);
-        }
-    }
-
-    private void addTitle(Document document, String title) throws DocumentException {
-        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13);
-        Paragraph paragraph = new Paragraph(title, titleFont);
-        paragraph.setAlignment(Element.ALIGN_CENTER);
-        paragraph.setSpacingAfter(8);
-        document.add(paragraph);
-    }
-
-    private void addPrintedAt(Document document) throws DocumentException {
-        Font font = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 7);
-        Paragraph printed =
-                new Paragraph("Printed: " + LocalDateTime.now().format(PRINTED_AT), font);
-        printed.setAlignment(Element.ALIGN_CENTER);
-        printed.setSpacingBefore(8);
-        document.add(printed);
-    }
-
-    private PdfPTable table(int columns) {
-        PdfPTable table = new PdfPTable(columns);
-        table.setWidthPercentage(100);
-        return table;
-    }
-
-    private void addHeader(PdfPTable table, List<String> headers) {
-        Font font = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 6);
-        for (String header : headers) {
-            PdfPCell cell = new PdfPCell(new Phrase(header, font));
-            cell.setBackgroundColor(new Color(230, 236, 245));
-            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-            cell.setPadding(3);
-            table.addCell(cell);
-        }
-    }
-
-    private void addCells(PdfPTable table, List<String> values) {
-        Font font = FontFactory.getFont(FontFactory.HELVETICA, 6);
-        for (String value : values) {
-            PdfPCell cell = new PdfPCell(new Phrase(value == null ? "" : value, font));
-            cell.setPadding(3);
-            table.addCell(cell);
-        }
-    }
-
-    private String money(BigDecimal amount) {
-        return amount == null ? "0.00" : amount.toPlainString();
+    private String money(BigDecimal value) {
+        return value.toPlainString();
     }
 
     private String text(Object value) {
+        if (value instanceof LocalDate date)
+            return com.foresight.fcms.shared.view.ApplicationTimestamps.date(date);
         return value == null ? "" : value.toString();
-    }
-
-    @FunctionalInterface
-    private interface PdfBody {
-        void write(Document document) throws DocumentException;
     }
 }

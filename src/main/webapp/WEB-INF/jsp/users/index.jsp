@@ -1,13 +1,9 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ include file="/WEB-INF/jsp/shared/header.jspf" %>
-<div class="app-page-header">
-<h1 class="app-page-title">
-<spring:message code="nav.users" />
-</h1>
-</div>
+
 <c:set var="baseUrl" value="/admin/users"/>
 <c:set var="resourceKey" value="users"/>
-<section class="erp-table-wrap" data-resource-table="users" data-table-selection="single" data-table-page-size="${query.size}" data-table-page-size-options="10 25 50 100">
+<section class="erp-table-wrap" data-resource-table="users" data-table-selection="single" data-table-wrap data-table-page-size="${query.size}" data-table-page-size-options="10 25 50 100">
 <div class="app-table-titlebar">
 <h2>
 <spring:message code="nav.users" />

@@ -391,7 +391,9 @@ public class WorkService {
                 a.id());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(
+            readOnly = true,
+            isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
     public java.util.List<WorkView> report(WorkKind kind, RegisterQuery query) {
         access.require(kind.claim + ".read");
         int original = query.getPage();

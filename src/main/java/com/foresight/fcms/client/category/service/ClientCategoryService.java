@@ -88,11 +88,13 @@ public class ClientCategoryService {
                 yearId,
                 filter.getPaymentStatusId(),
                 searchPattern(filter.normalizedSearch()),
-                " order by c.client_name asc limit 1001",
+                " order by " + order(filter) + " limit 1001",
                 List.of());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(
+            readOnly = true,
+            isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
     public ClientCategoryListExport exportClientsWithTotals(
             ClientCategory category, ClientCategoryFilter filter) {
         access.require("client.export");
@@ -104,13 +106,18 @@ public class ClientCategoryService {
                         yearId,
                         filter.getPaymentStatusId(),
                         search,
-                        " order by c.client_name asc limit 1001",
+                        " order by " + order(filter) + " limit 1001",
                         List.of());
         return new ClientCategoryListExport(
-                rows, summarize(category, yearId, filter.getPaymentStatusId(), search), yearId);
+                rows,
+                summarize(category, yearId, filter.getPaymentStatusId(), search),
+                yearId,
+                financialYearLabel(yearId));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(
+            readOnly = true,
+            isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
     public ClientCategoryReportResult revenueReport(
             ClientCategory category, ClientCategoryFilter filter) {
         access.require("client.read");
@@ -124,7 +131,7 @@ public class ClientCategoryService {
                         yearId,
                         filter.getPaymentStatusId(),
                         search,
-                        " order by c.client_name asc limit 1001",
+                        " order by " + order(filter) + " limit 1001",
                         List.of());
         return new ClientCategoryReportResult(
                 category,
@@ -182,31 +189,28 @@ public class ClientCategoryService {
         String stored = storageService.storeContract(contractUpload);
         var registered = new java.util.concurrent.atomic.AtomicBoolean();
         try {
-            return writes.execute(
-                    status -> {
-                        storageService.discardOnRollback(stored);
-                        registered.set(true);
-                        var actor = access.require("client.write");
-                        List<ColumnValue> columns = columnValues(category, form, stored, true);
-                        String sql =
-                                "insert into "
-                                        + category.getTableName()
-                                        + " ("
-                                        + names(columns)
-                                        + ", created_at, updated_at) values ("
-                                        + placeholders(columns.size())
-                                        + ", current_timestamp, current_timestamp) returning id";
-                        Long id =
-                                jdbcTemplate.queryForObject(
-                                        sql, Long.class, values(columns).toArray());
-                        audit.record(
-                                actor.id(),
-                                "client.create",
-                                category.getTableName(),
-                                id,
-                                "Client created; contract=" + stored);
-                        return id;
-                    });
+            return writes.execute(status -> {
+                storageService.discardOnRollback(stored);
+                registered.set(true);
+                var actor = access.require("client.write");
+                List<ColumnValue> columns = columnValues(category, form, stored, true);
+                String sql =
+                        "insert into "
+                                + category.getTableName()
+                                + " ("
+                                + names(columns)
+                                + ", created_at, updated_at) values ("
+                                + placeholders(columns.size())
+                                + ", current_timestamp, current_timestamp) returning id";
+                Long id = jdbcTemplate.queryForObject(sql, Long.class, values(columns).toArray());
+                audit.record(
+                        actor.id(),
+                        "client.create",
+                        category.getTableName(),
+                        id,
+                        "Client created; contract=" + stored);
+                return id;
+            });
         } catch (RuntimeException e) {
             if (!registered.get()) storageService.discardUncommitted(stored);
             throw e;
@@ -222,51 +226,46 @@ public class ClientCategoryService {
         String stored = storageService.storeContract(contractUpload);
         var registered = new java.util.concurrent.atomic.AtomicBoolean();
         try {
-            writes.executeWithoutResult(
-                    status -> {
-                        storageService.discardOnRollback(stored);
-                        registered.set(true);
-                        var actor = access.require("client.write");
-                        var previous =
-                                jdbcTemplate.query(
-                                        "select contract_file from "
-                                                + category.getTableName()
-                                                + " where id=? and version=? and visible",
-                                        (r, n) -> r.getString(1),
-                                        id,
-                                        form.getVersion());
-                        if (previous.isEmpty())
-                            throw new org.springframework.dao.OptimisticLockingFailureException(
-                                    "stale");
-                        List<ColumnValue> columns =
-                                columnValues(category, form, stored, stored != null);
-                        List<String> assignments =
-                                columns.stream().map(c -> c.name() + " = ?").toList();
-                        String sql =
-                                "update "
+            writes.executeWithoutResult(status -> {
+                storageService.discardOnRollback(stored);
+                registered.set(true);
+                var actor = access.require("client.write");
+                var previous =
+                        jdbcTemplate.query(
+                                "select contract_file from "
                                         + category.getTableName()
-                                        + " set "
-                                        + String.join(", ", assignments)
-                                        + ", version=version+1, updated_at=current_timestamp where"
-                                        + " visible and id=? and version=?";
-                        List<Object> args = values(columns);
-                        args.add(id);
-                        args.add(form.getVersion());
-                        if (jdbcTemplate.update(sql, args.toArray()) != 1)
-                            throw new org.springframework.dao.OptimisticLockingFailureException(
-                                    "stale");
-                        audit.record(
-                                actor.id(),
-                                "client.update",
-                                category.getTableName(),
+                                        + " where id=? and version=? and visible",
+                                (r, n) -> r.getString(1),
                                 id,
-                                stored == null
-                                        ? "Client state updated"
-                                        : "Contract replaced; before="
-                                                + previous.getFirst()
-                                                + "; after="
-                                                + stored);
-                    });
+                                form.getVersion());
+                if (previous.isEmpty())
+                    throw new org.springframework.dao.OptimisticLockingFailureException("stale");
+                List<ColumnValue> columns = columnValues(category, form, stored, stored != null);
+                List<String> assignments = columns.stream().map(c -> c.name() + " = ?").toList();
+                String sql =
+                        "update "
+                                + category.getTableName()
+                                + " set "
+                                + String.join(", ", assignments)
+                                + ", version=version+1, updated_at=current_timestamp where"
+                                + " visible and id=? and version=?";
+                List<Object> args = values(columns);
+                args.add(id);
+                args.add(form.getVersion());
+                if (jdbcTemplate.update(sql, args.toArray()) != 1)
+                    throw new org.springframework.dao.OptimisticLockingFailureException("stale");
+                audit.record(
+                        actor.id(),
+                        "client.update",
+                        category.getTableName(),
+                        id,
+                        stored == null
+                                ? "Client state updated"
+                                : "Contract replaced; before="
+                                        + previous.getFirst()
+                                        + "; after="
+                                        + stored);
+            });
         } catch (RuntimeException e) {
             if (!registered.get()) storageService.discardUncommitted(stored);
             throw e;
@@ -643,7 +642,8 @@ public class ClientCategoryService {
     public record ClientCategoryListExport(
             List<ClientCategoryRowDto> rows,
             ClientCategoryTotals totals,
-            Long selectedFinancialYearId) {}
+            Long selectedFinancialYearId,
+            String selectedFinancialYearLabel) {}
 
     public record ClientCategoryReportResult(
             ClientCategory category,

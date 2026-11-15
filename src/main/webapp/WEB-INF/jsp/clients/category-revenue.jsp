@@ -2,7 +2,7 @@
 <%@ include file="/WEB-INF/jsp/shared/header.jspf" %>
 <div class="app-page-header">
 <h1 class="app-page-title">
-<c:out value="${category.title}"/>
+<spring:message code="client.category.${category.tableName}"/>
 </h1>
 </div>
 <c:set var="resourceKey" value="client-category"/>
@@ -10,10 +10,10 @@
 <section class="erp-table-wrap" data-resource-table="client-category" data-table-selection="single" data-table-page-size="${filter.size}" data-table-page-size-options="10 25 50 100">
 <div class="app-table-titlebar">
 <h2>
-<c:out value="${category.title}"/> (<c:out value="${totals.totalRows()}"/>)</h2>
+<spring:message code="client.category.${category.tableName}"/> <span class="app-table-count">(<c:out value="${totals.totalRows()}"/>)</span></h2>
 <div class="app-table-toolbar">
 <c:if test="${permissions.contains('client.export')}">
-<a class="app-btn btn-neutral" href="<c:url value='${category.route}/revenues/print.pdf'>
+<a class="app-btn btn-neutral" data-table-export="pdf" href="<c:url value='${category.route}/revenues/print.pdf'>
 <c:param name='financialYearId' value='${filter.financialYearId}'/>
 <c:param name='paymentStatusId' value='${filter.paymentStatusId}'/>
 <c:param name='search' value='${filter.search}'/>
@@ -36,7 +36,7 @@
 <select name="reportType">
 <c:forEach items="${reportTypes}" var="type">
 <option value="${type.key}" ${type.key==reportType.key?'selected':''}>
-<c:out value="${type.label}"/>
+<spring:message code="report.type.${type.key}"/>
 </option>
 </c:forEach>
 </select>
@@ -66,7 +66,7 @@
 </option>
 <c:forEach items="${paymentStatuses}" var="status">
 <option value="${status.id}" ${filter.paymentStatusId==status.id?'selected':''}>
-<c:out value="${status.name}"/>
+<spring:message code="status.${fn:toUpperCase(status.name)}" text="${status.name}" htmlEscape="true"/>
 </option>
 </c:forEach>
 </select>
@@ -112,7 +112,7 @@
 <c:out value="${row.grossProfit()}"/>
 </td>
 <td>
-<c:out value="${row.paymentStatus()}"/>
+<spring:message code="status.${fn:toUpperCase(row.paymentStatus())}" text="${row.paymentStatus()}" htmlEscape="true"/>
 </td>
 <td>
 <a class="app-btn btn-neutral" href="<c:url value='${category.route}/${row.id()}'/>">

@@ -1,23 +1,20 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ include file="/WEB-INF/jsp/shared/header.jspf" %>
-<div class="app-page-header">
-<h1 class="app-page-title">
-<c:out value="${category.title}"/>
-</h1>
-</div>
-<c:set var="resourceKey" value="client-category"/>
+
+<c:set var="resourceKey" value="client-${category.slug}"/>
 <c:set var="baseUrl" value="${category.route}"/>
-<section class="erp-table-wrap" data-resource-table="client-category" data-table-selection="single" data-table-page-size="${filter.size}" data-table-page-size-options="10 25 50 100">
+<section class="erp-table-wrap" data-resource-table="client-${category.slug}" data-table-selection="single" data-table-wrap data-table-page-size="${filter.size}" data-table-page-size-options="10 25 50 100">
 <div class="app-table-titlebar">
 <h2>
-<c:out value="${category.title}"/> (<c:out value="${totals.totalRows()}"/>)</h2>
+<spring:message code="client.category.${category.tableName}"/> <span class="app-table-count">(<c:out value="${totals.totalRows()}"/>)</span></h2>
 <div class="app-table-toolbar">
 <c:if test="${permissions.contains('client.write')}"><a class="app-btn btn-neutral" href="<c:url value='${category.route}/archive'/>"><spring:message code="client.archive"/></a></c:if>
 <c:if test="${permissions.contains('client.export')}">
-<a class="app-btn btn-neutral" href="<c:url value='${category.route}/print.pdf'>
+<a class="app-btn btn-neutral" data-table-export="pdf" href="<c:url value='${category.route}/print.pdf'>
 <c:param name='financialYearId' value='${filter.financialYearId}'/>
 <c:param name='paymentStatusId' value='${filter.paymentStatusId}'/>
 <c:param name='search' value='${filter.search}'/>
+<c:param name='sort' value='${filter.sort}'/><c:param name='direction' value='${filter.direction}'/>
 </c:url>">
 <spring:message code="common.pdf" />
 </a>
@@ -55,7 +52,7 @@
 </option>
 <c:forEach items="${paymentStatuses}" var="status">
 <option value="${status.id}" ${filter.paymentStatusId==status.id?'selected':''}>
-<c:out value="${status.name}"/>
+<spring:message code="status.${fn:toUpperCase(status.name)}" text="${status.name}" htmlEscape="true"/>
 </option>
 </c:forEach>
 </select>
@@ -115,17 +112,17 @@
 <td>
 <c:out value="${appTime:display(row.expireDate())}"/>
 </td>
-<td>
+<td data-table-number>
 <c:out value="${row.annualFee()}"/>
 </td>
-<td>
+<td data-table-number>
 <c:out value="${row.amount()}"/>
 </td>
 <td>
 <c:out value="${row.financialYear()}"/>
 </td>
 <td>
-<c:out value="${row.paymentStatus()}"/>
+<spring:message code="status.${fn:toUpperCase(row.paymentStatus())}" text="${row.paymentStatus()}" htmlEscape="true"/>
 </td>
 <td>
 <a class="app-btn btn-neutral" href="<c:url value='${category.route}/${row.id()}'/>">

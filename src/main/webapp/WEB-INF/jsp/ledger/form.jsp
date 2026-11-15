@@ -81,7 +81,7 @@
 <label for="amount">
 <spring:message code="common.amount" />
 </label>
-<form:input id="amount" path="amount" type="number" step="0.01" min="0.01" />
+<form:input id="amount" path="amount" type="number" step="0.01" min="${kind.name()=='BULK'?'0':'0.01'}" />
 <form:errors path="amount" cssClass="fcms-error" />
 </div>
 <div class="fcms-field">
@@ -103,7 +103,7 @@
 <label for="units">
 <spring:message code="ledger.units" />
 </label>
-<form:input id="units" path="units" type="number" />
+<form:input id="units" path="units" type="number" min="0" step="1" />
 <form:errors path="units" cssClass="fcms-error" />
 </div>
 <div class="fcms-field">

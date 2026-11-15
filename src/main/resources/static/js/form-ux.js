@@ -54,7 +54,7 @@
     });
     document.addEventListener('click', event => {
         const link = event.target.closest('a[href]');
-        if (!link || event.defaultPrevented || event.ctrlKey || event.metaKey || event.shiftKey || submitting || !dirty() || link.target === '_blank' || link.getAttribute('href').startsWith('#')) return;
+        if (!link || event.defaultPrevented || event.ctrlKey || event.metaKey || event.shiftKey || submitting || !dirty() || link.hasAttribute('download') || link.target === '_blank' || link.getAttribute('href').startsWith('#')) return;
         event.preventDefault(); confirmDiscard(() => location.assign(link.href));
     });
     document.addEventListener('submit', event => {
@@ -81,6 +81,7 @@
         submitting = true;
         if (!modal.hidden) close();
     });
+    form.addEventListener('fcms:form-saved', () => { submitting = true; });
     window.addEventListener('beforeunload', event => { if (!submitting && dirty()) { event.preventDefault(); event.returnValue = ''; } });
     window.addEventListener('pageshow', () => {
         submitting = false; form.removeAttribute('aria-busy');

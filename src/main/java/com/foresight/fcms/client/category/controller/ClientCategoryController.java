@@ -1,5 +1,7 @@
 package com.foresight.fcms.client.category.controller;
 
+import static com.foresight.fcms.shared.view.CsvText.quote;
+
 import com.foresight.fcms.client.category.dto.ClientCategoryFilter;
 import com.foresight.fcms.client.category.dto.ClientCategoryForm;
 import com.foresight.fcms.client.category.dto.ClientCategoryRowDto;
@@ -212,6 +214,7 @@ public class ClientCategoryController {
             HttpServletResponse response)
             throws IOException {
         ClientCategory category = ClientCategory.fromSlug(categorySlug);
+        var rows = clientCategoryService.exportClients(category, filter);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType("text/csv");
         response.setHeader(
@@ -219,7 +222,7 @@ public class ClientCategoryController {
                 "attachment; filename=\"" + category.getSlug() + ".csv\"");
         try (PrintWriter writer = response.getWriter()) {
             writer.println(String.join(",", listHeaders(category)));
-            for (ClientCategoryRowDto row : clientCategoryService.exportClients(category, filter)) {
+            for (ClientCategoryRowDto row : rows) {
                 writer.println(String.join(",", listValues(category, row)));
             }
         }
@@ -234,7 +237,11 @@ public class ClientCategoryController {
         var export = clientCategoryService.exportClientsWithTotals(category, filter);
         return pdf(
                 category.getSlug() + ".pdf",
-                pdfService.listPdf(category, export.rows(), export.totals()));
+                pdfService.listPdf(
+                        category,
+                        export.rows(),
+                        export.totals(),
+                        export.selectedFinancialYearLabel()));
     }
 
     @GetMapping(CATEGORY_PATH + "/revenues/export.csv")
@@ -255,21 +262,21 @@ public class ClientCategoryController {
             if (!report.reportType().isFull()) {
                 writer.println(
                         "No,"
-                                + csv(category.getNameLabel())
+                                + quote(category.getNameLabel())
                                 + ","
-                                + csv(report.reportType().getLabel()));
+                                + quote(report.reportType().getLabel()));
                 int index = 1;
                 for (ClientCategoryRowDto row : report.rows()) {
                     writer.println(
                             index++
                                     + ","
-                                    + csv(row.clientName())
+                                    + quote(row.clientName())
                                     + ","
                                     + report.reportType().rowValue(row));
                 }
                 writer.println(
                         ","
-                                + csv("Grand Total")
+                                + quote("Grand Total")
                                 + ","
                                 + report.reportType().totalValue(report.totals()));
                 return;
@@ -305,7 +312,7 @@ public class ClientCategoryController {
         List<String> headers =
                 new ArrayList<>(
                         List.of(
-                                csv(category.getNameLabel()),
+                                quote(category.getNameLabel()),
                                 "Entry Date",
                                 "Expire Date",
                                 "Region",
@@ -338,10 +345,10 @@ public class ClientCategoryController {
         List<String> values =
                 new ArrayList<>(
                         List.of(
-                                csv(row.clientName()),
+                                quote(row.clientName()),
                                 String.valueOf(row.entryDate()),
                                 String.valueOf(row.expireDate()),
-                                csv(row.region()),
+                                quote(row.region()),
                                 String.valueOf(row.annualFee()),
                                 String.valueOf(row.amount())));
         if (category.isWithholdingTaxSupported()) {
@@ -363,7 +370,7 @@ public class ClientCategoryController {
         if (category.isHostingSupported()) {
             values.add(String.valueOf(row.hostingFee()));
         }
-        values.addAll(List.of(csv(row.financialYear()), csv(row.paymentStatus())));
+        values.addAll(List.of(quote(row.financialYear()), quote(row.paymentStatus())));
         return values;
     }
 
@@ -372,7 +379,7 @@ public class ClientCategoryController {
                 new ArrayList<>(
                         List.of(
                                 "No",
-                                csv(category.getNameLabel()),
+                                quote(category.getNameLabel()),
                                 "Annual Fee Invoiced",
                                 "Annual Fee Paid"));
         if (category.isWithholdingTaxSupported()) {
@@ -402,7 +409,7 @@ public class ClientCategoryController {
         List<String> values =
                 new ArrayList<>(
                         List.of(
-                                csv(row.clientName()),
+                                quote(row.clientName()),
                                 String.valueOf(row.annualFee()),
                                 String.valueOf(row.amount())));
         if (category.isWithholdingTaxSupported()) {
@@ -434,10 +441,5 @@ public class ClientCategoryController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
                 .body(bytes);
-    }
-
-    private String csv(String value) {
-        String safeValue = value == null ? "" : value;
-        return "\"" + safeValue.replace("\"", "\"\"") + "\"";
     }
 }

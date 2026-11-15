@@ -35,6 +35,13 @@
 </c:if>
 
 <section class="app-card">
+<div class="app-card-header"><h2 class="app-section-title"><spring:message code="common.details"/></h2></div>
+<div class="app-card-body app-definition-grid">
+<div class="app-definition-item"><span class="fcms-label"><spring:message code="client.region"/></span><div class="app-definition-value"><c:out value="${saccos.region()}"/></div></div>
+<div class="app-definition-item"><span class="fcms-label"><spring:message code="report.year"/></span><div class="app-definition-value"><c:out value="${saccos.financialYear()}"/></div></div>
+</div>
+</section>
+<section class="app-card">
     <div class="app-card-header">
         <h2 class="app-section-title"><spring:message code="client.billing"/></h2>
     </div>

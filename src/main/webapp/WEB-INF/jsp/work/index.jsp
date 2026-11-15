@@ -1,16 +1,13 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ include file="/WEB-INF/jsp/shared/header.jspf" %>
-<div class="app-page-header">
-<h1 class="app-page-title">
-<spring:message code="${kind.title}" />
-</h1>
-</div>
-<section class="erp-table-wrap" data-resource-table="${resourceKey}" data-table-selection="single" data-table-page-size="${query.size}" data-table-page-size-options="10 25 50 100">
+<section class="erp-table-wrap" data-resource-table="${resourceKey}" data-table-selection="single" data-table-wrap data-table-page-size="${query.size}" data-table-page-size-options="10 25 50 100">
 <div class="app-table-titlebar">
 <h2>
 <spring:message code="${kind.title}" />
 </h2>
 <c:url var="pdfUrl" value="${baseUrl}/print.pdf">
+<c:param name="ownerId" value="${query.ownerId}"/>
+<c:param name="clientId" value="${query.clientId}"/>
 <c:param name="search" value="${query.search}"/>
 <c:param name="status" value="${query.status}"/>
 <c:param name="from" value="${query.from}"/>
@@ -18,7 +15,7 @@
 <c:param name="sort" value="${query.sort}"/>
 <c:param name="direction" value="${query.direction}"/>
 </c:url>
-<a class="app-btn btn-neutral" href="<c:out value='${pdfUrl}'/>">
+<a class="app-btn btn-neutral" data-table-export="pdf" href="<c:out value='${pdfUrl}'/>">
 <spring:message code="common.pdf" />
 </a>
 <c:if test="${permissions.contains(kind.claim.concat('.write'))}">
@@ -42,10 +39,10 @@
 <spring:message code="common.client" />
 </th>
 <th data-table-sort-key="startAt" data-table-sort-asc="startAt" data-table-sort-desc="startAt">
-<spring:message code="work.start" />
+<spring:message code="operational.start" />
 </th>
 <th data-table-sort-key="endAt" data-table-sort-asc="endAt" data-table-sort-desc="endAt">
-<spring:message code="work.end" />
+<spring:message code="operational.end" />
 </th>
 <th data-table-sort-key="status" data-table-sort-asc="status" data-table-sort-desc="status">
 <spring:message code="common.status" />
@@ -67,10 +64,10 @@
 <td>
 <c:out value="${row.client()}" />
 </td>
-<td>
+<td data-table-date>
 <c:out value="${appTime:display(row.startAt())}" />
 </td>
-<td>
+<td data-table-date>
 <c:out value="${appTime:display(row.endAt())}" />
 </td>
 <td>

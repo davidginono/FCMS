@@ -550,6 +550,14 @@
                 new URL(location.href).searchParams.forEach((value,name)=>{
                     if(isOrder(name) && name!==sortParam && name!==directionParam)url.searchParams.set(name,value);
                 });
+                // Keep mounted export controls aligned with the successful server snapshot.
+                // Do not rewrite create links or selected-record commands.
+                region.querySelectorAll('[data-table-export]').forEach(control=>{
+                    const source=[...fresh.querySelectorAll('[data-table-export]')].find(item=>item.dataset.tableExport===control.dataset.tableExport);
+                    if(!source?.hasAttribute('href'))return;
+                    const target=new URL(source.getAttribute('href'),url);
+                    if(target.origin===location.origin){control.href=target.href;control.hidden=source.hidden;}
+                });
                 queryUrl=url;
                 syncSortHeaders();
                 const freshPager = fresh.querySelector('[data-table-pagination]') || [...page.querySelectorAll('[data-table-pagination][data-table-for]')].find(item=>item.dataset.tableFor.split(' ').includes(region.dataset.resourceTable));
@@ -638,7 +646,7 @@
         };
         const key = 'resource-table:v1:' + (region.dataset.resourceTable || scroller.dataset.viewPositionKey || location.pathname + ':' + [...document.querySelectorAll('[data-resource-table]')].indexOf(region));
         const defaultOrder = headers.map((_, index) => index);
-        let settings = {hidden: [], compact: true, wrap: false, striped: false, sticky: 0, order: defaultOrder};
+        let settings = {hidden: [], compact: true, wrap: region.hasAttribute('data-table-wrap'), striped: false, sticky: 0, order: defaultOrder};
         try {
             const stored = showTools && !statementMode ? JSON.parse(localStorage.getItem(key)) : null;
             if (stored && Array.isArray(stored.hidden)) settings = {...settings, ...stored,

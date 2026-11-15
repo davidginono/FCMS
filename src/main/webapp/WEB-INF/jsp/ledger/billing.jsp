@@ -1,15 +1,17 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ include file="/WEB-INF/jsp/shared/header.jspf" %>
-<div class="app-page-header">
-<h1 class="app-page-title">
-<spring:message code="cloud.billing" />
-</h1>
+<section class="erp-table-wrap" data-resource-table="cloud-billing" data-table-selection="single" data-table-wrap data-table-page-size="${query.size}" data-table-page-size-options="10 25 50 100">
+<div class="app-table-titlebar">
+<h2><spring:message code="cloud.billing"/></h2>
+<c:url var="billingPdfUrl" value="/finance/cloud-backup/billing/print.pdf">
+<c:param name="year" value="${year}"/><c:param name="search" value="${query.search}"/>
+<c:param name="status" value="${query.status}"/><c:param name="sort" value="${query.sort}"/>
+<c:param name="direction" value="${query.direction}"/>
+</c:url>
+<a class="app-btn btn-neutral" data-table-export="pdf" href="<c:out value='${billingPdfUrl}'/>"><spring:message code="common.pdf"/></a>
 </div>
-<section class="erp-table-wrap" data-resource-table="cloud-billing" data-table-selection="single" data-table-page-size="${query.size}" data-table-page-size-options="10 25 50 100">
-<h2>
-<spring:message code="cloud.billing" />
-</h2>
 <form method="get">
+<input type="hidden" name="size" value="${query.size}">
 <input type="hidden" name="sort" value="<c:out value='${query.sort}'/>">
 <input type="hidden" name="direction" value="${query.direction}">
 <label>
@@ -63,12 +65,12 @@
 <c:forEach items="${records.rows()}" var="row">
 <tr>
 <td>
-<c:out value="${row.name()}"/>
+<a class="resource-table-id-link" href="<c:url value='/clients/saccos/${row.id()}'/>"><c:out value="${row.name()}"/></a>
 </td>
-<td>
+<td data-table-number>
 <c:out value="${row.fee()}"/>
 </td>
-<td>
+<td data-table-number>
 <c:out value="${row.cost()}"/>
 </td>
 <td>

@@ -19,10 +19,10 @@
     <title>FCMS</title>
     <link rel="stylesheet" href="${appCssUrl}">
     <script defer src="${appJsUrl}"></script>
-<link rel="stylesheet" href="<c:url value='/css/resource-table.css?v=fcms-modules-20261103-accounting1' />">
+<link rel="stylesheet" href="<c:url value='/css/resource-table.css?v=20261115-registers3' />">
 <link rel="stylesheet" href="<c:url value='/css/ui-loading.css?v=fcms-modules-20261103-accounting1' />">
 <link rel="stylesheet" href="<c:url value='/css/select-enhancer.css?v=fcms-modules-20261103-accounting1' />">
-<script defer src="<c:url value='/js/resource-table.js?v=20261112-paper1' />"></script>
+<script defer src="<c:url value='/js/resource-table.js?v=20261115-registers3' />"></script>
 <script defer src="<c:url value='/js/ui-loading.js?v=fcms-modules-20261103-accounting1' />"></script>
 <script defer src="<c:url value='/js/select-enhancer.js?v=fcms-modules-20261103-accounting1' />"></script>
 <script defer src="<c:url value='/js/resource-split-view.js?v=fcms-modules-20261103-accounting1' />"></script>
@@ -31,7 +31,7 @@
 <script defer src="<c:url value='/js/live-search.js?v=fcms-modules-20261103-accounting1' />"></script><script defer src="<c:url value='/js/choice-loader.js?v=fcms-modules-20261103-accounting1' />"></script><link rel="stylesheet" href="<c:url value='/css/date-controls.css?v=20261103'/>"><script defer src="<c:url value='/js/date-controls.js?v=20261103'/>"></script></head>
 <body class="fcms-shell aws-console" data-date-choose="<spring:message code='date.choose'/>" data-date-invalid="<spring:message code='date.invalid'/>" data-nav-open="<spring:message code='nav.open'/>" data-nav-close="<spring:message code='nav.close'/>" data-select-retry="<spring:message code='common.refresh'/>" data-select-search="<spring:message code="select.search" />" data-select-load-more="<spring:message code="select.loadMore" />" data-select-no-matches="<spring:message code="select.noMatches" />" data-shell-select="<spring:message code="select.select" />" data-shell-loading="<spring:message code="common.loading" />" data-shell-no-options="<spring:message code="select.noOptions" />">
 <%@ include file="/WEB-INF/jsp/reusableuicomponents/resource-table-labels.jspf" %>
-<a class="skip-link" href="#main-content">Skip to main content</a>
+<a class="skip-link" href="#main-content"><spring:message code="common.skipContent"/></a>
 <%@ include file="/WEB-INF/jsp/reusableuicomponents/navigation/topbar.jspf" %>
 <div data-fcms-sidebar-overlay class="app-sidebar-overlay hidden"></div>
 <div class="app-shell">

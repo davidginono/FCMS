@@ -1,6 +1,9 @@
 package com.foresight.fcms.finance.expense.controller;
 
+import com.foresight.fcms.finance.expense.dto.ExpenseCategoryQuery;
 import com.foresight.fcms.finance.expense.dto.ExpenseForm;
+import com.foresight.fcms.finance.expense.dto.ExpenseQuery;
+import com.foresight.fcms.finance.expense.service.ExpenseCategoryService;
 import com.foresight.fcms.finance.expense.service.ExpenseService;
 import com.foresight.fcms.shared.dto.RegisterQuery;
 
@@ -15,9 +18,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/finance/expenses")
 public class ExpenseController {
     private final ExpenseService expenses;
+    private final ExpenseCategoryService categories;
 
-    public ExpenseController(ExpenseService e) {
+    public ExpenseController(ExpenseService e, ExpenseCategoryService categories) {
         expenses = e;
+        this.categories = categories;
     }
 
     @ModelAttribute
@@ -31,9 +36,25 @@ public class ExpenseController {
     }
 
     @GetMapping
-    public String index(@ModelAttribute("query") RegisterQuery q, Model m) {
+    public String index(@ModelAttribute("query") ExpenseQuery q, Model m) {
         m.addAttribute("records", expenses.list(q));
+        m.addAttribute("expenseFilters", true);
         return "expenses/index";
+    }
+
+    @GetMapping("/categories")
+    public String categories(@ModelAttribute("query") ExpenseCategoryQuery q, Model m) {
+        var summary = categories.summary(q);
+        m.addAttribute("records", summary.records());
+        m.addAttribute("total", summary.total());
+        m.addAttribute("baseUrl", "/finance/expenses/categories");
+        m.addAttribute("resourceKey", "expense-categories");
+        m.addAttribute("expenseFilters", true);
+        m.addAttribute("categorySummary", true);
+        m.addAttribute("breadcrumbUrl", "/finance/expenses");
+        m.addAttribute("breadcrumbLabel", "nav.expenses");
+        m.addAttribute("breadcrumbCurrent", "expense.categories");
+        return "expenses/categories";
     }
 
     @GetMapping("/new")

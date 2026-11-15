@@ -141,14 +141,14 @@
 <label for="allowance">
 <spring:message code="work.allowance" />
 </label>
-<form:input id="allowance" path="allowance" type="number" />
+<form:input id="allowance" path="allowance" type="number" step="0.01" min="0" />
 <form:errors path="allowance" cssClass="fcms-error" />
 </div>
 <div class="fcms-field">
 <label for="amount">
 <spring:message code="common.amount" />
 </label>
-<form:input id="amount" path="amount" type="number" />
+<form:input id="amount" path="amount" type="number" step="0.01" min="0" />
 <form:errors path="amount" cssClass="fcms-error" />
 </div>
 </c:if>
