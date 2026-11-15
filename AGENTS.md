@@ -187,3 +187,7 @@ Use the most relevant skill under `.agents/skills/` for specialized work:
 - `integration-resilience`
 
 Multiple skills may be combined when a task crosses concerns.
+
+## 16. Repository-local legacy PHP reference
+
+The sanitized legacy PHP source archive is `reference/fcms-php-reference.zip`. Before comparing legacy workflows, read `reference/README.md`, verify `reference/fcms-php-reference.zip.sha256`, and extract under an ignored local reference directory such as `.verification/legacy-php`. The canonical workflow entrypoints are the archive's root `fcms/*.php`; `CODES`, `CODE2` and `images` retain older application copies. The manifest identifies credential redactions and excluded runtime data. Inspect the snapshot as read-only source, without executing legacy entrypoints against an operational database. The archive does not replace the Microfinance financial-statement authority, FCMS authorization/financial rules, or the mandatory skills above.

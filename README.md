@@ -2,6 +2,8 @@
 
 This is the new Spring Boot migration workspace for the FCMS PHP/XAMPP project.
 
+The sanitized [legacy PHP source ZIP and workflow guide](reference/README.md) are included for agents and developers working from a fresh checkout.
+
 ## Stack
 
 - Spring Boot 4.1.0

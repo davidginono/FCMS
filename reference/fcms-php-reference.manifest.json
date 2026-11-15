@@ -1,0 +1,135 @@
+{
+  "snapshotDate": "2026-11-15",
+  "sourceFiles": 1403,
+  "excludedByReason": {
+    "generated-document-archive-or-non-source": 51,
+    "local-configuration-or-log": 6,
+    "profile-pictures": 9,
+    "runtime-or-local-directory": 138
+  },
+  "sanitizedFiles": {
+    "CODE2/admin.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 36
+    },
+    "CODE2/admin2.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 33
+    },
+    "CODE2/admin3.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 33
+    },
+    "CODE2/cloud_backup.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 3
+    },
+    "CODE2/connect.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 3
+    },
+    "CODE2/fetchimage.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 2
+    },
+    "CODE2/index.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 1
+    },
+    "CODES/admin.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 36
+    },
+    "CODES/admin2.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 33
+    },
+    "CODES/admin3.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 33
+    },
+    "CODES/cloud_backup.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 3
+    },
+    "CODES/connect.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 3
+    },
+    "CODES/fetchimage.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 2
+    },
+    "CODES/index.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 1
+    },
+    "connect.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 2
+    },
+    "database/fcms_db.schema.sql": {
+      "reason": "schema-only-dump",
+      "original": "database/fcms_db.sql"
+    },
+    "fetchimage.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 2
+    },
+    "images/admin.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 36
+    },
+    "images/admin2.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 33
+    },
+    "images/admin3.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 33
+    },
+    "images/cloud_backup.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 3
+    },
+    "images/connect.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 3
+    },
+    "images/fetchimage.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 2
+    },
+    "images/index.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 1
+    },
+    "index.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 1
+    },
+    "PHPMailer/get_oauth_token.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 2
+    },
+    "PHPMailer/src/PHPMailer.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 1
+    },
+    "send_otp.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 3
+    },
+    "tests/client_lifecycle_test.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 1
+    },
+    "tests/fixtures/client_connect.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 1
+    }
+  },
+  "archive": "fcms-php-reference.zip",
+  "archiveBytes": 48993097,
+  "sha256": "d3643a5a1352f62785502b662b15d8b1427f16cd3144173338b854ffff58dbff"
+}
