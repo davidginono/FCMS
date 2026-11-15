@@ -101,11 +101,11 @@ After editing code:
 - Never silently swallow exceptions affecting money, permissions, audit trails, notifications, or integrations.
 
 ## 9. JSP, Tailwind, responsiveness, and accessibility
-- Use Cloudscape create, table-view, details, form, and modal patterns through the preferred Microfinance UI skills and reusable JSP components. Reusable components may be copied and adapted from `C:\Users\USER\Desktop\Microfinance` after inspecting their dependencies and licenses.
+- Use Cloudscape create, table-view, details, form, and modal patterns through the repository-local Microfinance UI skills and reusable JSP components. Inspect `reference/microfinance-ui/README.md` for the sanitized source snapshot, FCMS component mapping, dependencies and retained licenses. The reference is available in cloud checkouts; no external Microfinance folder is required.
 - Keep pages clean: do not generate explanatory paragraphs, sentences, page descriptions, or subtitles. Retain visible field labels, validation/errors, required financial disclosures, and specific consequential-action confirmations.
 - Exports must be exact facsimiles of the approved original receipt, voucher, invoice, register or financial-statement format: preserve page size, design, typography, field order, spacing, alignment, borders, colors, totals, continuation headers and footers. Inspect the original renderer and reusable components before implementing. Preserve exact financial values, authorization and required disclosures; document any necessary FCMS-specific additions or corrections.
 - Financial-statement previews must follow the approved original display and retain authorized account and transaction-detail drilling with the selected reporting dates. Verify each export against the original renderer using identical synthetic data and timestamps, rendered page comparisons and font/character geometry checks; a generic table or high similarity percentage alone does not prove an exact facsimile.
-- For financial reports, use the actual income-statement workspace and corresponding financial-position, cash-flow, equity, trial-balance and ledger designs in `C:\Users\USER\Desktop\Microfinance` as the facsimile authority. Do not substitute the legacy FCMS blue income/profit-and-loss layout. Audit each report's presentation builder, preview/print views and exporter; a shared font/layout helper alone does not establish the correct report structure.
+- For financial reports, use the original Microfinance income-statement workspace and corresponding financial-position, cash-flow, equity, trial-balance and ledger designs included under `reference/microfinance-ui/source/` as the facsimile authority. Follow the financial-statement authority map in `reference/microfinance-ui/README.md` and documented FCMS-specific corrections. Do not substitute the legacy FCMS blue income/profit-and-loss layout. Audit each report's presentation builder, preview/print views and exporter; a shared font/layout helper alone does not establish the correct report structure.
 - Build mobile-first layouts.
 - Every changed page must be usable at approximately 320 px, 375 px, 768 px, 1024 px, 1440 px, and very wide displays.
 - Constrain reading width on large screens; do not stretch forms and text indefinitely.
@@ -166,16 +166,16 @@ A change is complete only when:
 - No unsupported performance or security claims are made.
 
 ## 15. Skill routing
-Always consult the installed `springboot-1k-rps-optimization` skill before planning or editing in any future Codex chat, review, change, or implementation in this repository. The canonical skill file is `C:\Users\USER\.codex\skills\springboot-1k-rps-optimization\SKILL.md`. Treat it as a mandatory baseline for Spring Boot MVC/JSP/PostgreSQL work, including UI routes, controllers, services, repositories, security, migrations, tests, and operational changes.
+Always consult [springboot-1k-rps-optimization](.agents/skills/springboot-1k-rps-optimization/SKILL.md) before planning or editing in any future Codex chat, review, change, or implementation in this repository. This repository-local copy includes its supporting references, template and audit script. Treat it as a mandatory baseline for Spring Boot MVC/JSP/PostgreSQL work, including UI routes, controllers, services, repositories, security, migrations, tests, and operational changes. All paths below are relative to the repository and work in cloud/Linux checkouts without access to the original workstation.
 
 For FCMS Spring interface work, also consult these skills whenever their scope applies:
-- `microfinance-ui-governance` — navigation, workflows, financial states, and localization. Canonical skill file: `C:\Users\USER\Desktop\Microfinance\.agents\skills\microfinance-ui-governance\SKILL.md`.
-- `microfinance-ui-style` — the existing ERP shell, forms, controls, modals, and responsiveness. Canonical skill file: `C:\Users\USER\Desktop\Microfinance\.agents\skills\microfinance-ui-style\SKILL.md`.
-- `microfinance-table-standard` — tables, selection, scrolling, sorting, and bounded server-side pagination. Canonical skill file: `C:\Users\USER\Desktop\Microfinance\.agents\skills\microfinance-table-standard\SKILL.md`.
+- [microfinance-ui-governance](.agents/skills/microfinance-ui-governance/SKILL.md) — navigation, workflows, financial states, and localization.
+- [microfinance-ui-style](.agents/skills/microfinance-ui-style/SKILL.md) — the existing ERP shell, forms, controls, modals, and responsiveness.
+- [microfinance-table-standard](.agents/skills/microfinance-table-standard/SKILL.md) — tables, selection, scrolling, sorting, and bounded server-side pagination.
 
-Apply these interface skills alongside the Spring Boot baseline. Adapt Microfinance-specific references to FCMS's existing domain, routes, permissions, and shared JSP/CSS/JavaScript components; referenced assets and workflows must not be assumed to exist in FCMS. These skills do not authorize unrelated lending features, terminology changes, or replacement of established FCMS financial approval rules. Read any supporting files needed for the current task using paths relative to the canonical skill file.
+Apply these interface skills alongside the Spring Boot baseline. These sanitized adaptations reference the included source snapshot and existing FCMS JSP/CSS/JavaScript components. Original source routes, principal fields, permissions and lending workflows require deliberate adaptation; they must not be assumed to exist in FCMS. The skills do not authorize unrelated lending features, terminology changes, or replacement of established FCMS financial approval rules. Read supporting files relative to their skill file. Verify the package with `python3 scripts/verify-agent-references.py` before using the reference on a fresh checkout.
 
-Use the most relevant skill under `.agents/skills/` for specialized work:
+When present, use the most relevant additional skill under `.agents/skills/` for specialized work (the following optional skills are not bundled; their absence does not block using the four required skills above):
 - `modular-monolith-architecture`
 - `postgresql-performance`
 - `spring-security-hardening`
@@ -187,6 +187,10 @@ Use the most relevant skill under `.agents/skills/` for specialized work:
 - `integration-resilience`
 
 Multiple skills may be combined when a task crosses concerns.
+
+## Repository-local Microfinance UI reference
+
+Read `reference/microfinance-ui/README.md` for the source-to-FCMS mapping and dependency boundaries. The snapshot includes shared table/selection/split-view, forms/validation, selectors/dates/loading, modal examples, dashboards, COA/activity/transaction views and original financial-statement presentation/print/export sources. Source files are read-only reference material outside the runtime source roots. Prefer extending the FCMS adaptation; do not copy the source shell, business services, claims or loan workflows wholesale. No browser or Computer Use check is implied by adding this package; follow the current user's tool instructions and report actual checks.
 
 ## 16. Repository-local legacy PHP reference
 

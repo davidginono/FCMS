@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Agent reference sources must not contribute classes to the application. */
+@source not "../../../../../reference";
+@source not "../../../../../.agents";
+
 @source "../../../webapp/WEB-INF/jsp/**/*.jsp";
 @source "../../../webapp/WEB-INF/jsp/**/*.jspf";
 @source "../../java/**/*.java";

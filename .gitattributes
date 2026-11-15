@@ -1,3 +1,8 @@
+# Portable skill scripts and reference hashes must survive Linux/Windows checkouts.
+.agents/skills/** text eol=lf
+reference/microfinance-ui/** text eol=lf
+scripts/verify-agent-references.py text eol=lf
+
 # Preserve document offsets, embedded fonts and reference image bytes on every platform.
 *.pdf binary
 *.zip binary

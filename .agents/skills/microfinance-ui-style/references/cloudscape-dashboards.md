@@ -1,0 +1,13 @@
+# Configurable dashboards and data visuals
+
+Use Cloudscape [configurable dashboards](https://cloudscape.design/patterns/general/service-dashboard/configurable-dashboard/), [dashboard items](https://cloudscape.design/patterns/general/service-dashboard/dashboard-items/) and [data visualization](https://cloudscape.design/patterns/general/data-vis/) through shared JSP components. The repository snapshot includes dashboard board/charts/data/work JavaScript, CSS, fragment and SVGs; use the [component map](../../../../reference/microfinance-ui/README.md) for dependencies. These are source references, not installed React components.
+
+- Preserve the FCMS shell. Use rectangular white widgets, shaded headings, compact page-level Add widgets/Reset controls, grips, menus and resize handles. Keep full registries in their workspaces.
+- One widget has one clear goal and actual authorized data. Missing observations are unavailable/gaps, real zero gets an empty-activity state. Never fabricate health/credit scores, projections or positive results.
+- Keep native nodes, forms and values when reordering/resizing/hiding. Provide pointer and keyboard operations, recoverable removal, defaults and responsive stacking. Validate saved widget IDs/sizes against currently authorized widgets.
+- Store layout only, scoped to user/workspace and relevant authorization context. The source principal/branch fields are not FCMS bindings; map them explicitly. Never persist payloads, selections, financial values or permission decisions.
+- Choose bars for comparison and lines for trends, separate unrelated units, meaningful units/zero-based quantitative axes where appropriate. Retain categorical colors, labels/legends, keyboard point access and a readable data alternative independent of color. Inspect the source chart adapter's data assumptions before reuse; do not silently discard legitimate signed financial values.
+- Bounded scoped endpoints own data. Cancel obsolete work; stop hidden-page polling; prevent overlap; resize redraws cached data rather than refetching. Retain verified values with an explicit local refresh error/retry and accurate update time.
+- Widget dialogs follow FCMS workspace-only backdrop geometry, focus/scroll restoration and keyboard ownership, even where older source CSS differs.
+
+Check layout restoration after permission changes, native-control preservation, keyboard/pointer reordering and sizing, palette add/remove/reset, real zero/missing/error states, cancellation, responsive layout, both languages and reduced motion. Source/sample widgets do not establish live authorization correctness.

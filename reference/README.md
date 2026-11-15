@@ -15,6 +15,15 @@ Expand-Archive -LiteralPath reference/fcms-php-reference.zip -DestinationPath .v
 
 The PHP entrypoints are under `.verification/legacy-php/fcms/`. Inspect them as reference source; do not deploy this archive or run it against an operational database. Keep changes in the Spring modules unless the task explicitly requests a PHP change.
 
+On Linux/cloud, from the repository root:
+
+```bash
+(cd reference && sha256sum --check fcms-php-reference.zip.sha256)
+python3 -m zipfile -e reference/fcms-php-reference.zip .verification/legacy-php
+```
+
+The checksum check runs inside `reference/`, where its ZIP filename resolves. The [portable Microfinance UI skills and source components](microfinance-ui/README.md) are also included for agents without the original Windows checkout.
+
 Start with the root PHP files. `CODES/`, `CODE2/` and `images/` contain historical application copies and may differ from the canonical root workflows. They are retained for source comparison, with the same credential sanitization.
 
 ## Workflow map

@@ -1,0 +1,37 @@
+<%@ page pageEncoding="UTF-8" %>
+<sec:authorize var="dashboardCanCreate" access="principal.staffSession and !@access.isPlatformIdentity(principal) and @access.hasAny(principal, 'ACCOUNTING_BUSINESS_CREATE', 'ACCOUNTING_JOURNALS_CREATE')" />
+<c:if test="${dashboardCanCreate}">
+<section class="erp-panel dashboard-auto-widget" data-dashboard-widget="create-resources" data-widget-width="4" data-widget-height="240">
+    <div class="erp-panel-header"><h2 class="erp-panel-title"><spring:message code="voucher.createHub" /></h2></div>
+    <div class="erp-panel-body dashboard-create-vouchers">
+        <details class="dashboard-voucher-shortcut" data-dashboard-voucher-menu>
+            <summary class="app-btn btn-launch"><spring:message code="voucher.createHub" /><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="m4 6 4 5 4-5H4Z" /></svg></summary>
+            <div class="dashboard-voucher-choices">
+            <sec:authorize access="@access.has(principal, 'ACCOUNTING_BUSINESS_CREATE')">
+                <a href="<c:url value='/finance/vouchers/receipts/new' />"><spring:message code="voucher.create.RECEIPT" /></a>
+                <a href="<c:url value='/finance/vouchers/payments/new' />"><spring:message code="voucher.create.PAYMENT" /></a>
+            </sec:authorize>
+            <sec:authorize access="@access.has(principal, 'ACCOUNTING_JOURNALS_CREATE')"><a href="<c:url value='/finance/vouchers/journals/new' />"><spring:message code="voucher.create.JOURNAL" /></a></sec:authorize>
+            </div>
+        </details>
+    </div>
+</section>
+</c:if>
+<section class="erp-panel dashboard-auto-widget" data-dashboard-widget="pending-work" data-widget-width="4" data-widget-height="480" data-dashboard-work data-work-url="<c:url value='/api/dashboard/work' />" data-context-path="${pageContext.request.contextPath}">
+    <div class="erp-panel-header"><h2 class="erp-panel-title"><spring:message code="dashboard.work.title" /></h2></div>
+    <div class="erp-panel-body">
+        <div class="dashboard-work-tools"><span data-work-updated></span><button type="button" class="app-btn btn-neutral" data-work-refresh><spring:message code="common.refresh" /></button></div>
+        <div data-work-status role="status"></div>
+        <div class="dashboard-infolet-grid" data-work-cards></div>
+        <div class="dashboard-work-chart" data-work-chart></div>
+    </div>
+</section>
+<template data-work-labels>
+    <c:forTokens items="title,expand,collapse,filters,back,minimumDays,minimumAmount,apply,reset,open,oldest,days,all,empty,updated,chart,queue.loan-groups,queue.disbursement,voucher.INCOMPLETE,voucher.NOT_VALIDATED,voucher.ERROR,voucher.REQUIRED,voucher.INITIATED,voucher.READY,voucher.FAILED,voucher.REJECTED" delims="," var="workMessage">
+        <span data-key="dashboard.work.${workMessage}"><spring:message code="dashboard.work.${workMessage}" /></span>
+    </c:forTokens>
+    <c:forTokens items="SUBMITTED,READY_FOR_DISBURSEMENT" delims="," var="workStatus">
+        <span data-key="loan.status.${workStatus}"><spring:message code="loan.status.${workStatus}" /></span>
+    </c:forTokens>
+    <c:forTokens items="RECEIPT,PAYMENT,JOURNAL" delims="," var="workVoucher"><span data-key="voucher.title.${workVoucher}"><spring:message code="voucher.title.${workVoucher}" /></span></c:forTokens>
+</template>

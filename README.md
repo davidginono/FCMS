@@ -2,6 +2,8 @@
 
 This is the new Spring Boot migration workspace for the FCMS PHP/XAMPP project.
 
+Cloud agents can use the [repository-local skills and Microfinance UI reference](reference/microfinance-ui/README.md) without the original Windows folders. Read [AGENTS.md](AGENTS.md), then run `python3 scripts/verify-agent-references.py` to verify the bundled source, licenses and portable skill links. The [legacy PHP reference](reference/README.md) includes Linux/cloud extraction commands.
+
 The sanitized [legacy PHP source ZIP and workflow guide](reference/README.md) are included for agents and developers working from a fresh checkout.
 
 ## Stack

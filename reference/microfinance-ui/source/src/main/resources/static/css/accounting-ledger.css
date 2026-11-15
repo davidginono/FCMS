@@ -1,0 +1,50 @@
+.accounting-workspace{min-width:0;display:grid;gap:1rem}.accounting-form{min-width:0;background:white;border:1px solid #d7dde3;border-radius:4px;padding:1rem}.accounting-form form{display:grid;gap:.8rem}.accounting-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:.8rem}.accounting-form label{display:grid;gap:.35rem;min-width:0}.accounting-form .aws-control{width:100%;min-width:0}.accounting-actions{display:flex;gap:.5rem;flex-wrap:wrap;padding:.5rem 0}.accounting-workspace p{overflow-wrap:anywhere}.accounting-form .app-btn{justify-self:start}
+
+/* Chart onboarding follows the shared compact ERP shell. */
+.accounting-servicing-workspace .app-btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.accounting-servicing-workspace .accounting-servicing-confirm{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;gap:.5rem}
+.accounting-servicing-workspace .accounting-servicing-confirm input{width:auto;justify-self:start;margin-top:.2rem}
+.aws-console .accounting-form {border-color:#d5dbdb;border-radius:0;box-shadow:0 1px 1px #879596;}
+.aws-console .accounting-create-card>h2 {background:#fafafa;border-bottom:1px solid #eaeded;padding:16px 20px;font-size:16px;line-height:24px;}
+.aws-console .accounting-create-card>form {padding:20px;gap:24px;}
+.aws-console .accounting-create-workspace {max-width:960px;gap:20px;}
+.aws-console .accounting-create-workspace .accounting-form-section {gap:16px;}
+.aws-console .accounting-create-workspace .accounting-grid:not(.library-rule) {grid-template-columns:minmax(0,1fr);max-width:728px;gap:16px;}
+.aws-console .accounting-form :is(.aws-control,.neo-select-button) {border:1px solid #aab7b8;border-radius:2px;box-shadow:none;background-color:white;min-height:32px;}
+.aws-console .accounting-form-section>legend {font-size:16px;font-weight:700;}
+.coa-titlebar{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:.75rem 1rem}
+.coa-titlebar h2{margin:0}.coa-filters{padding:.75rem 1rem;align-items:flex-end}.coa-filters label{display:grid;gap:.35rem;min-width:0}.coa-filters .aws-control{width:100%;min-width:0}
+.coa-parent-picker{min-width:0}.coa-parent-picker summary{cursor:pointer;padding:.5rem 0;font-weight:600}.coa-parent-picker .erp-table-wrap{margin-top:.5rem}
+.coa-description{display:block;color:#52606d;overflow-wrap:anywhere}.coa-wide{grid-column:1/-1}.coa-location{padding:.6rem 0;border-bottom:1px solid #d7dde3}
+.coa-error{color:#a12622;overflow-wrap:anywhere}.coa-success{color:#166534}.accounting-grid small{color:#52606d}.coa-filters input,.coa-filters select{max-width:100%}
+@media(max-width:767px){.coa-filters>label,.coa-filters>.erp-table-toolbar__actions{flex:1 1 100%}.coa-titlebar{align-items:flex-start}.accounting-grid{grid-template-columns:minmax(0,1fr)}}
+.library-rule{display:flex;flex-flow:row wrap;gap:16px;padding:20px 0;border-bottom:1px solid #d7dde3;align-items:end}.library-rule>label{flex:1 1 12rem;min-width:0}.library-rule .library-remove{align-self:end}.library-rule+.library-rule{margin-top:.5rem}
+.library-modal[hidden]{display:none!important}.library-modal-form{display:grid}.library-modal-form label{display:grid;gap:.35rem;min-width:0}.library-modal-form .aws-control{width:100%;min-width:0}.library-modal .app-modal-header{align-items:center}.library-modal .app-modal-header h2{margin:0}.library-modal .app-modal-actions .app-btn{min-width:0;padding:.45rem .75rem}.library-account-section{min-width:0;border:1px solid #d7dde3;padding:.75rem}.library-account-section p{margin:.25rem 0}.library-modal-form small{color:#52606d}.library-modal p{overflow-wrap:anywhere}.library-modal .app-modal-scroll{overscroll-behavior:contain}.library-lookup-status:empty{display:none}
+.library-template-filters .neo-select{min-width:0;width:100%;max-width:100%}
+
+/* Cloudscape resource patterns expressed through the existing JSP controls. */
+.accounting-create-workspace{max-width:960px;gap:1rem}.accounting-create-workspace>p{margin:0}
+.accounting-create-card{padding:0}.accounting-create-card>h2{margin:0;padding:.85rem 1rem;border-bottom:1px solid #d7dde3;font-size:1rem}
+.accounting-create-card>form{padding:1rem;gap:1.25rem}.accounting-create-workspace .accounting-grid,.library-modal-form>.accounting-form-section>.accounting-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+.accounting-form-section{margin:0;padding:0;border:0;min-width:0;display:grid;gap:.75rem}.accounting-form-section legend{float:left;width:100%;padding:0;margin:0 0 .75rem;font-weight:600}.accounting-form-section>p{margin:0;color:#52606d;font-size:.85rem}
+.accounting-create-form .aws-control,.accounting-create-form .neo-select,.coa-filters .neo-select{width:100%;max-width:100%;min-width:0}
+.accounting-create-form label{align-content:start;gap:.4rem}.accounting-create-form .coa-error{font-size:.85rem}.accounting-create-form [aria-invalid="true"]{border-color:#a12622}
+.accounting-additional{min-width:0;border-top:1px solid #d7dde3;padding-top:.75rem}.accounting-additional summary{font-weight:600;cursor:pointer;padding:.25rem 0}.accounting-additional>label{margin-top:.75rem}
+.accounting-form-actions{justify-content:flex-end;border-top:1px solid #d7dde3;padding:.85rem 0 0;margin:0}
+.accounting-context{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:1rem;padding:1rem;margin:0;border-bottom:1px solid #d7dde3}.accounting-context dt{font-size:.85rem;color:#52606d;margin-bottom:.35rem}.accounting-context dd{margin:0;overflow-wrap:anywhere}
+.accounting-create-workspace .coa-parent-picker{background:#fff;border:1px solid #d7dde3;border-radius:4px;padding:.5rem 1rem}.accounting-create-workspace .coa-parent-picker .erp-table-wrap{border:0;margin:0}.accounting-create-workspace .coa-parent-picker .coa-filters{padding:.75rem 0}
+.accounting-error-summary:empty{display:none}.accounting-error-summary:has(.coa-error),.accounting-resource-workspace>.coa-error{padding:.75rem 1rem;border:1px solid #a12622;border-radius:4px;background:#fff7f6}.accounting-error-summary p{margin:.25rem 0}
+.accounting-resource-workspace>.coa-success,.library-modal .coa-success{padding:.75rem 1rem;border:1px solid #6c9d78;border-radius:4px;background:#f4fbf5}
+.accounting-resource-workspace>.coa-success,.accounting-resource-workspace>.coa-error,.accounting-definition-note{margin:0}.accounting-empty{padding:1.5rem 1rem;text-align:center;color:#52606d}.accounting-definition-note{font-size:.85rem;color:#52606d}
+.accounting-filter-section .coa-filters{border-bottom:0}.accounting-resource-workspace .coa-titlebar .accounting-actions{padding:0}
+.library-modal .app-modal-header{padding:1rem;border-bottom:1px solid #d7dde3}.library-modal .app-modal-body{padding:1rem}.library-modal-form{gap:1.25rem}.library-modal-form .library-account-section{border-top:1px solid #d7dde3;padding-top:1rem}.library-modal-form .app-modal-actions{position:sticky;bottom:-1rem;background:#fff;padding:.75rem 0;border-top:1px solid #d7dde3;z-index:7}.library-modal-form .library-rule{align-items:end}
+.accounting-discard{z-index:10000}.accounting-discard[hidden]{display:none!important}.accounting-discard .app-modal-header{padding:1rem}.accounting-discard .app-modal-body{padding:0 1rem 1rem}
+.library-modal #library-add-rule{justify-self:start}.library-modal .app-modal-close i:empty::before,.accounting-discard .app-modal-close i:empty::before{content:"×";font-size:1.5rem;font-style:normal;line-height:1}
+
+:is(#coa-register,#library-register) button:disabled{opacity:.45;cursor:not-allowed}
+:is(#coa-register,#library-register) .coa-selection-cell{width:40px;text-align:center;padding:.5rem}:is(#coa-register,#library-register) .coa-selection-cell input{width:18px;height:18px;accent-color:#0073bb;cursor:pointer}:is(#coa-register,#library-register) :is([data-coa-row],[data-library-row]){cursor:pointer}:is(#coa-register,#library-register) .coa-selection-cell input:focus-visible{outline:2px solid #0073bb;outline-offset:3px}.accounting-empty .app-btn{display:table;margin:.75rem auto 0}
+@media(max-width:767px){.accounting-create-workspace .accounting-grid,.library-modal-form>.accounting-form-section>.accounting-grid{grid-template-columns:minmax(0,1fr)}.accounting-form-actions .app-btn{min-width:0}.accounting-create-card>form{padding:.85rem}.accounting-context{grid-template-columns:minmax(0,1fr)}}
+#coa-register .coa-tree-code{display:flex;align-items:center;gap:.35rem;padding-left:calc(min(var(--coa-depth,0),16)*1rem);white-space:nowrap}#coa-register .coa-tree-toggle{width:28px;height:28px;flex:0 0 28px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+#coa-register .coa-tree-toggle > .console-icon{width:12px;height:12px;flex:0 0 12px}
+#coa-register .coa-tree-toggle[aria-expanded="true"] > .console-icon{transform:rotate(90deg)}
+#coa-register [data-heading="false"] .coa-tree-code{padding-left:calc(min(var(--coa-depth,0),16)*1rem + 28px + .35rem)}#coa-register .coa-tree-message{padding:.75rem 1rem;color:#5f6b78}#coa-register .coa-tree-message .app-btn{margin-left:.75rem}#coa-register tr[hidden]{display:none!important}

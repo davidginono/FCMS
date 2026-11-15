@@ -1,0 +1,58 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<spring:htmlEscape defaultHtmlEscape="true" />
+<%@ include file="../fragments/header.jspf" %>
+<%@ include file="../fragments/sidebar.jspf" %>
+<link rel="stylesheet" href="<c:url value='/css/accounting-ledger.css' />" />
+<c:if test="${not empty selectedGroup}">
+    <nav class="erp-page-path" aria-label="<spring:message code='common.breadcrumb' />">
+        <a class="erp-page-path__item erp-page-path__link" href="<c:url value='/finance/accounts' />"><spring:message code="coa.registry" /></a>
+        <c:forEach items="${groupPath}" var="g" varStatus="pathStatus">
+            <span aria-hidden="true">›</span>
+            <c:choose>
+                <c:when test="${pathStatus.last}"><span class="erp-page-path__item" aria-current="page"><c:out value="${g.code}" /></span></c:when>
+                <c:otherwise><c:url value="/finance/accounts" var="groupUrl"><c:param name="parentId" value="${g.id}" /></c:url><a class="erp-page-path__item erp-page-path__link" href="<c:out value='${groupUrl}' />"><c:out value="${g.code}" /></a></c:otherwise>
+            </c:choose>
+        </c:forEach>
+    </nav>
+</c:if>
+<div class="accounting-workspace accounting-resource-workspace">
+    <c:if test="${not empty accountingError}"><p class="coa-error" role="alert"><spring:message code="${accountingError}" /></p></c:if>
+    <c:if test="${not empty accountingSuccess}"><p class="coa-success" role="status"><spring:message code="${accountingSuccess}" /></p></c:if>
+    <section data-resource-table="accounting-accounts-1" data-table-selection="single" data-resource-split data-table-page-size="${tablePageSize}" class="erp-table-wrap" data-aws-table-region id="coa-register" data-children-url="<c:url value='/finance/accounts/children' />" data-expand="<spring:message code='coa.expand' />" data-collapse="<spring:message code='coa.collapse' />" data-loading="<spring:message code='coa.loadingChildren' />" data-error="<spring:message code='coa.childrenError' />" data-empty-children="<spring:message code='coa.emptyChildren' />" data-retry="<spring:message code='coa.retryChildren' />">
+        <div class="app-table-titlebar coa-titlebar">
+            <h2 data-workspace-title><spring:message code="coa.registry" /></h2>
+                <div class="accounting-actions">
+                    <sec:authorize access="@access.has(principal, 'ACCOUNTING_ACCOUNTS_UPDATE')"><form method="get" data-table-command id="coa-status-form" data-url="<c:url value='/finance/accounts/' />"><input type="hidden" name="operation" value="DEACTIVATE" /><button type="submit" class="app-btn btn-neutral" id="coa-status" disabled data-deactivate="<spring:message code='accounting.deactivate' />" data-reactivate="<spring:message code='coa.reactivate' />"><spring:message code="accounting.deactivate" /></button></form><button type="button" data-table-command class="app-btn btn-neutral" id="coa-new-version" data-url="<c:url value='/finance/accounts/' />" disabled><spring:message code="coav.newVersion" /></button></sec:authorize>
+                    <button type="button" class="app-btn btn-neutral" data-table-command id="coa-history" data-url="<c:url value='/finance/accounts/' />" disabled><spring:message code="coav.history" /></button>
+                    <button type="button" class="app-btn btn-neutral" data-table-command id="coa-view" data-groups-label="<spring:message code='coa.viewSubgroups' />" data-accounts-label="<spring:message code='coa.viewAccounts' />" disabled><spring:message code="coa.viewSubgroups" /></button>
+                    <sec:authorize access="@access.has(principal, 'ACCOUNTING_ACCOUNTS_CREATE')">
+                    <button type="button" class="app-btn btn-launch" id="coa-create" data-group-url="<c:url value='/finance/accounts/groups/new' />" data-account-url="<c:url value='/finance/accounts/posting/new' />" data-group-label="<spring:message code='coa.addGroup' />" data-account-label="<spring:message code='coa.newAccount' />" data-empty-label="<spring:message code='coa.addGroup' />" disabled><spring:message code="coa.addGroup" /></button>
+                    </sec:authorize>
+                </div>
+        </div>
+        <form method="get" action="<c:url value='/finance/accounts' />" class="erp-table-toolbar coa-filters">
+            <input type="hidden" name="sort" value="<c:out value='${sort}' />" /><input type="hidden" name="direction" value="<c:out value='${direction}' />" />
+            <c:if test="${not empty selectedGroup}"><label class="erp-table-toolbar__control"><spring:message code="coa.parentGroup" /><select class="aws-control" name="parentId"><option value=""><spring:message code="coa.allAccounts" /></option><option value="${selectedGroup.id}" selected><c:out value="${pageContext.response.locale.language=='sw' and not empty selectedGroup.nameSw?selectedGroup.nameSw:selectedGroup.name}" /></option></select></label></c:if>
+            <label class="erp-table-toolbar__search"><spring:message code="coa.search" /><input class="aws-control" name="search" value="<c:out value='${filter.search}' />" maxlength="100" /></label>
+            <label class="erp-table-toolbar__control"><spring:message code="accounting.type" /><select class="aws-control" name="type"><option value=""><spring:message code="coa.all" /></option><c:forEach items="${accountTypes}" var="t"><option value="${t}" ${filter.type==t?'selected':''}><spring:message code="accounting.option.${t}" /></option></c:forEach></select></label>
+            <label class="erp-table-toolbar__control"><spring:message code="accounting.kind" /><select class="aws-control" name="kind"><option value=""><spring:message code="coa.all" /></option><c:forEach items="${accountKinds}" var="k"><option value="${k}" ${filter.kind==k?'selected':''}><c:choose><c:when test="${k=='HEADING'}"><spring:message code="coa.group" /></c:when><c:otherwise><spring:message code="accounting.option.${k}" /></c:otherwise></c:choose></option></c:forEach></select></label>
+            <label class="erp-table-toolbar__control"><spring:message code="coa.status" /><select class="aws-control" name="state"><option value=""><spring:message code="coa.all" /></option><option value="ACTIVE" ${filter.state=='ACTIVE'?'selected':''}><spring:message code="accounting.active.true" /></option><option value="INACTIVE" ${filter.state=='INACTIVE'?'selected':''}><spring:message code="accounting.active.false" /></option></select></label>
+            <div class="erp-table-toolbar__actions"><button class="app-btn btn-neutral"><spring:message code="coa.filter" /></button><a class="app-btn btn-neutral" href="<c:url value='/finance/accounts' />"><spring:message code="coa.clear" /></a></div>
+        </form>
+        <p class="sr-only" id="coa-selection-status" role="status" data-empty="<spring:message code='coa.selectHint' />" data-selected="<spring:message code='coa.selected' />"><spring:message code="coa.selectHint" /></p>
+        <div class="erp-table-scroll" data-view-position-key="gl-accounts-${filter.parentId}"><table class="erp-table">
+            <thead><tr><th class="coa-selection-cell"><span class="sr-only"><spring:message code="coa.select" /></span></th><th data-table-sort-key="code" data-table-sort-asc="asc" data-table-sort-desc="desc"><spring:message code="accounting.code" /></th><th data-table-sort-key="name" data-table-sort-asc="asc" data-table-sort-desc="desc"><spring:message code="accounting.name" /></th><th data-table-sort-key="parent" data-table-sort-asc="asc" data-table-sort-desc="desc"><spring:message code="coa.parentGroup" /></th><th data-table-sort-key="type" data-table-sort-asc="asc" data-table-sort-desc="desc"><spring:message code="accounting.type" /></th><th data-table-sort-key="kind" data-table-sort-asc="asc" data-table-sort-desc="desc"><spring:message code="accounting.kind" /></th><th data-table-sort-key="normalBalance" data-table-sort-asc="asc" data-table-sort-desc="desc"><spring:message code="accounting.normalBalance" /></th><th data-table-sort-key="status" data-table-sort-asc="asc" data-table-sort-desc="desc"><spring:message code="coa.status" /></th></tr></thead>
+            <tbody><%@ include file="account-rows.jsp" %><c:if test="${empty accounts.rows}"><tr><td colspan="8"><div class="accounting-empty"><spring:message code="${not empty filter.search or not empty filter.type or not empty filter.kind or not empty filter.state?'coa.noMatches':not empty selectedGroup?'coa.emptyChildren':'coa.empty'}" /><c:if test="${not empty selectedGroup and selectedGroup.active and empty filter.search and empty filter.type and empty filter.kind and empty filter.state}"><sec:authorize access="@access.has(principal, 'ACCOUNTING_ACCOUNTS_CREATE')"><c:if test="${selectedGroup.code.matches('[1-5][0-9]0000') or selectedGroup.code.matches('[1-5][1-9][1-9]000')}"><c:url value="${selectedGroup.code.matches('[1-5][0-9]0000')?'/finance/accounts/groups/new':'/finance/accounts/posting/new'}" var="emptyCreate"><c:param name="parentId" value="${selectedGroup.id}" /></c:url><a class="app-btn btn-neutral" href="<c:out value='${emptyCreate}' />"><spring:message code="${selectedGroup.code.matches('[1-5][0-9]0000')?'coa.addGroup':'coa.newAccount'}" /></a></c:if></sec:authorize></c:if></div></td></tr></c:if></tbody>
+        </table></div>
+        <div data-table-pagination data-page="${accounts.page}" data-table-for="accounting-accounts-1" class="erp-table-footer accounting-actions">
+            <c:if test="${accounts.page>0}"><c:url value="/finance/accounts" var="previous"><c:param name="page" value="${accounts.page-1}" /><c:param name="search" value="${filter.search}" /><c:param name="type" value="${filter.type}" /><c:param name="kind" value="${filter.kind}" /><c:param name="state" value="${filter.state}" /><c:param name="parentId" value="${filter.parentId}" /><c:param name="sort" value="${sort}" /><c:param name="direction" value="${direction}" /><c:param name="size" value="${tablePageSize}" /></c:url><a data-page-direction="previous" class="app-btn btn-neutral" href="<c:out value='${previous}' />"><spring:message code="common.previous" /></a></c:if>
+            <span><spring:message code="coa.page" arguments="${accounts.page+1}" /></span>
+            <c:if test="${accounts.hasNext}"><c:url value="/finance/accounts" var="next"><c:param name="page" value="${accounts.page+1}" /><c:param name="search" value="${filter.search}" /><c:param name="type" value="${filter.type}" /><c:param name="kind" value="${filter.kind}" /><c:param name="state" value="${filter.state}" /><c:param name="parentId" value="${filter.parentId}" /><c:param name="sort" value="${sort}" /><c:param name="direction" value="${direction}" /><c:param name="size" value="${tablePageSize}" /></c:url><a data-page-direction="next" class="app-btn btn-neutral" href="<c:out value='${next}' />"><spring:message code="common.next" /></a></c:if>
+        </div>
+    </section>
+</div>
+<script src="<c:url value='/js/accounting-accounts.js' />" defer></script>
+<%@ include file="../fragments/footer.jspf" %>

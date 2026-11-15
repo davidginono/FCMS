@@ -1,0 +1,153 @@
+(() => {
+    const register = document.getElementById('library-register');
+    if (register) {
+        const inputs = () => Array.from(register.querySelectorAll('input[name="library-selection"]'));
+        const view = document.getElementById('library-view'), status = document.getElementById('library-status');
+        const edit = document.getElementById('library-edit');
+        const statusForm = document.getElementById('library-status-form'), summary = document.getElementById('library-selection-status');
+        const selected = () => inputs().find(input => input.checked && !input.closest('tr').hidden)?.closest('[data-library-row]');
+        const update = () => {
+            const row = selected();
+            inputs().forEach(input => input.closest('tr').classList.toggle('coa-row-selected', input.checked));
+            view.disabled = !row;
+            if(edit)edit.disabled=!row || row.dataset.system==='true';
+            if (status) {
+                status.disabled = !row || row.dataset.system === 'true';
+                const action = row?.dataset.active === 'false' ? 'reactivate' : 'deactivate';
+                status.textContent = status.dataset[action];
+                if (row) statusForm.action = statusForm.dataset.url + row.dataset.id + '/' + action;
+                else statusForm.removeAttribute('action');
+            }
+            summary.textContent = row ? summary.dataset.selected + ' ' + row.querySelector('[data-library-code]').textContent.trim() + ' · ' + row.querySelector('[data-library-name]').firstChild.textContent.trim() : summary.dataset.empty;
+        };
+        register.addEventListener('change', event => {
+            const input=event.target;if(!input.matches('input[name="library-selection"]'))return;
+            if(input.checked)inputs().forEach(other=>{if(other!==input)other.checked=false;});update();
+        });
+        register.addEventListener('click', event => {
+            if(event.target.closest('a,button,input,label'))return;
+            const row=event.target.closest('[data-library-row]');if(!row)return;
+            const input=row.querySelector('input[name="library-selection"]'),checked=!input.checked;
+            inputs().forEach(other=>other.checked=false);input.checked=checked;input.focus();update();
+        });
+        view.addEventListener('click', () => {
+            const row = selected(); if (!row || view.disabled) return;
+            window.WorkspaceNavigation.navigate(row.dataset.url);
+        });
+        edit?.addEventListener('click',()=>{
+            const row=selected();if(!row || edit.disabled)return;
+            window.WorkspaceNavigation.navigate(edit.dataset.url+encodeURIComponent(row.dataset.id)+'/edit');
+        });
+        statusForm?.addEventListener('submit', event => { if (!selected() || status.disabled) event.preventDefault(); else status.disabled = true; });
+        const reset = () => { inputs().forEach(input => input.checked = false); update(); };
+        window.addEventListener('pageshow', reset);
+        register.addEventListener('resource-table:reset',reset);
+        register.addEventListener('resource-table:updated',reset);
+        reset();
+    }
+    const modal = document.getElementById('library-create-modal');
+    if (modal) {
+        document.body.appendChild(modal);
+        const panel = modal.querySelector('[role="dialog"]');
+        const triggers = document.querySelectorAll('[data-library-open]');
+        let previousFocus;
+        let previousOverflow;
+        let previousRootOverflow;
+        let submitting = false;
+        const focusable = () => Array.from(panel.querySelectorAll('button:not([disabled]), input:not([type="hidden"]), textarea, select, a[href], [tabindex="0"]')).filter(el => el.getClientRects().length);
+        const open = () => {
+            previousFocus = document.activeElement; previousOverflow = document.body.style.overflow; previousRootOverflow = document.documentElement.style.overflow;
+            modal.hidden = false; modal.classList.add('is-open'); document.body.style.overflow = 'hidden'; document.documentElement.style.overflow = 'hidden';
+            (panel.querySelector('.coa-error') ? panel : panel.querySelector('input:not([type="hidden"])') || focusable()[0] || panel).focus();
+        };
+        const close = (discard = false) => {
+            if (submitting) return;
+            if (!discard && !document.dispatchEvent(new CustomEvent('accounting:before-close', {cancelable:true, detail:{close:() => close(true)}}))) return;
+            modal.classList.remove('is-open'); modal.hidden = true; document.body.style.overflow = previousOverflow || ''; document.documentElement.style.overflow = previousRootOverflow || '';
+            (previousFocus?.isConnected && previousFocus !== document.body ? previousFocus : triggers[0])?.focus();
+            const url = new URL(location.href); url.searchParams.delete('create');
+            if (modal.dataset.created === 'true') window.WorkspaceNavigation.navigate(url.href,{replace:true,force:true});
+            else history.replaceState(null, '', url.href);
+        };
+        triggers.forEach(button => button.addEventListener('click', open));
+        modal.querySelectorAll('[data-library-close]').forEach(button => button.addEventListener('click', () => close()));
+        modal.addEventListener('keydown', event => {
+            if (event.key === 'Escape') { event.preventDefault(); close(); }
+            if (event.key === 'Tab') {
+                const controls = focusable(), first = controls[0], last = controls.at(-1);
+                if (!first) { event.preventDefault(); panel.focus(); }
+                else if (event.shiftKey && (document.activeElement === first || document.activeElement === panel)) { event.preventDefault(); last.focus(); }
+                else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+            }
+        });
+        modal.querySelector('form')?.addEventListener('submit', event => {
+            if (submitting) { event.preventDefault(); return; }
+            submitting = true; modal.querySelectorAll('button').forEach(button => button.disabled = true);
+        });
+        window.addEventListener('pageshow', () => { submitting = false; modal.querySelectorAll('button').forEach(button => button.disabled = false); renumber(); });
+        if (modal.dataset.autoOpen === 'true') open();
+    }
+    // Search suggestions without navigating away or losing entered form values.
+    const lookups = new Map(), bound = new WeakSet();
+    function bindLookup(input) {
+        if (!input.matches('[data-library-lookup]') || bound.has(input)) return;
+        bound.add(input);
+        const key = input.getAttribute('list');
+        const loadingHost=input.parentElement;
+        const invalidate = () => {
+            lookups.get(key)?.abort(); lookups.delete(key);
+            window.AppLoading?.end(loadingHost);
+        };
+        const binding = window.AppSearch.bind(input, async () => {
+            const controller = new AbortController(); lookups.set(key, controller);
+            window.AppLoading?.begin(loadingHost,{table:false});
+            const status = input.closest('form')?.querySelector('.library-lookup-status');
+            try {
+                const url = new URL(input.dataset.libraryLookup, location.href); url.searchParams.set('search', input.value);
+                const response = await fetch(url, {headers: {'Accept':'application/json'}, signal:controller.signal, cache:'no-store'});
+                if (!response.ok) throw new Error('Lookup unavailable');
+                const choices = await response.json(), list = document.getElementById(key);
+                if (lookups.get(key) !== controller || controller.signal.aborted || !input.isConnected) return;
+                list.replaceChildren(...choices.map(choice => {const option=document.createElement('option'); option.value=choice.code; option.textContent=choice.name; return option;}));
+                if (status) status.textContent = '';
+            } catch (error) {
+                if (lookups.get(key) === controller && error.name !== 'AbortError') {if (status) status.textContent = status.dataset.lookupFailure; binding.cancel();}
+            } finally {if(lookups.get(key)===controller)window.AppLoading?.end(loadingHost);}
+        }, invalidate);
+    }
+    document.querySelectorAll('[data-library-lookup]').forEach(bindLookup);
+    document.addEventListener('focusin', event => {if (event.target instanceof HTMLInputElement) bindLookup(event.target);});
+    const list = document.getElementById('library-rule-list');
+    const add = document.getElementById('library-add-rule');
+    const renumber = () => {
+        if (!list || !add) return;
+        const rows = list.querySelectorAll('.library-rule');
+        rows.forEach((row, index) => row.querySelectorAll('[name]').forEach(control => {
+            control.name = control.name.replace(/rules\[\d+\]/, `rules[${index}]`);
+            if (control.id) control.id = control.id.replace(/rules\d+/, `rules${index}`);
+        }));
+        rows.forEach(row => row.querySelector('.library-remove').disabled = rows.length === 1);
+        add.disabled = rows.length >= 5;
+    };
+    if (!list || !add) return;
+    add.addEventListener('click', () => {
+        if (list.children.length >= 5) return;
+        const row = list.firstElementChild.cloneNode(true);
+        const select = row.querySelector('select');
+        const enhancedWrapper = select.closest('.neo-select');
+        if (enhancedWrapper) enhancedWrapper.replaceWith(select);
+        select.removeAttribute('data-neo-enhanced');
+        select.classList.remove('neo-select-native');
+        row.querySelectorAll('.coa-error').forEach(error => error.remove());
+        row.querySelectorAll('[aria-invalid],[aria-describedby]').forEach(control => { control.removeAttribute('aria-invalid'); control.removeAttribute('aria-describedby'); });
+        row.querySelectorAll('input').forEach(input => input.value = '');
+        select.selectedIndex = 0;
+        list.appendChild(row); renumber();
+        requestAnimationFrame(() => (row.querySelector('.neo-select-button') || select).focus());
+    });
+    list.addEventListener('click', event => {
+        const button = event.target.closest('.library-remove');
+        if (button && list.children.length > 1) {button.closest('.library-rule').remove(); renumber(); add.focus();}
+    });
+    renumber();
+})();

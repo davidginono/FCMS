@@ -1,0 +1,23 @@
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
+<c:if test="${not empty successMessageCode}">
+    <spring:message code="${successMessageCode}" var="message" />
+</c:if>
+<c:if test="${not empty error and fn:startsWith(error, 'staffClient.')}">
+    <spring:message code="${error}" text="${error}" var="error" />
+</c:if>
+<sec:authorize access="@authz.platformAdminIdentity(principal)" var="platformFormFeedback" />
+<div class="workspace-flashbar" data-workspace-flashbar></div>
+<c:if test="${not suppressToastMessages}">
+    <c:if test="${not empty message}">
+        <div hidden data-toast-message="${fn:escapeXml(message)}" data-toast-type="success" data-toast-placement="workspace"></div>
+    </c:if>
+    <c:if test="${not empty infoMessage}"><div hidden data-toast-message="${fn:escapeXml(infoMessage)}" data-toast-type="info" data-toast-placement="workspace"></div></c:if>
+    <c:if test="${not empty error}">
+        <c:choose>
+            <c:when test="${platformFormFeedback}"><div class="console-message" data-message-type="error" data-workspace-response-error role="alert" tabindex="-1"><c:out value="${error}" /></div></c:when>
+            <c:otherwise><div hidden data-toast-message="${fn:escapeXml(error)}" data-toast-type="error"></div></c:otherwise>
+        </c:choose>
+    </c:if>
+</c:if>

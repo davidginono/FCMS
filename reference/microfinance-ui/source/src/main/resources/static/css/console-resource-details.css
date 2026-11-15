@@ -1,0 +1,141 @@
+/* Classic AWS reference: shared resource facts, breadcrumb group, statuses and tabs. */
+.aws-console {--sacco-font-family:"Amazon Ember","Helvetica Neue",Arial,sans-serif;--aws-blue:#0073bb;}
+.aws-console :is(.erp-page-path,.erp-breadcrumb) {text-transform:none!important;letter-spacing:normal!important;font-size:14px!important;line-height:20px!important;font-weight:400!important;}
+.aws-console .erp-page-path {position:sticky!important;top:var(--shell-breadcrumb-top,var(--shell-nav-height))!important;min-height:36px;gap:8px 12px;padding:8px 0!important;margin:0!important;background:var(--sacco-canvas,#f2f3f3);z-index:37;}
+/* Cover the workspace gutters up to either sidebar edge without moving the breadcrumb text. */
+.aws-console .shell-main > .erp-page-path::before {content:"";position:absolute;inset:0 calc(-1 * var(--shell-workspace-inset,12px));z-index:-1;background:inherit;pointer-events:none;}
+.aws-console .erp-page-path [aria-current=page] {color:#687078!important;font-weight:700;}
+.aws-console .erp-page-path__separator {display:inline-flex;align-items:center;color:#687078;flex:none;}
+.aws-console .erp-page-path a[href],.aws-console .erp-page-path a[href]:visited {color:#0073bb!important;font-weight:400;}
+.console-icon {display:inline-block;width:16px;height:16px;flex:0 0 16px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-3px;}
+.console-icon .stroke-linejoin-round {stroke-linejoin:round;}
+.console-icon .filled {fill:currentColor;}
+.console-icon .no-stroke {stroke:none;}
+.aws-console :is(.erp-detail-facts,.resource-split-values,.voucher-metadata) dt {font-size:14px!important;font-weight:400!important;line-height:20px;color:#545b64!important;margin:0 0 4px;}
+.aws-console :is(.erp-detail-facts,.resource-split-values,.voucher-metadata) dd {font-size:14px!important;line-height:20px;font-weight:400;min-width:0;color:#16191f;white-space:normal;}
+.aws-console :is(.erp-detail-facts,.resource-split-values,.voucher-metadata) dd:has(>.console-copy) {display:flex;align-items:flex-start;gap:8px;}
+.console-detail-value {min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;}
+.aws-console button.console-copy {display:inline-flex;align-items:center;justify-content:center;flex:0 0 16px;width:16px;height:20px;padding:0;border:0;background:transparent;color:#16191f;cursor:pointer;}
+.aws-console button.console-copy:hover {color:#0073bb;}
+.aws-console .console-copy:focus-visible,.aws-console .console-resource-link:focus-visible {outline:2px solid #0073bb;outline-offset:3px;}
+.aws-console :is(.console-resource-link,.erp-detail-facts a[href],.resource-split-values a[href],.accounting-section a.resource-table-id-link) {color:#0073bb!important;text-decoration:none;}
+.aws-console :is(.console-resource-link,.erp-detail-facts a[href],.resource-split-values a[href],.accounting-section a.resource-table-id-link):is(:hover,:focus-visible) {color:#0a4a74!important;text-decoration:underline;}
+.console-resource-link>.console-icon,a>.console-external-icon {margin-left:4px;}
+.aws-console .console-status,.aws-console .console-status-host {border:0!important;border-radius:0!important;background:transparent!important;padding:0!important;box-shadow:none!important;text-transform:none!important;letter-spacing:normal!important;font-size:inherit!important;line-height:20px!important;font-weight:400!important;}
+.aws-console .console-status {display:inline-flex!important;align-items:center;gap:4px;max-width:100%;vertical-align:middle;white-space:normal;}
+.aws-console [data-resource-table]:not(.resource-table-wrap-lines) .erp-table .console-status {max-width:none;white-space:nowrap;}
+.aws-console .console-status-host {display:inline!important;}
+.aws-console .console-status[data-status-type=success] {color:#1d8102!important;}
+.aws-console .console-status[data-status-type=error] {color:#d13212!important;}
+.aws-console .console-status[data-status-type=warning] {color:#906806!important;}
+.aws-console .console-status[data-status-type=info] {color:#0073bb!important;}
+.aws-console .console-status:is([data-status-type=pending],[data-status-type=stopped],[data-status-type=in-progress]) {color:#545b64!important;}
+.aws-console .console-detail-tabs {display:flex;flex-wrap:wrap;align-items:stretch;min-width:0;max-width:100%;border-bottom:1px solid #aab7b8;margin:28px 0 16px;padding:0;background:transparent;}
+.aws-console .console-detail-tabs>[role=tab] {position:relative;flex:0 1 auto;min-width:0;max-width:100%;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;padding:12px 20px 14px;color:#545b64;font-family:inherit;font-size:14px;line-height:20px;font-weight:700;white-space:normal;overflow-wrap:anywhere;cursor:pointer;}
+.aws-console .console-detail-tabs>[role=tab]:not(:last-child)::after {content:"";position:absolute;right:0;top:8px;bottom:10px;border-right:1px solid #d5dbdb;}
+.aws-console .console-detail-tabs>[role=tab][aria-selected=true] {border-bottom-color:#16191f;color:#0073bb;}
+.aws-console .console-detail-tabs>[role=tab]:hover {color:#0073bb;}
+.aws-console .console-detail-tabs>[role=tab]:focus-visible {outline:2px solid #0073bb;outline-offset:-4px;}
+.console-detail-panels {min-width:0;}
+.console-detail-panels>[role=tabpanel][hidden] {display:none!important;}
+.console-detail-panels>[role=tabpanel] {margin-top:0!important;}
+.console-detail-panels>[role=tabpanel]:focus-visible {outline:2px solid #0073bb;outline-offset:3px;}
+.aws-console .console-detail-tabs > a[role=tab] {text-decoration:none;}
+.aws-console .institution-details-controls {display:flex;flex-flow:row wrap;align-items:flex-end;gap:8px;min-width:0;}
+.institution-details-controls > label {display:grid;gap:6px;flex:0 1 320px;min-width:0;max-width:100%;}
+.institution-details-controls > .app-btn {flex:none;}
+.institution-details-controls .aws-control {width:100%;min-width:0;}
+.aws-console [data-institution-details] .erp-panel-body {padding:20px!important;}
+.aws-console [data-institution-details] .resource-table-filters > label[data-institution-page-size] {flex:0 0 80px!important;}
+@media(max-width:767px) {.aws-console [data-institution-details] .erp-panel-body {padding:16px!important;}}
+#institution-section {position:relative;min-width:0;}
+#institution-section:focus-visible {outline:2px solid #0073bb;outline-offset:3px;}
+#institution-section[aria-busy=true] > :not(.institution-section-status) {visibility:hidden;}
+#institution-section[aria-busy=true] > .institution-section-status {position:absolute;inset:0;padding:20px;}
+.aws-console .console-prerequisite {display:flex;align-items:flex-start;gap:12px;min-width:0;margin:16px 0;padding:16px 20px;border:1px solid #906806;background:#fffce9;border-radius:var(--sacco-container-radius,0px);box-shadow:none;color:#16191f;}
+.console-prerequisite>.console-icon {color:#906806;margin-top:2px;}
+.console-prerequisite-body {flex:1;min-width:0;}
+.console-prerequisite h2 {margin:0 0 4px;font-size:14px;line-height:20px;font-weight:700;}
+.console-prerequisite p {margin:0;font-size:14px;line-height:20px;}
+.console-prerequisite form {flex:none;margin:0;}
+@media(max-width:767px) {.aws-console .console-prerequisite {flex-wrap:wrap;padding:16px;}.console-prerequisite-body {flex-basis:calc(100% - 28px);}.console-prerequisite form {margin-left:28px;}.aws-console .console-detail-tabs>[role=tab] {padding-left:16px;padding-right:16px;}}
+@media print {.console-copy,.console-detail-tabs {display:none!important;}.console-detail-panels>[role=tabpanel][hidden] {display:block!important;}.console-detail-panels>[role=tabpanel] {margin-top:16px!important;}}
+
+.aws-console .resource-split-tabs>span {color:#0073bb;font-size:14px;line-height:20px;padding:12px 20px 14px;}
+.aws-console .resource-split-values {border:0;background:#fff;padding:0;}
+.aws-console .resource-split-values>div:nth-child(3n) {border-right:0;}
+@media(max-width:767px) {.aws-console .resource-split-values>div {border-right:0;padding:0;}}
+
+/* Existing finance workspaces already provide a 16px grid gap. */
+.aws-console :is(.accounting-workspace,.repayment-workspace)>.console-detail-tabs {margin:12px 0 0;}
+
+/* Cloudscape Alert presentation shared by authored and dynamically inserted messages. */
+:is(.aws-console, .aws-auth-shell) .console-message {
+    --message-color:#0972d3;
+    --message-background:#f2f8fd;
+    position:relative;
+    box-sizing:border-box;
+    min-width:0;
+    min-height:52px;
+    border:1px solid var(--message-color)!important;
+    border-radius:var(--sacco-container-radius,0px)!important;
+    padding:14px 16px 14px 46px!important;
+    background:var(--message-background)!important;
+    color:#0f141a!important;
+    font-size:14px!important;
+    line-height:22px!important;
+    overflow-wrap:anywhere;
+}
+:is(.aws-console, .aws-auth-shell) .console-message[data-message-type="success"] {--message-color:#037f0c;--message-background:#f2fcf3;}
+:is(.aws-console, .aws-auth-shell) .console-message[data-message-type="warning"] {--message-color:#8d6605;--message-background:#fffce9;}
+:is(.aws-console, .aws-auth-shell) .console-message[data-message-type="error"] {--message-color:#d13212;--message-background:#fff7f7;}
+:is(.aws-console, .aws-auth-shell) .console-message > .console-message-icon {position:absolute;top:16px;left:16px;width:20px;height:20px;color:var(--message-color);}
+:is(.aws-console, .aws-auth-shell) .console-message[hidden],:is(.aws-console, .aws-auth-shell) .console-message.hidden {display:none!important;}
+:is(.aws-console, .aws-auth-shell) .console-message a {color:#0972d3;}
+@media(max-width:600px) {:is(.aws-console, .aws-auth-shell) .console-message {padding:12px 12px 12px 40px!important;}:is(.aws-console, .aws-auth-shell) .console-message > .console-message-icon {left:12px;top:14px;width:18px;height:18px;}}
+
+.aws-console .workspace-navigation-feedback[role="alert"] {
+    min-height:44px;
+    padding-block:6px!important;
+}
+.aws-console .workspace-navigation-feedback[role="alert"] > span {flex:1 1 16rem;min-width:0;}
+.aws-console .workspace-navigation-actions {display:flex;align-items:center;gap:8px;flex:0 0 auto;margin-inline-start:auto;}
+.aws-console .workspace-navigation-dismiss {
+    display:grid;place-items:center;width:32px;height:32px;padding:0;
+    border:0;background:transparent;color:#545b64;cursor:pointer;
+}
+.aws-console .workspace-navigation-dismiss:hover {color:#16191f;background:#eaeded;}
+.aws-console .workspace-navigation-dismiss:focus-visible {outline:2px solid #0073bb;outline-offset:2px;}
+.aws-console .workspace-navigation-feedback[role="alert"] > .console-message-icon {top:50%;transform:translateY(-50%);}
+@media(max-width:600px) {
+    .aws-console .workspace-navigation-feedback[role="alert"] > .console-message-icon {top:12px;transform:none;}
+}
+
+/* Persistent command results stay in the workspace and use the shared toast lifecycle. */
+.workspace-flashbar:empty {display:none;}
+.workspace-flashbar {display:grid;gap:8px;min-width:0;margin-bottom:16px;scroll-margin-top:calc(var(--shell-nav-height,56px) + 56px);}
+/* Shared notification surface for workspace, page and modal delivery. */
+.aws-console .app-notification-bar.console-message {
+    width:100%;box-shadow:none!important;padding-inline-end:52px!important;
+}
+.app-notification-bar [data-toast-text] {margin:0;font-size:14px!important;line-height:22px;font-weight:400;overflow-wrap:anywhere;}
+.aws-console .app-notification-bar .app-toast-close {
+    position:absolute;right:12px;top:12px;display:flex;align-items:center;justify-content:center;
+    width:28px;height:28px;padding:6px;background:transparent;color:var(--message-color);border:0;
+    cursor:pointer;touch-action:manipulation;
+}
+.app-notification-bar .app-toast-close:hover {opacity:.72;}
+.app-notification-bar .app-toast-close:focus-visible {outline:2px solid #0972d3;outline-offset:2px;}
+@media(max-width:600px) {.aws-console .app-notification-bar .app-toast-close {right:8px;top:10px;}}
+form[data-workspace-submit="recover"] {scroll-margin-top:calc(var(--shell-nav-height,56px) + 56px);}
+[data-workspace-form-error] {flex-basis:100%;min-width:0;scroll-margin-top:calc(var(--shell-nav-height,56px) + 56px);}
+.platform-create-form,.minor-admin-create-form {width:100%;max-width:960px;min-width:0;}
+.platform-create-fields {display:grid;gap:20px;max-width:728px;}
+.platform-form-actions {display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:16px 0;}
+.platform-settings-overview {display:grid;gap:16px;max-width:1100px;min-width:0;}
+.platform-create-form > .erp-panel + .erp-panel {margin-top:16px;}
+.platform-settings-overview > section {scroll-margin-top:calc(var(--shell-nav-height,56px) + 56px);}
+.platform-settings-section-header,.platform-settings-section-actions {display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-width:0;}
+.platform-settings-section-header {justify-content:space-between;}
+.platform-settings-editor .platform-settings-grid {grid-template-columns:minmax(0,1fr);max-width:728px;}
+.platform-settings-editor .platform-settings-field--wide {grid-column:auto;}

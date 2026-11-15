@@ -1,0 +1,893 @@
+{
+  "snapshotDate": "2026-11-15",
+  "purpose": "Read-only UI source reference and portable skills for FCMS cloud agents",
+  "exclusions": [
+    "runtime configuration",
+    "credentials and environment files",
+    "database data/migrations",
+    "uploads and real personal/financial records",
+    "institution identity/contact values",
+    "Amazon Ember font binaries (not needed by FCMS)",
+    "controllers, repositories and operational integrations"
+  ],
+  "files": [
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/resource-table.js",
+      "source": "Microfinance/src/main/resources/static/js/resource-table.js",
+      "sourceSha256": "04e47d3b0d9673668033cf163dbcdb9ac7f442803b989cc5f1c396726c8669bb",
+      "sha256": "cd66023501848491fbb73bc04fcde576e6805a5b0b188f50073339eeb08e20d3",
+      "bytes": 63968,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/resource-split-view.js",
+      "source": "Microfinance/src/main/resources/static/js/resource-split-view.js",
+      "sourceSha256": "afcce3d1e0b3dc8b098ba0561e55f1d09578822d60b68b40020ca46532a95dd7",
+      "sha256": "afcce3d1e0b3dc8b098ba0561e55f1d09578822d60b68b40020ca46532a95dd7",
+      "bytes": 8816,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/select-enhancer.js",
+      "source": "Microfinance/src/main/resources/static/js/select-enhancer.js",
+      "sourceSha256": "93b4823542f77f310c2344bdb7cb6b94227278fe81fbba732b880fa1054a32ce",
+      "sha256": "f32014c90c603d0dfec2a69e7f6d9e4b58d085d09c548bf04d7788972f64c2da",
+      "bytes": 23477,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/live-search.js",
+      "source": "Microfinance/src/main/resources/static/js/live-search.js",
+      "sourceSha256": "448a81846b0555ba40b732e4653a9aa9ec176f0c71542cdb5e8a0cf4c66d219a",
+      "sha256": "448a81846b0555ba40b732e4653a9aa9ec176f0c71542cdb5e8a0cf4c66d219a",
+      "bytes": 6671,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/date-controls.js",
+      "source": "Microfinance/src/main/resources/static/js/date-controls.js",
+      "sourceSha256": "d0f4de317364ec2b8a3b23bc0615a364a90233f7f372b8fda83e500a50c01d15",
+      "sha256": "88b839155f21f9bb9f25d9911549692b97c2c5ae4c473d13d614aa94aaf04e18",
+      "bytes": 4255,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/ui-loading.js",
+      "source": "Microfinance/src/main/resources/static/js/ui-loading.js",
+      "sourceSha256": "2f352518b50f7571dd2db89b9c64aa48126fd147293cf6b1b63a937732b814dd",
+      "sha256": "2f352518b50f7571dd2db89b9c64aa48126fd147293cf6b1b63a937732b814dd",
+      "bytes": 6880,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/form-validation.js",
+      "source": "Microfinance/src/main/resources/static/js/form-validation.js",
+      "sourceSha256": "7c19b2cb5cf3a1eef66a71ac802f00e71c1051ea48eab505d0db53bd9c6d8ac2",
+      "sha256": "10fdcc4b6e0fb62c29eb6af9bd593392c4637495be673612195b6aacb30eb3f6",
+      "bytes": 11349,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/amount-inputs.js",
+      "source": "Microfinance/src/main/resources/static/js/amount-inputs.js",
+      "sourceSha256": "002532ba6250ac1d68613c7372e465bf15422c948748f3d76de505d703819059",
+      "sha256": "002532ba6250ac1d68613c7372e465bf15422c948748f3d76de505d703819059",
+      "bytes": 6922,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/console-resource-details.js",
+      "source": "Microfinance/src/main/resources/static/js/console-resource-details.js",
+      "sourceSha256": "a4853be8b548f51b828109189d0d938c641581ea3612a5c4597fb5ad46a112e5",
+      "sha256": "2dd00e92a3fbcbcd5132a7237d2f408d7c2d30b55d40d7319bceca145b00c93b",
+      "bytes": 16032,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/workspace-navigation.js",
+      "source": "Microfinance/src/main/resources/static/js/workspace-navigation.js",
+      "sourceSha256": "16cf1de7ff1aaac98d48fc4e459f82057f5c60cea7ef14a655598a9be8d4c65a",
+      "sha256": "4d2dc490b14e0a64f9dfda0d728b9a8877547c25d40872ee378ff8b93774fb7a",
+      "bytes": 37088,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/shell.js",
+      "source": "Microfinance/src/main/resources/static/js/shell.js",
+      "sourceSha256": "09193ec17fed3b186753f67eafb228e4464fe07a0ae34e3d570aa45a6f90fd58",
+      "sha256": "76d7647f1ef2fa9f4394cd24c5c6337bab9bed6ae1269f32d6219256680b82f6",
+      "bytes": 106343,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/dashboard-board.js",
+      "source": "Microfinance/src/main/resources/static/js/dashboard-board.js",
+      "sourceSha256": "d504b7ea324cc013917f28b7cc14e1847c283d7d3e4c87d4611ec73fc7e9580b",
+      "sha256": "262d24d9c40246f4247a7d0fd137a9a0c0555ec485f30cd255d58fb4e22518a4",
+      "bytes": 35082,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/dashboard-charts.js",
+      "source": "Microfinance/src/main/resources/static/js/dashboard-charts.js",
+      "sourceSha256": "d876565ccb1fe36fa38a37b4c003c8d9a5f159a1bc34b559bd4c5151a28b161a",
+      "sha256": "d876565ccb1fe36fa38a37b4c003c8d9a5f159a1bc34b559bd4c5151a28b161a",
+      "bytes": 10740,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/dashboard-data.js",
+      "source": "Microfinance/src/main/resources/static/js/dashboard-data.js",
+      "sourceSha256": "9c36fa4906f2d489a48406d848619531b3914c57e7e188fffc9e90994559dbcd",
+      "sha256": "c1c2a157021757326ce8295e2c10eb1a67d1ab8e79388ca2a4fa99f4667f01e0",
+      "bytes": 6749,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/dashboard-work.js",
+      "source": "Microfinance/src/main/resources/static/js/dashboard-work.js",
+      "sourceSha256": "a066ba274307373ca9f98f0a8462b8f35da0ddf0f022db518d2a41765da17fb7",
+      "sha256": "a066ba274307373ca9f98f0a8462b8f35da0ddf0f022db518d2a41765da17fb7",
+      "bytes": 11790,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/accounting-accounts.js",
+      "source": "Microfinance/src/main/resources/static/js/accounting-accounts.js",
+      "sourceSha256": "f6105ee463de94ebf95797704ea11673b802efc0474513d0cd1d96f5cfc2a961",
+      "sha256": "4e1e887615bc619161e8d1e3268ac712c1b890f8bd8b530227c970d64aea2c97",
+      "bytes": 10458,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/accounting-library.js",
+      "source": "Microfinance/src/main/resources/static/js/accounting-library.js",
+      "sourceSha256": "a6be5c5c346d45667c3a51916a32a19d06c3f4e54dd2f04b6550f4f0a924b2a0",
+      "sha256": "bca902e4e86453365dc92228027a820b83246f34145af25ec23a157660df7c01",
+      "bytes": 10474,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/accounting-form-ux.js",
+      "source": "Microfinance/src/main/resources/static/js/accounting-form-ux.js",
+      "sourceSha256": "695a00fc527c1fb8db765d9812bc7c7d6b8271481eac6a103d4503665d441087",
+      "sha256": "695a00fc527c1fb8db765d9812bc7c7d6b8271481eac6a103d4503665d441087",
+      "bytes": 9736,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/financial-statements.js",
+      "source": "Microfinance/src/main/resources/static/js/financial-statements.js",
+      "sourceSha256": "5e15bb2d8209f41a23bd17d35bf83d2d23725daeb3c3dcb4468f125b270dcd6a",
+      "sha256": "74d8481e3c99d0879685993ae383679071c82363b9a55377548decad559e160a",
+      "bytes": 5833,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/report-print.js",
+      "source": "Microfinance/src/main/resources/static/js/report-print.js",
+      "sourceSha256": "644f1d78dc12d7e9e0b7612147d9c839b346f8e569e9ba9e89949461bd341874",
+      "sha256": "afb5de5a467610d998774c4a0634b9d3a6e02ae1ddbc772f23bf33009eea2ce5",
+      "bytes": 169,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/resource-table.css",
+      "source": "Microfinance/src/main/resources/static/css/resource-table.css",
+      "sourceSha256": "46c396945c2918b4a6d745531fbcc17e1e5787d431f5c3ba9abefbdc5993bf9e",
+      "sha256": "b13ec907b06a57e2be2eec0d1004da1eea60469b2636865932da539bf0bba940",
+      "bytes": 22366,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/select-enhancer.css",
+      "source": "Microfinance/src/main/resources/static/css/select-enhancer.css",
+      "sourceSha256": "3feded4779e99602f8b253e61f4ce3c62205fb70c222150d698c607c04ff31ad",
+      "sha256": "5830e6fdb9d4df9afc97f36053fab4efa251646141d0e92a13df72d887d73fa8",
+      "bytes": 3372,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/date-controls.css",
+      "source": "Microfinance/src/main/resources/static/css/date-controls.css",
+      "sourceSha256": "92c6cbd0a02775c54b63e1620cf51eadf0240e91b3af51d1b4523c13bebea655",
+      "sha256": "adb7d39abab0ff2b3f26ededda20fc6aa7ff8edf751759f15a50e52b9f67d5a2",
+      "bytes": 986,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/ui-loading.css",
+      "source": "Microfinance/src/main/resources/static/css/ui-loading.css",
+      "sourceSha256": "f03d7f6384525af19dedb71a9ff42ef77a20cca84f645a8e29f127fe2a883e13",
+      "sha256": "6dbf824f1c8e4a2fdfd7648b7b1f3ecefd31bb2a74dee27536da852cd1c06294",
+      "bytes": 4377,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/form-validation.css",
+      "source": "Microfinance/src/main/resources/static/css/form-validation.css",
+      "sourceSha256": "1dfb924299285464c659a6a6c5fb187930526bd2ff4c27ff4087d1c6f6019622",
+      "sha256": "1dfb924299285464c659a6a6c5fb187930526bd2ff4c27ff4087d1c6f6019622",
+      "bytes": 1754,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/amount-inputs.css",
+      "source": "Microfinance/src/main/resources/static/css/amount-inputs.css",
+      "sourceSha256": "4bca420225ee8b1f2e8d6ca0826ba2d7d25a147d333341c90fcebd09c5bdd601",
+      "sha256": "4bca420225ee8b1f2e8d6ca0826ba2d7d25a147d333341c90fcebd09c5bdd601",
+      "bytes": 518,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/console-resource-details.css",
+      "source": "Microfinance/src/main/resources/static/css/console-resource-details.css",
+      "sourceSha256": "3467836af1f7094a47fbcb7270ec184010f9d9459470e72947652f10b479738e",
+      "sha256": "3467836af1f7094a47fbcb7270ec184010f9d9459470e72947652f10b479738e",
+      "bytes": 13020,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/workspace-resources.css",
+      "source": "Microfinance/src/main/resources/static/css/workspace-resources.css",
+      "sourceSha256": "8edd8ec43e2a987c7b40ea42efa238d8f9621fc80b3dc73055ff6ed3b1fee13e",
+      "sha256": "8edd8ec43e2a987c7b40ea42efa238d8f9621fc80b3dc73055ff6ed3b1fee13e",
+      "bytes": 11915,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/shell.css",
+      "source": "Microfinance/src/main/resources/static/css/shell.css",
+      "sourceSha256": "8424d415789ca92ec2ab6f3aaa51eecbcc32a35dc490d94ab681064f66b2da00",
+      "sha256": "8424d415789ca92ec2ab6f3aaa51eecbcc32a35dc490d94ab681064f66b2da00",
+      "bytes": 132435,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/console-components.css",
+      "source": "Microfinance/src/main/resources/static/css/console-components.css",
+      "sourceSha256": "e7e4c242d4d365f35f5599fedb13ade5b4b6a313e522675ccdf71a7186a32484",
+      "sha256": "e7e4c242d4d365f35f5599fedb13ade5b4b6a313e522675ccdf71a7186a32484",
+      "bytes": 148366,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/dashboard-board.css",
+      "source": "Microfinance/src/main/resources/static/css/dashboard-board.css",
+      "sourceSha256": "927afd3df04e26a8aa7c1035fd231cfe6f935e188d3d0a2481ad1ae2c51e7323",
+      "sha256": "453dd3b231b516282b18cd76fda482399be668716c308b10633507faa8e58be3",
+      "bytes": 21512,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/accounting-ledger.css",
+      "source": "Microfinance/src/main/resources/static/css/accounting-ledger.css",
+      "sourceSha256": "7bf386b5cc0fafac9bafe7ee6e1ce41e807b3bcbe4e94db8a21ebb5a553ab6e3",
+      "sha256": "7bf386b5cc0fafac9bafe7ee6e1ce41e807b3bcbe4e94db8a21ebb5a553ab6e3",
+      "bytes": 9157,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/accounting-vouchers.css",
+      "source": "Microfinance/src/main/resources/static/css/accounting-vouchers.css",
+      "sourceSha256": "03778d6890eee195d00f19dbd7c99169b78348783b9c14ee75db52a596e95cce",
+      "sha256": "b67ee99613623718b1105aef8cfdd31d7be3eb2cc2da03f0d0b58600d2922f32",
+      "bytes": 6045,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/financial-statements.css",
+      "source": "Microfinance/src/main/resources/static/css/financial-statements.css",
+      "sourceSha256": "6e4191630f2b86e0a88eb21aeea56b39ab48d4b081cf01d6349c1aa3a6e9ee4f",
+      "sha256": "7ddfb6c43c1849b16ec121d790907d842540d6be09f71e5da157d0e638ceb916",
+      "bytes": 7027,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/financial-statement-print.css",
+      "source": "Microfinance/src/main/resources/static/css/financial-statement-print.css",
+      "sourceSha256": "4ad067258e95a4b487bac19bb515c775300c0e23567077a70c658763c589aadd",
+      "sha256": "746a375ee6aa84b95feb47109418eff73c9b95577beff87a1cf66a159df63cea",
+      "bytes": 2364,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/print-footer.css",
+      "source": "Microfinance/src/main/resources/static/css/print-footer.css",
+      "sourceSha256": "2937ed9d6a359eb98889b9fc8dd2d39bac67674b7fdc184cc2a3f3c622b3a314",
+      "sha256": "2937ed9d6a359eb98889b9fc8dd2d39bac67674b7fdc184cc2a3f3c622b3a314",
+      "bytes": 268,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/css/open-sans.css",
+      "source": "Microfinance/src/main/resources/static/css/open-sans.css",
+      "sourceSha256": "6fc5b116412b11d02aa36b2daaae90bb30e9e99ef36359c86d098c30e263662f",
+      "sha256": "a544ec606698db7cf8d92fc7d7cd79766a9a9d1bf75ec78d2fc334e0b981dbd9",
+      "bytes": 1709,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/fragments/resource-table-labels.jspf",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/fragments/resource-table-labels.jspf",
+      "sourceSha256": "9ea00c32cfe2905704fab640e8f5a91871b113fdf491cac3ec7e8936ec28ae47",
+      "sha256": "db486ad38754737045f910946213291ccfef018d6ebf0ed0562ea4d34a88199c",
+      "bytes": 2555,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/fragments/select-enhancer.jspf",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/fragments/select-enhancer.jspf",
+      "sourceSha256": "29e1e69bb205af8ce7ed4ebc8e8dd4aed55eee99721403163b39dac14b020d68",
+      "sha256": "e5d7e156a645dff21f72022767b91d40ed6653601960e04cf9b3fdb389ac98ba",
+      "bytes": 231,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/fragments/dashboard-support.jspf",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/fragments/dashboard-support.jspf",
+      "sourceSha256": "d111f6aa4caa2b29160e8ecd97d432188971371fac0d3784d906412b8abc7098",
+      "sha256": "b978e4e8e5144ca94d36b5dbd67c3f1c174c78bffdcc941c522df95c2dec6a2c",
+      "bytes": 3956,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/fragments/dashboard-workspace.jspf",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/fragments/dashboard-workspace.jspf",
+      "sourceSha256": "768defeaddc3803a1512d086f814141f11a1834184d0b1fc736d09dc901e0b0a",
+      "sha256": "768defeaddc3803a1512d086f814141f11a1834184d0b1fc736d09dc901e0b0a",
+      "bytes": 3378,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/fragments/alerts.jspf",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/fragments/alerts.jspf",
+      "sourceSha256": "338dcee7ec63addc7bcb3158af8b4e6a1d857b07f10ccaf00e76c025f784c6ab",
+      "sha256": "4250acd9db407a9aa35c213102adb102ba8e4780bf5065ba11107ec927cdcb70",
+      "bytes": 1458,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/fragments/confirm-modal.jspf",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/fragments/confirm-modal.jspf",
+      "sourceSha256": "ce8230b31426200a3a6932edf5773fc48cc9614dc303dc2952b38947795ee0a8",
+      "sha256": "8d0c85c35a6396aeb0626724e361981b87caad7cd5149042bdb6e480c39863e8",
+      "bytes": 8025,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/fragments/finance-navigation.jspf",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/fragments/finance-navigation.jspf",
+      "sourceSha256": "14e8108bbadc9ba1cfdc6ec3fd12db77d50183be924e8101f5fafb77ac215247",
+      "sha256": "2c460f597a10af343fd24383cb4e2bb34954124f02fa36d0b3b65489284ed00e",
+      "bytes": 20747,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/accounts.jsp",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/accounts.jsp",
+      "sourceSha256": "81b11d0d7bd9327c88ff57b96cd2d5055d4a8330eeaad033b3fd8ac4a1f8a5c4",
+      "sha256": "81b11d0d7bd9327c88ff57b96cd2d5055d4a8330eeaad033b3fd8ac4a1f8a5c4",
+      "bytes": 11258,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/account-rows.jsp",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/account-rows.jsp",
+      "sourceSha256": "cdf2e88f70e50721b10fe7e8a53a428b3f88f86b0c0bda2b502dc438d346f434",
+      "sha256": "6474385708041a9fa245b1f44e9adb0da57a70159d0b46aa946625b62dd9309b",
+      "bytes": 3398,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/library.jsp",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/library.jsp",
+      "sourceSha256": "69cfd96836faf9e856b31f2b349cecdaaf1fbbd80011ec738f9ac81a4c31a7a4",
+      "sha256": "69cfd96836faf9e856b31f2b349cecdaaf1fbbd80011ec738f9ac81a4c31a7a4",
+      "bytes": 12531,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/library-activity-modal.jspf",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/library-activity-modal.jspf",
+      "sourceSha256": "f1c62c412444620ee8fbc2f00574b39a12f96b725476b2d57657c4258b9d40db",
+      "sha256": "f1c62c412444620ee8fbc2f00574b39a12f96b725476b2d57657c4258b9d40db",
+      "bytes": 2918,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/library-transaction-modal.jspf",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/library-transaction-modal.jspf",
+      "sourceSha256": "afa6e51f9bfa49ed91f0d5bd647557b8e97ea39d41fd05a84f3ad3cccefd34eb",
+      "sha256": "fe684b5af035927fc8e4f9704ce4236f020d3a2dcaccd009af630ac153c3aa01",
+      "bytes": 4875,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/library-rule-fields.jspf",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/library-rule-fields.jspf",
+      "sourceSha256": "8d1c4abc8eee105638764b8b2550ef0cfef923501c399fe44db6a8d7dff9b791",
+      "sha256": "8d1c4abc8eee105638764b8b2550ef0cfef923501c399fe44db6a8d7dff9b791",
+      "bytes": 1845,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/library-template-form.jsp",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/library-template-form.jsp",
+      "sourceSha256": "82dc6eeae5feb8be35b6360bfefc00b3b705d7db780386a36106bfdcf66359da",
+      "sha256": "dd5e91adb7f77a7bf4f4ad76634f5cefae00cdea17fbd48d3cbcf34cfc66dfa5",
+      "bytes": 6459,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/library-transaction.jsp",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/library-transaction.jsp",
+      "sourceSha256": "51c82897db7c8367899100ba1801fe153f15a9d41252756f3a417d7901264fb2",
+      "sha256": "4cd4612fe4651ed146a9bf20c2f583ecb071aba19700ec47720c472b2dc8a34e",
+      "bytes": 6872,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/library-activity-edit.jsp",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/library-activity-edit.jsp",
+      "sourceSha256": "8178b05f2c185e30ff10395d68ef19e4190b6d737fe14177818d4867e1bb7abb",
+      "sha256": "8178b05f2c185e30ff10395d68ef19e4190b6d737fe14177818d4867e1bb7abb",
+      "bytes": 2411,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/library-code-form.jsp",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/library-code-form.jsp",
+      "sourceSha256": "635262aa0737e5ea91cbdf8a7d723f705878b4c2454e1f72694dbf1ec4303d2f",
+      "sha256": "3fd791646aab497a351175a535f787b96b678fda27ec98112603802046f37adb",
+      "bytes": 4491,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/accounting-form-support.jspf",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/accounting-form-support.jspf",
+      "sourceSha256": "1e913410fc410576ddb587d87871519e408391865d8898da9c609e8631880c6f",
+      "sha256": "1e913410fc410576ddb587d87871519e408391865d8898da9c609e8631880c6f",
+      "bytes": 1115,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/statements/preview.jsp",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/statements/preview.jsp",
+      "sourceSha256": "eba49fde3a20fcb3dfc234a24c1fcc1b137dcee46d5916b185d0e148bae73346",
+      "sha256": "d59fd8119a309546095a878c4ae65a44d3622aeccf73d755eeeaf8f326987d39",
+      "bytes": 9053,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/statements/print.jsp",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/statements/print.jsp",
+      "sourceSha256": "7639c8a6c15f5f167fe7bf58751e605b207392a48918232953f80aed108d6c9c",
+      "sha256": "aa4d0274d2340e832bea391ad62c4f51061c4f453a2902102bf4ff647bbb3aac",
+      "bytes": 3442,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/statements/support.jspf",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/statements/support.jspf",
+      "sourceSha256": "6311854caef87fe330bc43f7881416a163a99ad146e274c9505df42ef146450a",
+      "sha256": "6311854caef87fe330bc43f7881416a163a99ad146e274c9505df42ef146450a",
+      "bytes": 654,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/statements/movements.jsp",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/statements/movements.jsp",
+      "sourceSha256": "bd39e938fb2efaa70c65abca1ddebd5939287b2b15048312e79ac482f050dbdb",
+      "sha256": "18fd0d85ea39f672ffc3ad5cc70f874832da05aae830999af39b1d23672c1aaf",
+      "bytes": 4361,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/statements/feedback.jspf",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/statements/feedback.jspf",
+      "sourceSha256": "79a2d9527c6b692188c8f2cd686c8fd43daa822ec757cd8bac818bc64859e399",
+      "sha256": "79a2d9527c6b692188c8f2cd686c8fd43daa822ec757cd8bac818bc64859e399",
+      "bytes": 639,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/jsp/accounting/vouchers/document.jspf",
+      "source": "Microfinance/src/main/webapp/WEB-INF/jsp/accounting/vouchers/document.jspf",
+      "sourceSha256": "39c4b5f2f31bdb6cbd0f3f5abd239212e6551f8b78f90d2431fe768bd7426be7",
+      "sha256": "e003c9f221dbf17463d2f4e5d72ce3763e989661e20af9089372722a56edeec2",
+      "bytes": 3591,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/tags/reportMoney.tag",
+      "source": "Microfinance/src/main/webapp/WEB-INF/tags/reportMoney.tag",
+      "sourceSha256": "0155b06d6f792c26dfbb116c01b649f9c26d92bf83418c7672f9144a2daa3b5d",
+      "sha256": "0155b06d6f792c26dfbb116c01b649f9c26d92bf83418c7672f9144a2daa3b5d",
+      "bytes": 502,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/tags/reportExport.tag",
+      "source": "Microfinance/src/main/webapp/WEB-INF/tags/reportExport.tag",
+      "sourceSha256": "8165d202ec714bc9c64681d24faaf67d108aa92477afc0c71bcd650679ac8a50",
+      "sha256": "8165d202ec714bc9c64681d24faaf67d108aa92477afc0c71bcd650679ac8a50",
+      "bytes": 1391,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/java/com/sacco/mvp/accounting/statements/service/StatementPresentation.java",
+      "source": "Microfinance/src/main/java/com/sacco/mvp/accounting/statements/service/StatementPresentation.java",
+      "sourceSha256": "0905b300fc084a72161328dfbe4d96740d0274aa39b1c80578942f8641febdac",
+      "sha256": "f349e012e354df28533e10f0a2470fa7fb351de93c51ceb5a38cf81f3760fc22",
+      "bytes": 14630,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/java/com/sacco/mvp/accounting/statements/service/StatementExportService.java",
+      "source": "Microfinance/src/main/java/com/sacco/mvp/accounting/statements/service/StatementExportService.java",
+      "sourceSha256": "be2cc483dff61cdbb50ded5718ac2d80c76f11a5801e69de01820233359cc53a",
+      "sha256": "b10f34fded2e685dbeb6e751fe3a1f04f4fa2971e7712be958a46c76071dbb8c",
+      "bytes": 10574,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/java/com/sacco/mvp/accounting/statements/service/StatementCalculator.java",
+      "source": "Microfinance/src/main/java/com/sacco/mvp/accounting/statements/service/StatementCalculator.java",
+      "sourceSha256": "604606b03243704d10c8051714b177776d3bdb0b89c4a3dfa498fb54cae89ed4",
+      "sha256": "cc114950ab46e331b0b64892e0ea2bf15d2fa46f93d5b12518ac1b47f35ef6cc",
+      "bytes": 14204,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/java/com/sacco/mvp/accounting/statements/service/EquityStatementCalculator.java",
+      "source": "Microfinance/src/main/java/com/sacco/mvp/accounting/statements/service/EquityStatementCalculator.java",
+      "sourceSha256": "2c4adcefcebab289c4abe58689470ffa8b5e963ad626069bf820cafe89ca7c2c",
+      "sha256": "2c4adcefcebab289c4abe58689470ffa8b5e963ad626069bf820cafe89ca7c2c",
+      "bytes": 6499,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/java/com/sacco/mvp/accounting/statements/dto/StatementModels.java",
+      "source": "Microfinance/src/main/java/com/sacco/mvp/accounting/statements/dto/StatementModels.java",
+      "sourceSha256": "1f3331122f8e8bbaf3245afbb24397a132db22292c4272d15b11b7b617de1a51",
+      "sha256": "8bdbaf6bf5046a9ba0390ff083f329573a303e1525169dd8459376efa47c2570",
+      "bytes": 3417,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/java/com/sacco/mvp/accounting/reports/AccountingPdfDocument.java",
+      "source": "Microfinance/src/main/java/com/sacco/mvp/accounting/reports/AccountingPdfDocument.java",
+      "sourceSha256": "88b5339be818bfa8a9b9b0404d681927484a8a2528ac68b00098814fe5ed41e0",
+      "sha256": "4ce62ae672728c7839b724e885ac4fbd85aa526b447a388d278ed2d269ed9fda",
+      "bytes": 25458,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/java/com/sacco/mvp/accounting/reports/VoucherPdfDocument.java",
+      "source": "Microfinance/src/main/java/com/sacco/mvp/accounting/reports/VoucherPdfDocument.java",
+      "sourceSha256": "af52c572d3d547c829df20df0346b6e175ec98307cf03537a2c7963a9a77a8f9",
+      "sha256": "af52c572d3d547c829df20df0346b6e175ec98307cf03537a2c7963a9a77a8f9",
+      "bytes": 12790,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/java/com/sacco/mvp/accounting/service/VoucherPdfService.java",
+      "source": "Microfinance/src/main/java/com/sacco/mvp/accounting/service/VoucherPdfService.java",
+      "sourceSha256": "c4543c8391c427baf18b3c97103393f19d7f53b0bee178e0ecbce4fbacec7190",
+      "sha256": "a93cf5a062f57b017dd5455819cc55e4327c875ddffd6ce96974d84939edb54e",
+      "bytes": 19389,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/report-fonts/NotoSans-Regular.ttf",
+      "source": "Microfinance/src/main/resources/report-fonts/NotoSans-Regular.ttf",
+      "sourceSha256": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5",
+      "sha256": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5",
+      "bytes": 569208,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/report-fonts/LICENSE.txt",
+      "source": "Microfinance/src/main/resources/report-fonts/LICENSE.txt",
+      "sourceSha256": "3c05a56499a20ee045a6d36834b6a9e1108f359eede10d7c1613bc4524d01eef",
+      "sha256": "0dab92d0544f7b233403f14b84a663bdbfa746982eda629e7f4f9ffe1b036feb",
+      "bytes": 4377,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/report-fonts/NOTICE.md",
+      "source": "Microfinance/src/main/resources/report-fonts/NOTICE.md",
+      "sourceSha256": "2152dad2d3cdda8a44c321bba24075ae67a811f81c872e6698de6811a81fb723",
+      "sha256": "3296307721d1c5ef7cfdbea4e06bc49026a50b91de81a34b6acc5fc959534ac3",
+      "bytes": 474,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/vendor/cloudscape-icons.LICENSE",
+      "source": "Microfinance/src/main/resources/static/js/vendor/cloudscape-icons.LICENSE",
+      "sourceSha256": "09e8a9bcec8067104652c168685ab0931e7868f9c8284b66f5ae6edae5f1130b",
+      "sha256": "09e8a9bcec8067104652c168685ab0931e7868f9c8284b66f5ae6edae5f1130b",
+      "bytes": 10142,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/js/vendor/cloudscape-icons.NOTICE",
+      "source": "Microfinance/src/main/resources/static/js/vendor/cloudscape-icons.NOTICE",
+      "sourceSha256": "d4290ed64c2edd0fce1d84e3f9dfb2881240fe534def76b8cd29ed6af683e287",
+      "sha256": "d4290ed64c2edd0fce1d84e3f9dfb2881240fe534def76b8cd29ed6af683e287",
+      "bytes": 67,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/webapp/WEB-INF/application-time.tld",
+      "source": "Microfinance/src/main/webapp/WEB-INF/application-time.tld",
+      "sourceSha256": "80c10f9781b4f8d46521c20c67e64642efcbb5bfc7de69d806fc6564337e8bed",
+      "sha256": "bfae1ca16cceede0f84aa025eaf6cdb6db720f34c0e251dd22a279abe69aae6c",
+      "bytes": 1229,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/fonts/open-sans/CLOUDSCAPE-GLOBAL-STYLES-LICENSE.txt",
+      "source": "Microfinance/src/main/resources/static/fonts/open-sans/CLOUDSCAPE-GLOBAL-STYLES-LICENSE.txt",
+      "sourceSha256": "88046bf22d5b4f4b8cc85079ae6aae5424a3a1999db952ed152828ff325b2c6d",
+      "sha256": "09e8a9bcec8067104652c168685ab0931e7868f9c8284b66f5ae6edae5f1130b",
+      "bytes": 10142,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/fonts/open-sans/CLOUDSCAPE-GLOBAL-STYLES-NOTICE.txt",
+      "source": "Microfinance/src/main/resources/static/fonts/open-sans/CLOUDSCAPE-GLOBAL-STYLES-NOTICE.txt",
+      "sourceSha256": "3b921bdc93d93a9db034684b0b3154f1d4bab94b275be2fe37ccbf6d7f285b66",
+      "sha256": "d4290ed64c2edd0fce1d84e3f9dfb2881240fe534def76b8cd29ed6af683e287",
+      "bytes": 67,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/fonts/open-sans/open-sans-300-italic.woff2",
+      "source": "Microfinance/src/main/resources/static/fonts/open-sans/open-sans-300-italic.woff2",
+      "sourceSha256": "ccb47554127f48bdd249939182097d8b7f9c976b7b6ae24d6713a81ce93ce02d",
+      "sha256": "ccb47554127f48bdd249939182097d8b7f9c976b7b6ae24d6713a81ce93ce02d",
+      "bytes": 17788,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/fonts/open-sans/open-sans-300.woff2",
+      "source": "Microfinance/src/main/resources/static/fonts/open-sans/open-sans-300.woff2",
+      "sourceSha256": "ac74d7d0323d238309ee0a321935a57cbad893de6ae27e4b568f444531466e5e",
+      "sha256": "ac74d7d0323d238309ee0a321935a57cbad893de6ae27e4b568f444531466e5e",
+      "bytes": 16700,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/fonts/open-sans/open-sans-400-italic.woff2",
+      "source": "Microfinance/src/main/resources/static/fonts/open-sans/open-sans-400-italic.woff2",
+      "sourceSha256": "f27408b033a0195d0f29b0ecbc143f470c4fbb0807472a688b2f9e66403651e0",
+      "sha256": "f27408b033a0195d0f29b0ecbc143f470c4fbb0807472a688b2f9e66403651e0",
+      "bytes": 17768,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/fonts/open-sans/open-sans-400.woff2",
+      "source": "Microfinance/src/main/resources/static/fonts/open-sans/open-sans-400.woff2",
+      "sourceSha256": "cce577471c2586f3e0c2518fff84a970d33f61491fb8c629341b86f238cf07c0",
+      "sha256": "cce577471c2586f3e0c2518fff84a970d33f61491fb8c629341b86f238cf07c0",
+      "bytes": 16692,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/fonts/open-sans/open-sans-700-italic.woff2",
+      "source": "Microfinance/src/main/resources/static/fonts/open-sans/open-sans-700-italic.woff2",
+      "sourceSha256": "3131314786063c25356e58697cbc14131dbb8d8b585e4a92b855f25d2eee09dc",
+      "sha256": "3131314786063c25356e58697cbc14131dbb8d8b585e4a92b855f25d2eee09dc",
+      "bytes": 17360,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/fonts/open-sans/open-sans-700.woff2",
+      "source": "Microfinance/src/main/resources/static/fonts/open-sans/open-sans-700.woff2",
+      "sourceSha256": "a61d67250a5c36640e22099937af31613e68d6134439d5d4329efea0372aea79",
+      "sha256": "a61d67250a5c36640e22099937af31613e68d6134439d5d4329efea0372aea79",
+      "bytes": 16408,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/fonts/open-sans/open-sans-800-italic.woff2",
+      "source": "Microfinance/src/main/resources/static/fonts/open-sans/open-sans-800-italic.woff2",
+      "sourceSha256": "b9c7e941368e9ad2b21a1b1c5ee2c0f8e2a3852f6ce9856a5abf30ae956b144a",
+      "sha256": "b9c7e941368e9ad2b21a1b1c5ee2c0f8e2a3852f6ce9856a5abf30ae956b144a",
+      "bytes": 17528,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/fonts/open-sans/open-sans-800.woff2",
+      "source": "Microfinance/src/main/resources/static/fonts/open-sans/open-sans-800.woff2",
+      "sourceSha256": "c9955557c047d44a9e3b361768b0c4015db5bb49ccc8c6513aa6e40ce0f1b3a3",
+      "sha256": "c9955557c047d44a9e3b361768b0c4015db5bb49ccc8c6513aa6e40ce0f1b3a3",
+      "bytes": 16664,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/icons/dashboard/add-plus.svg",
+      "source": "Microfinance/src/main/resources/static/icons/dashboard/add-plus.svg",
+      "sourceSha256": "8ed9abab298c8da3bc9a0ec8a6435f1c82781d73d80ebf9dae999d5024c167ff",
+      "sha256": "a9df1741687aca746dc424848d481f51f3bfedd87927c7ac445ac203c90d6312",
+      "bytes": 379,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/icons/dashboard/close.svg",
+      "source": "Microfinance/src/main/resources/static/icons/dashboard/close.svg",
+      "sourceSha256": "89322ed70c3af3f40a9490ff113409f85e42b1872fc98f35dc474b91396216da",
+      "sha256": "7e55b75f7a05da53c9154d364eaf4a1d55175f8d9dfe230cbdfa6130fa4a45ec",
+      "bytes": 448,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/icons/dashboard/drag-indicator.svg",
+      "source": "Microfinance/src/main/resources/static/icons/dashboard/drag-indicator.svg",
+      "sourceSha256": "b4cf8165c8984c595033d8b4265ec5f6b9c97591ea5e4e7f390d16a463bc40f3",
+      "sha256": "1689daa34bcee42f8dba313124efbcb73dcc7444b489df72b8d6ce727d82f1d9",
+      "bytes": 799,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/icons/dashboard/ellipsis.svg",
+      "source": "Microfinance/src/main/resources/static/icons/dashboard/ellipsis.svg",
+      "sourceSha256": "d92957a0352e45f0d90fd9763ea5fbf9ae5769c41a09b50fb2f8b43966c663e4",
+      "sha256": "544ba046a63eb2bd71038960d99e676551905b6b4624d08b2553226b9fc006b4",
+      "bytes": 534,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/source/src/main/resources/static/icons/dashboard/resize-area.svg",
+      "source": "Microfinance/src/main/resources/static/icons/dashboard/resize-area.svg",
+      "sourceSha256": "4f121a433034e54d0bbc848c44e12754a944a081dda3d0d86b080f181c55d85e",
+      "sha256": "e55994c74617c43918a49b2248a24d3830874e7cf18744c73c7b08566ea76891",
+      "bytes": 433,
+      "treatment": "UTF-8/LF normalized; content unchanged"
+    },
+    {
+      "path": ".agents/skills/springboot-1k-rps-optimization/agents/openai.yaml",
+      "source": "installed-skills/springboot-1k-rps-optimization/agents/openai.yaml",
+      "sourceSha256": "00f975a26bcb79f3546625b5a58da293859d0166852efb3dd7205bb0ea67c59e",
+      "sha256": "00f975a26bcb79f3546625b5a58da293859d0166852efb3dd7205bb0ea67c59e",
+      "bytes": 310,
+      "treatment": "unchanged"
+    },
+    {
+      "path": ".agents/skills/springboot-1k-rps-optimization/assets/component-slice-template.txt",
+      "source": "installed-skills/springboot-1k-rps-optimization/assets/component-slice-template.txt",
+      "sourceSha256": "df8a63645458316df72cb8531154413ac9c3413845ec29b176f1082ae70875f9",
+      "sha256": "df8a63645458316df72cb8531154413ac9c3413845ec29b176f1082ae70875f9",
+      "bytes": 902,
+      "treatment": "unchanged"
+    },
+    {
+      "path": ".agents/skills/springboot-1k-rps-optimization/references/1k-rps-validation.md",
+      "source": "installed-skills/springboot-1k-rps-optimization/references/1k-rps-validation.md",
+      "sourceSha256": "eb70f7aee2040e4192ada72b50aca3ae5bc1c6db7bc145fb4d0ca707502c805a",
+      "sha256": "eb70f7aee2040e4192ada72b50aca3ae5bc1c6db7bc145fb4d0ca707502c805a",
+      "bytes": 2031,
+      "treatment": "unchanged"
+    },
+    {
+      "path": ".agents/skills/springboot-1k-rps-optimization/references/architecture-contract.md",
+      "source": "installed-skills/springboot-1k-rps-optimization/references/architecture-contract.md",
+      "sourceSha256": "9638b7b0f364c5dcf0131adcad084aa6880c5b2a4325f1b45670ec413dbd599d",
+      "sha256": "9638b7b0f364c5dcf0131adcad084aa6880c5b2a4325f1b45670ec413dbd599d",
+      "bytes": 4373,
+      "treatment": "unchanged"
+    },
+    {
+      "path": ".agents/skills/springboot-1k-rps-optimization/references/database-query-antipatterns.md",
+      "source": "installed-skills/springboot-1k-rps-optimization/references/database-query-antipatterns.md",
+      "sourceSha256": "b831b77f0ad15f4b6b88ab26a4f2fa56d6e2154e95e19fc9d7d5055745b79287",
+      "sha256": "b831b77f0ad15f4b6b88ab26a4f2fa56d6e2154e95e19fc9d7d5055745b79287",
+      "bytes": 2941,
+      "treatment": "unchanged"
+    },
+    {
+      "path": ".agents/skills/springboot-1k-rps-optimization/references/research-sources.md",
+      "source": "installed-skills/springboot-1k-rps-optimization/references/research-sources.md",
+      "sourceSha256": "764f53a643b2a1a72854d5cdb18bcc322dac998154e3577d3e451119773c828c",
+      "sha256": "764f53a643b2a1a72854d5cdb18bcc322dac998154e3577d3e451119773c828c",
+      "bytes": 2871,
+      "treatment": "unchanged"
+    },
+    {
+      "path": ".agents/skills/springboot-1k-rps-optimization/references/security-threat-checklist.md",
+      "source": "installed-skills/springboot-1k-rps-optimization/references/security-threat-checklist.md",
+      "sourceSha256": "cce67cc2ca56ded7cd93ba5fd01d4264149907fef9ccae2b9dafc8697458f475",
+      "sha256": "cce67cc2ca56ded7cd93ba5fd01d4264149907fef9ccae2b9dafc8697458f475",
+      "bytes": 3494,
+      "treatment": "unchanged"
+    },
+    {
+      "path": ".agents/skills/springboot-1k-rps-optimization/references/threading-concurrency.md",
+      "source": "installed-skills/springboot-1k-rps-optimization/references/threading-concurrency.md",
+      "sourceSha256": "9f296ef1eeb6d2b5e3face87c95dc771b9c64500b74164674045842d3854ac07",
+      "sha256": "9f296ef1eeb6d2b5e3face87c95dc771b9c64500b74164674045842d3854ac07",
+      "bytes": 2110,
+      "treatment": "unchanged"
+    },
+    {
+      "path": ".agents/skills/springboot-1k-rps-optimization/scripts/audit-springboot-route.sh",
+      "source": "installed-skills/springboot-1k-rps-optimization/scripts/audit-springboot-route.sh",
+      "sourceSha256": "e20f58d10c9c58c732a22dadd1026a6af53be5d2026750e5e9487c23269caa97",
+      "sha256": "59c4421fded1f89fa0e4d751944fd5c47c04623000b6eee3e29504d34a10ba1e",
+      "bytes": 2330,
+      "treatment": "LF normalized; audit excludes read-only references, agent skills and local verification artifacts"
+    },
+    {
+      "path": ".agents/skills/springboot-1k-rps-optimization/SKILL.md",
+      "source": "installed-skills/springboot-1k-rps-optimization/SKILL.md",
+      "sourceSha256": "d42778ffbcfd4598fcadd2dcba05c8a20c7945d2ba93269a926bf09fd749dc26",
+      "sha256": "d42778ffbcfd4598fcadd2dcba05c8a20c7945d2ba93269a926bf09fd749dc26",
+      "bytes": 34118,
+      "treatment": "unchanged"
+    },
+    {
+      "path": "reference/microfinance-ui/labels/messages_en.properties",
+      "source": "Microfinance/src/main/resources/messages_en.properties",
+      "sha256": "b295328a8c8ea9c52edc2ccda184de4a2d35af3da64310b4744731511e7d65e6",
+      "bytes": 24841,
+      "treatment": "filtered component labels; identity/contact/URL values excluded"
+    },
+    {
+      "path": "reference/microfinance-ui/labels/messages_sw.properties",
+      "source": "Microfinance/src/main/resources/messages_sw.properties",
+      "sha256": "a5219f47b474b925ce25ec46ecb0c5fb61caab70dcedd419e6583ed75c109d3c",
+      "bytes": 26200,
+      "treatment": "filtered component labels; identity/contact/URL values excluded"
+    },
+    {
+      "path": ".agents/skills/microfinance-ui-governance/SKILL.md",
+      "source": "Microfinance/.agents/skills/microfinance-ui-governance/SKILL.md",
+      "sourceSha256": "19facfa24ac8f7e20f464fef5e0360e9c4bb664dd0d98dcc337924272b572fff",
+      "sha256": "824621588cac3707f5e95ef6efafa2dee7a81b3cd0a11fbbcdbc90d292ad5c0c",
+      "bytes": 7045,
+      "treatment": "adapted for portable FCMS routing, current UI requirements and existing financial/security ownership"
+    },
+    {
+      "path": ".agents/skills/microfinance-ui-style/references/aws-instance-type-finder.md",
+      "source": "Microfinance/.agents/skills/microfinance-ui-style/references/aws-instance-type-finder.md",
+      "sourceSha256": "ace3dcf104b653abc1a3dfe0092916afdeca75629bc06539332fdce7cdc18604",
+      "sha256": "be22e066054a6caf35d38507912847db495065841126f0a0f304687bb06010c4",
+      "bytes": 2572,
+      "treatment": "adapted for portable FCMS routing, current UI requirements and existing financial/security ownership"
+    },
+    {
+      "path": ".agents/skills/microfinance-ui-style/references/cloudscape-dashboards.md",
+      "source": "Microfinance/.agents/skills/microfinance-ui-style/references/cloudscape-dashboards.md",
+      "sourceSha256": "6bde287e87243bd24ab43a9fc96a2296860e629c37c768c176387d497fd995ad",
+      "sha256": "0d89d6d59d2d4cbaee14039ccc41461f0ebbb5614031904a8351c604b0e1141f",
+      "bytes": 2620,
+      "treatment": "adapted for portable FCMS routing, current UI requirements and existing financial/security ownership"
+    },
+    {
+      "path": ".agents/skills/microfinance-ui-style/references/form-validation.md",
+      "source": "Microfinance/.agents/skills/microfinance-ui-style/references/form-validation.md",
+      "sourceSha256": "65b29f6abf47bcd5005ba425e06d5cb530ceaf8ab8c3c7d046411d473954c387",
+      "sha256": "93f4301627c3037661bcfe4a633fcc69ea5aef7cad759fe2c736e139bd44fdba",
+      "bytes": 2169,
+      "treatment": "adapted for portable FCMS routing, current UI requirements and existing financial/security ownership"
+    },
+    {
+      "path": ".agents/skills/microfinance-ui-style/SKILL.md",
+      "source": "Microfinance/.agents/skills/microfinance-ui-style/SKILL.md",
+      "sourceSha256": "4d4d40fa038a77f6a4c3c9458766beac134e53cbfbe290fa3077b087f4b25c38",
+      "sha256": "949ac77e5011f18233110391cc17adc9c2c4199d444f1c32f1611a83a925da50",
+      "bytes": 7676,
+      "treatment": "adapted for portable FCMS routing, current UI requirements and existing financial/security ownership"
+    },
+    {
+      "path": ".agents/skills/microfinance-table-standard/SKILL.md",
+      "source": "Microfinance/.agents/skills/microfinance-table-standard/SKILL.md",
+      "sourceSha256": "9b9a14d4120d142b2b92f8d319202634921c27a3c7eb246750b08448b34c912d",
+      "sha256": "cfb330d382d26ba7de3554fad6ffa2196cef9f3c08084c64dac5c9d0e03771e9",
+      "bytes": 8245,
+      "treatment": "adapted for portable FCMS routing, current UI requirements and existing financial/security ownership"
+    }
+  ]
+}
