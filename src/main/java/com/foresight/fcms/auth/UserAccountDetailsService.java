@@ -1,45 +1,59 @@
 package com.foresight.fcms.auth;
 
-import java.util.Locale;
-
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.*;
+
 @Service
-public class UserAccountDetailsService implements UserDetailsService {
+public class UserAccountDetailsService implements UserDetailsService, UserDetailsPasswordService {
+    private final JdbcTemplate db;
 
-    private final UserAccountRepository users;
-
-    public UserAccountDetailsService(UserAccountRepository users) {
-        this.users = users;
+    public UserAccountDetailsService(JdbcTemplate db) {
+        this.db = db;
     }
 
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) {
-        UserAccount account = users.findByEmailIgnoreCase(email)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        String role = normalizeRole(account.getRole().getRoleName());
-        boolean active = account.getStatus() != null && account.getStatus().isActive();
-
-        return User.withUsername(account.getEmail())
-            .password(account.getPassword())
-            .authorities(new SimpleGrantedAuthority("ROLE_" + role))
-            .disabled(!active)
-            .build();
+        var rows =
+                db.query(
+                        "select u.id,u.email,u.password,s.status_name from users u join"
+                            + " account_status s on s.id=u.status_id where lower(u.email)=lower(?)",
+                        (r, n) ->
+                                new Login(
+                                        r.getLong(1),
+                                        r.getString(2),
+                                        r.getString(3),
+                                        "active".equalsIgnoreCase(r.getString(4))),
+                        email);
+        if (rows.isEmpty()) throw new UsernameNotFoundException("User not found");
+        var a = rows.getFirst();
+        var claims =
+                db.queryForList(
+                        "select rc.claim from users u join role_claims rc on rc.role_id=u.role_id"
+                            + " where u.id=? union select claim from user_claims where user_id=?",
+                        String.class,
+                        a.id(),
+                        a.id());
+        return User.withUsername(a.email())
+                .password(a.password())
+                .authorities(claims.toArray(String[]::new))
+                .disabled(!a.active())
+                .build();
     }
 
-    private String normalizeRole(String roleName) {
-        String value = roleName == null ? "USER" : roleName.trim().toUpperCase(Locale.ROOT);
-        if ("USERS".equals(value)) {
-            return "USER";
-        }
-        return value;
+    @Override
+    @Transactional
+    public UserDetails updatePassword(UserDetails user, String password) {
+        db.update(
+                "update users set password=?,version=version+1 where lower(email)=lower(?)",
+                password,
+                user.getUsername());
+        return loadUserByUsername(user.getUsername());
     }
+
+    private record Login(long id, String email, String password, boolean active) {}
 }

@@ -1,9 +1,10 @@
 package com.foresight.fcms.task;
 
 import com.foresight.fcms.auth.UserAccount;
-import com.foresight.fcms.client.Saccos;
+import com.foresight.fcms.client.saccos.model.Saccos;
 import com.foresight.fcms.reference.TaskStatus;
 import com.foresight.fcms.reference.TaskType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -12,9 +13,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tasks")
@@ -22,7 +24,7 @@ public class Task {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id")
@@ -48,10 +50,10 @@ public class Task {
 
     private String activities;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal allowance;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal amount;
 
     private String observation;
@@ -59,9 +61,9 @@ public class Task {
     private String remarks;
 
     @Column(name = "created_date", nullable = false)
-    private LocalDateTime createdDate;
+    private Instant createdDate;
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
@@ -109,7 +111,7 @@ public class Task {
         return remarks;
     }
 
-    public LocalDateTime getCreatedDate() {
+    public Instant getCreatedDate() {
         return createdDate;
     }
 }

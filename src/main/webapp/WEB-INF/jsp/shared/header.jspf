@@ -1,48 +1,44 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="appTime" uri="https://fcms.local/tags/time" %>
+<c:url var="appCssUrl" value="/css/app.css">
+    <c:param name="v" value="fcms-modules-20261103-accounting1" />
+</c:url>
+<c:url var="appJsUrl" value="/js/app.js">
+    <c:param name="v" value="fcms-modules-20261103-accounting1" />
+</c:url>
+<spring:htmlEscape defaultHtmlEscape="true" />
 <!doctype html>
-<html lang="en">
+<html lang="${pageContext.response.locale.language}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FCMS</title>
-    <link rel="stylesheet" href="<c:url value='/css/app.css' />">
-    <script defer src="<c:url value='/js/app.js' />"></script>
-</head>
-<body class="fcms-shell">
-<div class="min-h-screen lg:flex">
-    <aside data-fcms-sidebar class="hidden w-64 shrink-0 border-r border-fcms-line bg-white lg:block">
-        <div class="flex h-16 items-center gap-3 border-b border-fcms-line px-5">
-            <img src="<c:url value='/img/app-logo.png' />" alt="FCMS" class="h-9 w-9 rounded object-cover">
-            <div>
-                <div class="text-sm font-bold text-fcms-ink">FCMS</div>
-                <div class="text-xs text-fcms-muted">Client management</div>
-            </div>
-        </div>
-        <nav class="space-y-1 px-3 py-4">
-            <a class="fcms-sidebar-link" href="<c:url value='/dashboard' />">Dashboard</a>
-            <a class="fcms-sidebar-link" href="<c:url value='/clients/saccos' />">SACCOS</a>
-            <a class="fcms-sidebar-link" href="<c:url value='/tasks' />">Tasks</a>
-            <a class="fcms-sidebar-link" href="<c:url value='/finance/expenses' />">Expenses</a>
-            <a class="fcms-sidebar-link" href="<c:url value='/reports' />">Reports</a>
-        </nav>
-    </aside>
+    <link rel="stylesheet" href="${appCssUrl}">
+    <script defer src="${appJsUrl}"></script>
+<link rel="stylesheet" href="<c:url value='/css/resource-table.css?v=fcms-modules-20261103-accounting1' />">
+<link rel="stylesheet" href="<c:url value='/css/ui-loading.css?v=fcms-modules-20261103-accounting1' />">
+<link rel="stylesheet" href="<c:url value='/css/select-enhancer.css?v=fcms-modules-20261103-accounting1' />">
+<script defer src="<c:url value='/js/resource-table.js?v=20261112-paper1' />"></script>
+<script defer src="<c:url value='/js/ui-loading.js?v=fcms-modules-20261103-accounting1' />"></script>
+<script defer src="<c:url value='/js/select-enhancer.js?v=fcms-modules-20261103-accounting1' />"></script>
+<script defer src="<c:url value='/js/resource-split-view.js?v=fcms-modules-20261103-accounting1' />"></script>
+<link rel="stylesheet" href="<c:url value='/css/workspaces.css?v=20261103-sales1' />">
+<script defer src="<c:url value='/js/modal-workspace.js?v=20261103-modal2'/>"></script>
+<script defer src="<c:url value='/js/live-search.js?v=fcms-modules-20261103-accounting1' />"></script><script defer src="<c:url value='/js/choice-loader.js?v=fcms-modules-20261103-accounting1' />"></script><link rel="stylesheet" href="<c:url value='/css/date-controls.css?v=20261103'/>"><script defer src="<c:url value='/js/date-controls.js?v=20261103'/>"></script></head>
+<body class="fcms-shell aws-console" data-date-choose="<spring:message code='date.choose'/>" data-date-invalid="<spring:message code='date.invalid'/>" data-nav-open="<spring:message code='nav.open'/>" data-nav-close="<spring:message code='nav.close'/>" data-select-retry="<spring:message code='common.refresh'/>" data-select-search="<spring:message code="select.search" />" data-select-load-more="<spring:message code="select.loadMore" />" data-select-no-matches="<spring:message code="select.noMatches" />" data-shell-select="<spring:message code="select.select" />" data-shell-loading="<spring:message code="common.loading" />" data-shell-no-options="<spring:message code="select.noOptions" />">
+<%@ include file="/WEB-INF/jsp/reusableuicomponents/resource-table-labels.jspf" %>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<%@ include file="/WEB-INF/jsp/reusableuicomponents/navigation/topbar.jspf" %>
+<div data-fcms-sidebar-overlay class="app-sidebar-overlay hidden"></div>
+<div class="app-shell">
+    <%@ include file="/WEB-INF/jsp/reusableuicomponents/navigation/sidebar.jspf" %>
 
-    <div class="min-w-0 flex-1">
-        <header class="sticky top-0 z-10 border-b border-fcms-line bg-white/95 backdrop-blur">
-            <div class="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-                <button data-fcms-menu type="button" class="rounded-md border border-fcms-line px-3 py-2 text-sm font-semibold text-slate-700 lg:hidden">
-                    Menu
-                </button>
-                <div class="hidden text-sm text-fcms-muted lg:block">Spring Boot migration workspace</div>
-                <div class="flex items-center gap-4">
-                    <span class="text-sm font-medium text-slate-700">${pageContext.request.userPrincipal.name}</span>
-                    <form method="post" action="<c:url value='/logout' />">
-                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-                        <button type="submit" class="rounded-md border border-fcms-line px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                            Logout
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </header>
-        <main class="px-4 py-6 sm:px-6 lg:px-8">
+    <div class="app-content">
+        <main id="main-content" class="app-main" tabindex="-1">
+<c:if test="${not empty breadcrumbUrl}"><nav class="erp-page-path" aria-label="Breadcrumb"><a href="<c:url value='${breadcrumbUrl}'/>"><spring:message code="${breadcrumbLabel}"/></a><span aria-hidden="true">/</span><span aria-current="page"><spring:message code="${breadcrumbCurrent}"/></span></nav></c:if>
+
+<c:if test="${param.saved!=null and pageContext.response.status lt 400}"><div class="console-message" data-message-type="success" role="status"><span><spring:message code="common.saved"/></span><button type="button" class="app-modal-close" data-dismiss-notice aria-label="<spring:message code="common.close"/>">×</button></div></c:if>

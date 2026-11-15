@@ -1,0 +1,4 @@
+<%@ page pageEncoding="UTF-8" %>
+<c:choose><c:when test="${activityEdit}"><form:hidden path="code"/><dl class="fcms-details"><div><dt><spring:message code="gl.code"/></dt><dd><c:out value="${activity.code()}"/></dd></div></dl></c:when><c:otherwise><ui:field path="code" label="gl.code" type="text"/></c:otherwise></c:choose>
+<ui:field path="name" label="common.name" type="text"/>
+<div class="fcms-field"><label for="activityDescription"><spring:message code="common.description"/></label><form:textarea path="description" id="activityDescription" maxlength="500"/><form:errors path="description" cssClass="fcms-error"/></div>

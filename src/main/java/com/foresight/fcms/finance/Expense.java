@@ -2,6 +2,7 @@ package com.foresight.fcms.finance;
 
 import com.foresight.fcms.auth.UserAccount;
 import com.foresight.fcms.reference.ExpenseStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -19,7 +21,7 @@ public class Expense {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(name = "date_created")
     private LocalDate dateCreated;
@@ -36,7 +38,7 @@ public class Expense {
 
     private String payee;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal amount;
 
     @Column(name = "financial_year", nullable = false)
@@ -46,7 +48,7 @@ public class Expense {
     @JoinColumn(name = "status_id")
     private ExpenseStatus status;
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 

@@ -1,0 +1,236 @@
+/* Source: src/main/webapp/WEB-INF/jsp/fragments/select-enhancer.jspf */
+.neo-select {
+        position: relative;
+        width: 100%;
+        isolation: isolate;
+        z-index: 1;
+    }
+    .neo-select--open {
+        z-index: 160;
+    }
+    .neo-select-native {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .neo-select-button {
+        position: relative;
+        display: flex;
+        width: 100%;
+        height: var(--sacco-control-height, 32px);
+        min-height: var(--sacco-control-height, 32px);
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        border: 1px solid var(--aws-line-dark, #879596);
+        border-radius: 2px;
+        background: #ffffff;
+        padding: 4px 8px;
+        color: var(--aws-ink, #16191f);
+        box-shadow: none;
+        transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+    }
+    .neo-select-button:hover,
+    .neo-select-button:focus-visible {
+        transform: none;
+        filter: none;
+        background: #ffffff;
+        border-color: var(--aws-blue, #0972d3);
+        box-shadow: none;
+    }
+    .neo-select-button:active {
+        transform: none;
+        box-shadow: none;
+    }
+    .neo-select-button:focus-visible {
+        outline: none;
+        border-color: var(--aws-blue, #0972d3);
+        box-shadow: 0 0 0 2px rgba(9, 114, 211, 0.18);
+    }
+    .neo-select--open .neo-select-button {
+        border-color: var(--aws-blue, #0972d3);
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        box-shadow: none;
+    }
+    .neo-select--invalid .neo-select-button {
+        border-color: rgba(190, 24, 93, 0.55);
+        box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.12);
+    }
+    .neo-select-button.is-disabled {
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+    .neo-select-button-text {
+        min-width: 0;
+        flex: 1;
+        overflow: visible;
+        color: var(--aws-ink, #16191f);
+        text-overflow: clip;
+        white-space: nowrap;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+        letter-spacing: 0;
+    }
+    .neo-select-button.is-placeholder .neo-select-button-text {
+        color: #7b8798;
+    }
+    .neo-select-chevron {
+        flex-shrink: 0;
+        color: var(--aws-muted, #5f6b7a);
+        transition: transform 120ms ease, color 120ms ease;
+    }
+    .neo-select--open .neo-select-chevron {
+        transform: rotate(180deg);
+        color: var(--aws-blue, #0972d3);
+    }
+    .neo-select-menu {
+        position: absolute;
+        box-sizing: border-box;
+        left: 0;
+        right: 0;
+        top: calc(100% - 1px);
+        z-index: 180;
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        max-height: 12rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -ms-overflow-style: auto;
+        scrollbar-width: thin;
+        border: 1px solid var(--aws-line-dark, #879596);
+        border-radius: 0 0 2px 2px;
+        background: #ffffff;
+        padding: 0;
+        box-shadow: 0 2px 6px rgba(0, 28, 36, 0.24);
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+        transform: none;
+        transition: opacity 120ms ease, visibility 120ms ease;
+    }
+    .neo-select-menu.is-open {
+        opacity: 1;
+        pointer-events: auto;
+        visibility: visible;
+        transform: none;
+    }
+    .neo-select-menu::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+        display: block;
+    }
+    .neo-select-menu::-webkit-scrollbar-track {
+        background: #f7f8f8;
+    }
+    .neo-select-menu::-webkit-scrollbar-thumb {
+        border: 2px solid #f7f8f8;
+        background: var(--aws-line-dark, #879596);
+    }
+    .neo-select-empty {
+        padding: 5px 8px;
+        color: var(--aws-muted, #5f6b7a);
+        font-size: 14px;
+        line-height: 18px;
+        text-align: center;
+    }
+    .neo-select-option {
+        display: block;
+        width: 100%;
+        min-height: 30px;
+        border: none;
+        border-radius: 0;
+        background: #ffffff;
+        padding: 5px 8px;
+        color: var(--aws-ink, #16191f);
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 18px;
+        text-align: left;
+        white-space: normal;
+        overflow-wrap: break-word;
+        word-break: normal;
+        transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+    }
+    .neo-select-option:hover,
+    .neo-select-option:focus-visible {
+        transform: none;
+        filter: none;
+        outline: none;
+        background: #f2f3f3;
+        color: var(--aws-ink, #16191f);
+    }
+    .neo-select-option:active {
+        transform: none;
+        background: #eaeded;
+        color: var(--aws-ink, #16191f);
+    }
+    .neo-select-option.is-selected {
+        background: #eaeded;
+        color: var(--aws-ink, #16191f);
+        box-shadow: inset 3px 0 0 var(--aws-line-dark, #879596);
+        font-weight: 700;
+    }
+    .neo-select-option.is-selected:hover,
+    .neo-select-option.is-selected:focus-visible {
+        background: #eaeded;
+        color: var(--aws-ink, #16191f);
+    }
+    .neo-select-option.is-disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+        pointer-events: none;
+    }
+    @media (max-width: 640px) {
+        .neo-select-button {
+            min-height: 38px;
+            height: 38px;
+            padding: 6px 8px;
+        }
+        .neo-select-menu {
+            border-radius: 0 0 2px 2px;
+            width: 100%;
+            max-width: 100%;
+            max-height: 14rem;
+        }
+        .neo-select-option {
+            min-height: 34px;
+            padding: 7px 8px;
+        }
+        .neo-select-button-text {
+            font-size: 14px;
+        }
+        .neo-select-option,
+        .neo-select-empty {
+            font-size: 0.9rem;
+        }
+    }
+
+
+/* Classic AWS searchable selects; the overlay is anchored outside clipping panels. */
+:is(.aws-console, .aws-auth-shell) .neo-select-button {box-sizing:border-box;height:var(--sacco-control-height,32px);min-height:var(--sacco-control-height,32px);padding:4px 12px;border-color:#aab7b8;background:#fff;}
+:is(.aws-console, .aws-auth-shell) .neo-select-button-text {min-width:0;overflow:hidden;text-overflow:ellipsis;text-align:left!important;color:#16191f;}
+:is(.aws-console, .aws-auth-shell) .neo-select-chevron {width:16px;height:16px;color:#545b64;}
+:is(.aws-console, .aws-auth-shell) .neo-select-menu {position:fixed;right:auto;min-width:0;display:flex;flex-direction:column;overflow:hidden;padding:0;border:1px solid #879596;border-radius:2px;background:#fff;z-index:10000!important;box-shadow:0 2px 4px #0003!important;}
+:is(.aws-console, .aws-auth-shell) .neo-select-menu[hidden] {display:none!important;}
+.neo-select-search {flex:none;padding:8px;background:#fff;border-bottom:1px solid #eaeded;}
+:is(.aws-console, .aws-auth-shell) .neo-select-search input {box-sizing:border-box;width:100%;min-width:0;height:32px;margin:0;border:1px solid #aab7b8;border-radius:2px;background:#fff;padding:4px 32px;font:400 14px/20px "Amazon Ember",Helvetica,Arial,sans-serif;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16' fill='none' stroke='%23687078' stroke-width='2'%3E%3Ccircle cx='10' cy='10' r='7'/%3E%3Cpath d='m15 15 6 6'/%3E%3C/svg%3E");background-position:8px center;background-repeat:no-repeat;}
+.neo-select-search input::placeholder {font-style:italic;color:#879596;}
+.neo-select-search input:focus {outline:2px solid #0073bb;outline-offset:-2px;}
+.neo-select-options {flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;}
+:is(.aws-console, .aws-auth-shell) .neo-select-options .neo-select-option {flex:none;height:auto!important;white-space:normal!important;overflow-wrap:anywhere;}
+.neo-select-option-label {flex:1 1 auto;min-width:0;white-space:normal;overflow-wrap:anywhere;text-align:left;}
+:is(.aws-console, .aws-auth-shell) .neo-select-options .neo-select-option {box-sizing:border-box;display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;min-height:36px!important;padding:8px 12px!important;border:0;border-radius:0;background:#fff;color:#16191f;text-align:left;font-size:14px!important;line-height:20px!important;font-weight:400!important;box-shadow:none;}
+:is(.aws-console, .aws-auth-shell) .neo-select-options .neo-select-option:is(:hover,:focus-visible) {background:#f1faff;outline:2px solid #0073bb;outline-offset:-2px;}
+:is(.aws-console, .aws-auth-shell) .neo-select-options .neo-select-option.is-selected {background:#f1faff;box-shadow:inset 3px 0 #0073bb;color:#0073bb;}
+.neo-select-check {visibility:hidden;flex:none;color:#0073bb;}
+.neo-select-check svg {display:block;width:16px;height:16px;}
+.is-selected>.neo-select-check {visibility:visible;}
+:is(.aws-console, .aws-auth-shell) .neo-select-more {flex:none;min-height:36px;padding:8px 12px;border:0;border-top:1px solid #eaeded;border-radius:0;background:#fff;color:#0073bb;text-align:left;justify-content:flex-start;}
+.neo-select-more[hidden] {display:none!important;}
+.neo-select-more:focus-visible {outline:2px solid #0073bb;outline-offset:-2px;}

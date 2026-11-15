@@ -1,0 +1,10 @@
+<%@ page pageEncoding="UTF-8" %>
+<form method="get" action="<c:url value='${baseUrl}'/>">
+<input type="hidden" name="size" value="${query.size}">
+<label><spring:message code="common.search"/><input type="search" name="search" value="<c:out value='${query.search}'/>" maxlength="100"></label>
+<label><spring:message code="common.from"/><input type="date" name="from" value="${query.from}" min="${book.openingDate()}" max="${today}" required></label>
+<label><spring:message code="common.to"/><input type="date" name="to" value="${query.to}" min="${book.openingDate()}" max="${today}" required></label>
+<label><spring:message code="gl.preview.sortBy"/><select name="sort"><c:forEach items="${statementDocument.columns()}" var="column" varStatus="cs"><c:if test="${not empty statementSortKeys[cs.index]}"><option value="${statementSortKeys[cs.index]}" ${query.sort==statementSortKeys[cs.index]?'selected':''}><c:out value="${column.label()}"/></option></c:if></c:forEach><c:forEach items="${statementAdditionalSorts}" var="extraSort"><option value="${extraSort.key}" ${query.sort==extraSort.key?'selected':''}><spring:message code="${extraSort.value}"/></option></c:forEach></select></label>
+<label><spring:message code="gl.preview.direction"/><select name="direction"><option value="asc" ${query.direction=='asc'?'selected':''}><spring:message code="gl.preview.ascending"/></option><option value="desc" ${query.direction=='desc'?'selected':''}><spring:message code="gl.preview.descending"/></option></select></label>
+<button class="app-btn btn-neutral" type="submit"><spring:message code="common.apply"/></button><a class="app-btn btn-neutral" href="<c:url value='${baseUrl}'/>"><spring:message code="common.clear"/></a>
+</form>

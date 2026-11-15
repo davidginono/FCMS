@@ -6,3 +6,5 @@ node_modules/
 *.war
 *.class
 src/main/resources/static/css/app.css.map
+
+.verification/

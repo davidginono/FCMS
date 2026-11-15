@@ -1,9 +1,9 @@
 package com.foresight.fcms.auth;
 
-import java.util.Optional;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserAccountRepository extends JpaRepository<UserAccount, Integer> {
+import java.util.Optional;
+
+public interface UserAccountRepository extends JpaRepository<UserAccount, Long> {
     Optional<UserAccount> findByEmailIgnoreCase(String email);
 }

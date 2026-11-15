@@ -1,47 +1,65 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <!doctype html>
-<html lang="en">
+<html lang="${pageContext.response.locale.language}">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>FCMS Login</title>
-    <link rel="stylesheet" href="<c:url value='/css/app.css' />">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FCMS</title>
+<link rel="stylesheet" href="<c:url value='/css/app.css'/>">
+<link rel="stylesheet" href="<c:url value='/css/workspaces.css'/>">
 </head>
-<body class="min-h-screen bg-fcms-bg text-fcms-ink">
-<main class="flex min-h-screen items-center justify-center px-4 py-10">
-    <section class="w-full max-w-md rounded-lg border border-fcms-line bg-white p-8 shadow-sm">
-        <div class="mb-8 text-center">
-            <img src="<c:url value='/img/app-logo.png' />" alt="FCMS" class="mx-auto mb-4 h-14 w-14 rounded object-cover">
-            <h1 class="text-2xl font-bold">Welcome to FCMS</h1>
-            <p class="mt-2 text-sm text-fcms-muted">Sign in to continue the Spring migration workspace.</p>
-        </div>
-
-        <c:if test="${param.error != null}">
-            <div class="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                Wrong password, inactive account, or unknown email.
-            </div>
-        </c:if>
-        <c:if test="${param.logout != null}">
-            <div class="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                You have been logged out.
-            </div>
-        </c:if>
-
-        <form method="post" action="<c:url value='/login' />" class="space-y-5">
-            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-            <div>
-                <label for="email" class="block text-sm font-semibold text-slate-700">Email address</label>
-                <input id="email" name="email" type="email" required autocomplete="email"
-                       class="mt-2 block w-full rounded-md border border-fcms-line px-3 py-2.5 text-sm outline-none focus:border-fcms-brand focus:ring-2 focus:ring-blue-100">
-            </div>
-            <div>
-                <label for="password" class="block text-sm font-semibold text-slate-700">Password</label>
-                <input id="password" name="password" type="password" required autocomplete="current-password"
-                       class="mt-2 block w-full rounded-md border border-fcms-line px-3 py-2.5 text-sm outline-none focus:border-fcms-brand focus:ring-2 focus:ring-blue-100">
-            </div>
-            <button type="submit" class="fcms-button-primary w-full">Login</button>
-        </form>
-    </section>
+<body>
+<main class="app-auth-shell">
+<section class="app-auth-card">
+<h1 class="app-auth-title">FCMS</h1>
+<h2>
+<spring:message code="auth.title" />
+</h2>
+<c:if test="${param.error!=null}">
+<div class="fcms-alert" role="alert">
+<spring:message code="auth.failed" />
+</div>
+</c:if>
+<c:if test="${param.logout!=null}">
+<div role="status">
+<spring:message code="auth.loggedOut" />
+</div>
+</c:if>
+<c:if test="${param.passwordChanged!=null}">
+<div role="status">
+<spring:message code="auth.changed" />
+</div>
+</c:if>
+<form method="post" action="<c:url value='/login'/>">
+<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+<div class="fcms-field">
+<label for="email">
+<spring:message code="common.email" />
+</label>
+<input type="email" id="email" name="email" maxlength="100" required autocomplete="username">
+</div>
+<div class="fcms-field">
+<label for="password">
+<spring:message code="common.password" />
+</label>
+<input type="password" id="password" name="password" required autocomplete="current-password">
+</div>
+<div class="fcms-form-actions">
+<button class="app-btn btn-neutral" type="submit">
+<spring:message code="auth.signIn" />
+</button>
+</div>
+</form>
+<a href="<c:url value='/password/forgot'/>">
+<spring:message code="password.forgot" />
+</a>
+<div>
+<a href="?lang=en">English</a> · <a href="?lang=sw">Kiswahili</a>
+</div>
+</section>
 </main>
 </body>
 </html>

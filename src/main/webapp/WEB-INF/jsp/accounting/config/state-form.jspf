@@ -1,0 +1,8 @@
+<%@ page pageEncoding="UTF-8" %>
+<c:if test="${permissions.contains('accounting.setup')}">
+<section class="erp-resource-section" id="state"><h2><spring:message code="common.status"/></h2><div class="fcms-section-body">
+<form method="post" action="<c:url value='${stateUrl}'/>" class="fcms-command">
+ <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"><input type="hidden" name="version" value="${stateResource.version()}"><input type="hidden" name="active" value="${not stateResource.active()}">
+ <div class="fcms-field"><label for="stateReason"><spring:message code="common.reason"/></label><textarea id="stateReason" name="reason" maxlength="500" required><c:out value="${param.reason}"/></textarea></div>
+ <button type="submit" class="app-btn btn-neutral"><spring:message code="${stateResource.active()?'common.deactivate':'common.activate'}"/></button>
+</form></div></section></c:if>

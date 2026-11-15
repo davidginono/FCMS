@@ -1,0 +1,24 @@
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
+fcms:
+  upload-scan:
+    enabled: true
+spring:
+  mail:
+    properties:
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      mail.smtp.ssl.checkserveridentity: true
+  jpa:
+    properties:
+      hibernate:
+        format_sql: false
+management:
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true

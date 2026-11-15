@@ -1,0 +1,2 @@
+create table system_backups(id uuid primary key,status varchar(20) not null check(status in ('QUEUED','RUNNING','READY','FAILED')),requested_by bigint not null references users(id),created_at timestamptz not null default current_timestamp,started_at timestamptz,finished_at timestamptz,size_bytes bigint,error_code varchar(40));
+create unique index one_active_backup on system_backups((true)) where status in ('QUEUED','RUNNING');

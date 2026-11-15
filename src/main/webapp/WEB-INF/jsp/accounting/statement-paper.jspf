@@ -1,0 +1,26 @@
+<%@ page pageEncoding="UTF-8" %>
+<section class="fs-paper-scroll" tabindex="0" aria-label="<spring:message code='gl.preview'/>">
+<article class="fs-paper fs-${statementDocument.style()}" data-equity-columns="${statementDocument.columns().size()}" data-fs-paper data-kind="${reportType}">
+<c:choose><c:when test="${statementDocument.style()=='equity'}">
+<h2><c:out value="${statementDocument.title()}"/></h2>
+<p class="fs-equity-period"><span><spring:message code="gl.equity.forPeriod"/></span><span><c:out value="${statementDocument.header().period().substring(statementDocument.header().period().lastIndexOf('       ')+7)}"/></span></p>
+</c:when><c:otherwise>
+<h2><c:out value="${statementDocument.title()}"/></h2>
+<div class="fs-paper-meta"><strong><c:out value="${statementDocument.header().identity()}"/></strong><c:forEach items="${statementDocument.header().previewLines()}" var="value"><span><c:out value="${value}"/></span></c:forEach></div>
+</c:otherwise></c:choose>
+<table class="fs-table" data-table-sort-mode="none" data-table-sort-reason="financial-statement">
+<c:if test="${statementDocument.style()=='equity'}"><colgroup><c:forEach items="${statementDocument.columns()}" var="column"><col width="${column.weight()*100}%"></c:forEach></colgroup></c:if><thead><tr><c:forEach items="${statementDocument.columns()}" var="column" varStatus="cs">
+<c:if test="${not statementPrint and cs.index==statementDocument.detailsBefore()}"><th class="fs-details" scope="col"><spring:message code="common.details"/></th></c:if>
+<th scope="col" class="${column.numeric()?'fs-number':''} ${cs.last and statementDocument.style()=='statement'?'fs-comparison':''}"><c:out value="${column.label()}"/></th>
+</c:forEach></tr></thead><tbody>
+<c:if test="${statementEmpty}"><tr><td colspan="${statementDocument.columns().size()+(statementDocument.detailsBefore()>=0?1:0)}"><spring:message code="common.noRecords"/></td></tr></c:if>
+<c:forEach items="${statementDocument.rows()}" var="row">
+<tr class="${row.heading()?'fs-section':''} ${row.total()?'fs-total':''}"><c:forEach items="${row.cells()}" var="cell" varStatus="cs">
+<c:if test="${not statementPrint and cs.index==statementDocument.detailsBefore()}"><td class="fs-details">
+<c:if test="${not empty row.drillLine() or not empty row.accountId()}">
+<c:choose><c:when test="${not empty row.accountId()}"><c:choose><c:when test="${statementDrill}"><c:url var="accountDrillPath" value="/accounting/statements/${reportType}/lines/${statementLine}/accounts/${row.accountId()}"/></c:when><c:otherwise><c:url var="accountDrillPath" value="/accounting/accounts/${row.accountId()}/ledger"/></c:otherwise></c:choose><c:url var="drillUrl" value="${accountDrillPath}"><c:param name="from" value="${query.from}"/><c:param name="to" value="${query.to}"/></c:url></c:when><c:otherwise><c:url var="drillUrl" value="/accounting/statements/${reportType}/lines/${row.drillLine()}"><c:param name="from" value="${query.from}"/><c:param name="to" value="${query.to}"/></c:url></c:otherwise></c:choose>
+<a class="fs-details-button" href="<c:out value='${drillUrl}'/>"><spring:message code="common.details"/><span class="sr-only"> <c:out value="${row.label()}"/></span></a>
+</c:if></td></c:if>
+<td class="${statementDocument.columns()[cs.index].numeric() and row.numericCell(cs.index)?'fs-number':''} ${cs.last and statementDocument.style()=='statement'?'fs-comparison':''}"><c:choose><c:when test="${not statementPrint and not empty row.cellDrills()[cs.index]}"><a class="fs-equity-drill" href="<c:out value='${row.cellDrills()[cs.index]}'/>"><c:out value="${cell}"/></a></c:when><c:when test="${not statementPrint and (reportType=='ledger' or paperKind=='ledger') and cs.index==1 and not empty row.journalId()}"><c:url var="journalUrl" value="/accounting/journals/${row.journalId()}"><c:param name="ledgerAccount" value="${ledger.account().id()}"/><c:param name="from" value="${query.from}"/><c:param name="to" value="${query.to}"/></c:url><a href="<c:out value='${journalUrl}'/>"><c:out value="${cell}"/><span class="sr-only"> <c:out value="${row.label()}"/></span></a></c:when><c:otherwise><c:out value="${cell}"/></c:otherwise></c:choose></td>
+</c:forEach></tr></c:forEach>
+</tbody></table><c:if test="${statementDocument.style()=='equity'}"><p class="fs-equity-scope"><c:out value="${statementDocument.context()[1]}"/></p></c:if><div class="fs-status"><c:out value="${statementDocument.notice()}"/></div></article></section>

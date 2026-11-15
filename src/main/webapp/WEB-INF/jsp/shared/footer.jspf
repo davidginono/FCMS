@@ -1,5 +1,6 @@
         </main>
     </div>
 </div>
+<%@ include file="/WEB-INF/jsp/reusableuicomponents/form-support.jspf" %>
 </body>
 </html>

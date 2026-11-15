@@ -1,0 +1,9 @@
+<section class="erp-resource-section"><h2><spring:message code="gl.coverage"/></h2><div class="fcms-section-body"><dl class="fcms-details">
+<div><dt><spring:message code="gl.coverage.through"/></dt><dd><c:out value="${appTime:date(sourceCoverage.through())}"/></dd></div>
+<div><dt><spring:message code="common.status"/></dt><dd><spring:message code="${not sourceCoverage.booksReady()?'status.BOOKS_PENDING':sourceCoverage.complete()?'gl.coverage.complete':'gl.coverage.incomplete'}"/></dd></div>
+<div><dt><spring:message code="gl.coverage.posted"/></dt><dd><c:out value="${sourceCoverage.posted()}"/></dd></div>
+<div><dt><spring:message code="gl.coverage.opening"/></dt><dd><c:out value="${sourceCoverage.openingCovered()}"/></dd></div>
+<div><dt><spring:message code="gl.coverage.unposted"/></dt><dd><c:out value="${sourceCoverage.unposted()}"/></dd></div>
+<div><dt><spring:message code="gl.coverage.unverified"/></dt><dd><c:out value="${sourceCoverage.unverified()}"/></dd></div>
+<div><dt><spring:message code="gl.coverage.amount"/></dt><dd><c:out value="${sourceCoverage.unresolvedAmount()}"/></dd></div>
+</dl><c:if test="${permissions.contains('finance.gl-source.read')}"><a class="app-btn btn-neutral" href="<c:url value='/accounting/sources'><c:param name='to' value='${sourceCoverage.through()}'/></c:url>"><spring:message code="gl.sources"/></a></c:if></div></section>

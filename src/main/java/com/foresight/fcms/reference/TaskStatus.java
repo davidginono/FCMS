@@ -13,12 +13,12 @@ public class TaskStatus {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(name = "status_name", nullable = false, unique = true)
     private String statusName;
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 

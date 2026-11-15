@@ -50,12 +50,30 @@ mvn spring-boot:run
 
 ## Migration Status
 
-The current project is a Spring Boot/JSP/Tailwind migration shell. The
-provisional legacy-derived PostgreSQL schema has been removed.
+FCMS now includes company client registers (SACCOS, AMCOS, Union, Microfinance and
+Other Clients), staff tasks/reports/leave, expense review and payment workflows,
+income/petty-cash/cloud/bulk-SMS ledgers, user administration, account recovery,
+financial statements and database backup workflows.
 
-Application tables and seed data will be introduced through new Flyway
-migrations after FCMS requirements are defined during development. Hibernate is
-set to `ddl-auto: none` so the application does not create or validate a schema
-implicitly.
+`V1__initial_schema.sql` creates the first operational slice: users, roles,
+account statuses, financial years, SACCO clients, tasks, expenses, and reference
+statuses. Hibernate is set to `ddl-auto: validate` so model/schema mismatches
+fail during startup instead of hiding until runtime.
 
-The legacy PHP project remains untouched.
+Development login (non-production profiles only):
+
+```text
+Email: admin@fcms.local
+Password: ChangeMe123!
+```
+
+Production startup rejects the enabled development bootstrap credential. Prepare a unique
+administrator password or another authorized administrator before disabling the development
+account; see the production bootstrap procedure in operations. The prod profile also rejects
+the published development password during authentication and password changes.
+
+The legacy PHP project remains untouched. See [operations](docs/operations.md) for
+mail, backups, claim scopes, ledger semantics, verification and rollout requirements.
+Implementation acceptance is tracked in [the completion plan](docs/implementation-plan.md).
+
+Reviewed COA reporting setup and numbered Notes are available from Accounting. Setup proposals retain independent review, approved inheritance and replacement history; statements retain dated account/transaction drills and original Microfinance print/PDF formats. See [scope and verification](docs/coa-reporting-and-notes.md). The broader module/export goal remains in progress.

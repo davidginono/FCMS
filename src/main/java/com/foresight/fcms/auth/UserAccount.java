@@ -2,6 +2,7 @@ package com.foresight.fcms.auth;
 
 import com.foresight.fcms.reference.AccountStatus;
 import com.foresight.fcms.reference.Role;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,7 +11,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+
+import java.time.Instant;
 
 @Entity
 @Table(name = "users")
@@ -18,7 +20,7 @@ public class UserAccount {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;
@@ -47,20 +49,20 @@ public class UserAccount {
     private Role role;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "reset_token")
     private String resetToken;
 
     @Column(name = "token_expiry")
-    private LocalDateTime tokenExpiry;
+    private Instant tokenExpiry;
 
     private String otp;
 
     @Column(name = "otp_expiry")
-    private LocalDateTime otpExpiry;
+    private Instant otpExpiry;
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
@@ -100,7 +102,7 @@ public class UserAccount {
         return role;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
@@ -108,7 +110,7 @@ public class UserAccount {
         return resetToken;
     }
 
-    public LocalDateTime getTokenExpiry() {
+    public Instant getTokenExpiry() {
         return tokenExpiry;
     }
 
@@ -116,7 +118,7 @@ public class UserAccount {
         return otp;
     }
 
-    public LocalDateTime getOtpExpiry() {
+    public Instant getOtpExpiry() {
         return otpExpiry;
     }
 }

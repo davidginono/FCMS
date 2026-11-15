@@ -1,0 +1,11 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ include file="/WEB-INF/jsp/shared/header.jspf" %>
+<div class="app-page-header"><h1 class="app-page-title"><spring:message code="${record.visible()?'client.archiveAction':'client.restore'}"/></h1></div>
+<form class="fcms-form" method="post" action="<c:url value='${clientRoute}/${record.id()}/visibility'/>" data-resource-form-page data-dirty-form>
+<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"><input type="hidden" name="version" value="${record.version()}"><input type="hidden" name="visible" value="${not record.visible()}">
+<c:if test="${not empty actionError}"><div class="fcms-alert" role="alert"><spring:message code="${actionError}"/></div></c:if>
+<section class="erp-resource-section"><h2><spring:message code="common.details"/></h2><div class="fcms-section-body"><dl class="fcms-details"><div><dt>ID</dt><dd><c:out value="${record.id()}"/></dd></div><div><dt><spring:message code="common.name"/></dt><dd><c:out value="${record.name()}"/></dd></div><div><dt><spring:message code="client.region"/></dt><dd><c:out value="${record.region()}"/></dd></div><div><dt><spring:message code="common.year"/></dt><dd><c:out value="${record.year()}"/></dd></div><div><dt><spring:message code="client.amountPaid"/></dt><dd><fmt:formatNumber value="${record.amount()}" minFractionDigits="2" maxFractionDigits="2"/></dd></div><div><dt><spring:message code="common.status"/></dt><dd><spring:message code="${record.visible()?'status.ACTIVE':'client.archived'}"/></dd></div></dl>
+<div class="fcms-field"><label for="reason"><spring:message code="common.reason"/></label><input id="reason" name="reason" value="<c:out value='${reason}'/>" maxlength="500" required></div></div></section>
+<c:set var="cancelUrl" value="${clientRoute}"/><c:if test="${not record.visible()}"><c:set var="cancelUrl" value="${clientRoute}/archive"/></c:if>
+<div class="app-actions"><a class="app-btn btn-neutral" href="<c:url value='${cancelUrl}'/>"><spring:message code="common.cancel"/></a><button type="submit" class="app-btn btn-launch"><spring:message code="${record.visible()?'client.archiveAction':'client.restore'}"/></button></div></form>
+<%@ include file="/WEB-INF/jsp/reusableuicomponents/form-support.jspf" %><%@ include file="/WEB-INF/jsp/shared/footer.jspf" %>

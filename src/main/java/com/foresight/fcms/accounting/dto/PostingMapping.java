@@ -1,0 +1,26 @@
+package com.foresight.fcms.accounting.dto;
+
+public record PostingMapping(
+        long id,
+        String event,
+        long debitAccountId,
+        String debitAccount,
+        long creditAccountId,
+        String creditAccount,
+        String voucherKind,
+        String cashFlow,
+        String policyReference,
+        String state,
+        long makerId,
+        String maker,
+        Long checkerId,
+        String checker,
+        String reviewReason,
+        java.time.Instant createdAt,
+        java.time.Instant reviewedAt,
+        Long retiredBy,
+        java.time.Instant retiredAt,
+        long version,
+        long transactionId,
+        String transactionCode,
+        String transactionName) {}

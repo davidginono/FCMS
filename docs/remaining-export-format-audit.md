@@ -1,0 +1,30 @@
+# Remaining export format audit
+
+Core GL receipts/payments, journals/opening/reversals and financial statements/trial balance have source-stationery evidence in their dedicated verification documents. Operational ledger register formats now have separate source/financial evidence in docs/ledger-report-facsimiles.md. Invoice/proforma exports have separate legacy-artwork evidence. These checks do not prove every legacy operational/client report is a facsimile.
+
+## Authoritative remaining gaps
+
+| Owning current code | Observed behavior | Remaining work |
+| --- | --- | --- |
+| Exact financial-statement stationery | Income, financial position, cash flow, equity, trial PDF and consolidated income now use the actual Microfinance presentation/print authority. Thirty-four fixture pages are pixel-identical, with zero character/font/color/geometry differences. | Finish the separate trial preview, account-ledger PDF, Notes and approved COA reporting metadata. Detailed scope and evidence: docs/financial-report-source-review.md. |
+| OperationalReportController → PdfReportService (remaining routes) | Per-entry receipt is still a generic Field/Value table; expense/task/leave/staff-report exports still use generic tables and hardcoded labels. The four ledger register routes now use LedgerReportPdfService and original ledger stationery. | Compare remaining actual legacy individual/workforce/expense formats and retain domain columns, exact amounts, scope and filters. Localize report labels. Do not invent a missing legacy counterpart. |
+| ReportController → ConsolidatedStatementPdfService | The earlier blue legacy statement is superseded by the user’s explicit Microfinance income-statement reference. Its replacement uses the original monochrome income paper and retains client-margin detail. | The corrected replacement passed original-renderer, JSP, PDF and native-route checks. Final responsive resource verification is tracked in docs/financial-report-source-review.md. Earlier blue-design acceptance is historical only. |
+| SaccosPdfService and ClientCategoryPdfService | Dedicated table exporters exist. | Compare against original client register/paid/unpaid/revenue reports with synthetic fixtures; current class existence is not proof of visual fidelity. |
+
+Known legacy source candidates found by read-only source search: fpdf_report_helpers.php, print_cashpetty.php, print_bulk.php, print_filtered_income_year.php, print_microfinance_report.php, print_other_report.php, print_paidsaccos.php, print_paid_cloud_backup.php, print_saccos.php, print_task_report.php, print_unpaidsaccos.php and print_unpaid_cloud_backup.php. This is a candidate inventory, not proof of exhaustive route coverage.
+
+The petty/cloud/bulk register gap is resolved with their distinct source columns, geometry and totals. The standalone income register reuses this stationery because the original income page linked to the consolidated income statement rather than a standalone register PDF. This adaptation does not complete the remaining report/receipt audit.
+
+Read-only inspection also found important remaining source details: print_task_report.php has task type, client, activities, allowance, amount and profit columns (the generic FCMS export omits these financial fields even though WorkView already owns them); print_expenses_report.php uses portrait A4, five columns and an amount total; print_reportbystaff.php uses the company/activity heading and staff/client-specific report metadata. Preserve current staff scope, review status and precise decimal semantics while adapting these formats. Original fixed-height cells can clip long text, and the expense script places its footer at Y=0; reproduce the stationery while correcting overlap/data-loss defects.
+
+Inspect entrypoints and their included layout helpers before changing code. Do not execute legacy PHP entrypoints against the operational legacy database; isolate original presentation code and synthetic data for comparisons. Preserve FCMS claims, scope, bounded export queries, financial provenance, exact cents, immutable records and reversals. Browser access became available on November 12. Consolidated-report responsiveness, core statement drill links, and main-content-only modal blur were exercised; the remaining workflows still require their own checks.
+
+The November 12 source correction resolved the earlier title-width truncation, fractional coordinates/font sizes and A4 media-box differences. Refreshed deterministic references now show zero text, font, color and geometry differences across 34 pages. The final stylesheet repair contains out-of-flow accessibility labels inside the report scroller; it does not change PDF drawing.
+
+The financial-report audit follows each actual Microfinance presentation builder and preview/export, not only its drawing helper. Account-ledger PDF, trial paper preview, approved current/non-current/report-line metadata and Notes remain explicit gaps. See docs/financial-report-source-review.md.
+
+
+November 12 ledger update: original trial paper and account-ledger paper/print/PDF are now accepted (docs/trial-balance-paper.md and docs/account-ledger-paper.md). Complete ledger exports retain full-period totals and chronological balances before search/pagination. Remaining financial report-domain gaps are approved current/non-current/report-line metadata and Notes. The operational/client/receipt inventory and other goal gates above still require their own completion evidence.
+
+
+November13 reporting update: approved current/non-current roles, actual family grouping and numbered Notes are now accepted with54 affected checks,71 browser records and42 exact original-renderer pages; see docs/coa-reporting-and-notes.md. The newer complete equity matrix/components, cash counterpart reporting, exact contribution-drill face, and the operational/client/per-entry-receipt inventory remain unfinished. This supersedes earlier assertions that FCMS lacks Notes or reviewed reporting metadata.

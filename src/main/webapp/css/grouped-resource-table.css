@@ -1,0 +1,29 @@
+/* Grouped-resource behavior composes the shared ERP table surface and preferences. */
+[data-grouped-resources] .grouped-resource-heading > td,
+[data-grouped-resources] .grouped-resource-heading > th {
+    background: #f2f3f3;
+    border-bottom: 1px solid #d5dbdb;
+}
+[data-grouped-resources] .grouped-resource-heading th { font-weight: 700; }
+.aws-console [data-grouped-resources] .grouped-resource-heading th { position: static; }
+.grouped-resource-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 0;
+    color: inherit;
+    font: inherit;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+}
+.grouped-resource-toggle svg { width: 16px; height: 16px; fill: currentColor; flex: none; }
+.grouped-resource-toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
+.grouped-resource-toggle:focus-visible { outline: 2px solid #0972d3; outline-offset: 3px; }
+[data-grouped-resources] .grouped-resource-code { padding-inline-start: 36px; }
+[data-grouped-resources] .grouped-resource-more td { padding-block: 12px; }
+[data-grouped-resources] [data-grouped-previous] { margin-inline-end: 16px; }
+[data-grouped-resources] .grouped-resource-more .fcms-error:not(:empty) { display: block; margin-top: 8px; }
+[data-grouped-resources] tr[hidden] { display: none; }
+
+[data-grouped-resources] .grouped-resource-more .app-loading-spinner { width:16px; height:16px; vertical-align:middle; margin-inline-start:8px; }

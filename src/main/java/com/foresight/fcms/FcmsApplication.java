@@ -6,6 +6,9 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
 @SpringBootApplication
+@org.springframework.boot.context.properties.EnableConfigurationProperties(
+        com.foresight.fcms.upload.UploadScanProperties.class)
+@org.springframework.scheduling.annotation.EnableScheduling
 public class FcmsApplication extends SpringBootServletInitializer {
 
     public static void main(String[] args) {

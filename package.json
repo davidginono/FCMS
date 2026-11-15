@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "build:css": "tailwindcss -i ./src/main/resources/static/css/tailwind.css -o ./src/main/resources/static/css/app.css --minify",
+    "build:css": "tailwindcss -i ./src/main/resources/static/css/tailwind.css -o ./src/main/resources/static/css/app.css --minify && node ./scripts/sync-webapp-assets.mjs",
     "watch:css": "tailwindcss -i ./src/main/resources/static/css/tailwind.css -o ./src/main/resources/static/css/app.css --watch"
   },
   "devDependencies": {

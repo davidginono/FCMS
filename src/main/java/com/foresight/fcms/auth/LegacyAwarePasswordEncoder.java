@@ -5,10 +5,23 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 public class LegacyAwarePasswordEncoder implements PasswordEncoder {
 
+    public static final String DEVELOPMENT_PASSWORD = "ChangeMe123!";
     private final BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder();
+    private final boolean production;
+
+    public LegacyAwarePasswordEncoder() {
+        this(false);
+    }
+
+    public LegacyAwarePasswordEncoder(boolean production) {
+        this.production = production;
+    }
 
     @Override
     public String encode(CharSequence rawPassword) {
+        if (production && rawPassword != null && DEVELOPMENT_PASSWORD.contentEquals(rawPassword)) {
+            throw new IllegalArgumentException("error.passwordDefault");
+        }
         return bcrypt.encode(rawPassword);
     }
 
@@ -18,6 +31,9 @@ public class LegacyAwarePasswordEncoder implements PasswordEncoder {
             return false;
         }
 
+        if (production && DEVELOPMENT_PASSWORD.contentEquals(rawPassword)) {
+            return false;
+        }
         if (looksLikeBcrypt(encodedPassword)) {
             return bcrypt.matches(rawPassword, encodedPassword);
         }
@@ -27,7 +43,9 @@ public class LegacyAwarePasswordEncoder implements PasswordEncoder {
 
     @Override
     public boolean upgradeEncoding(String encodedPassword) {
-        return encodedPassword == null || !looksLikeBcrypt(encodedPassword) || bcrypt.upgradeEncoding(encodedPassword);
+        return encodedPassword == null
+                || !looksLikeBcrypt(encodedPassword)
+                || bcrypt.upgradeEncoding(encodedPassword);
     }
 
     private boolean looksLikeBcrypt(String value) {
