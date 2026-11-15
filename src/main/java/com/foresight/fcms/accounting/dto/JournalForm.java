@@ -49,7 +49,7 @@ public class JournalForm {
     }
 
     @jakarta.validation.constraints.NotNull
-    private java.time.LocalDate date = java.time.LocalDate.now();
+    private java.time.LocalDate date = com.foresight.fcms.shared.time.ApplicationCalendar.today();
 
     public java.time.LocalDate getDate() {
         return date;

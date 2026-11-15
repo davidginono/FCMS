@@ -11,6 +11,7 @@
 <c:param name="search" value="${query.search}"/>
 <c:param name="status" value="${query.status}"/>
 <c:param name="from" value="${query.from}"/>
+<c:if test="${kind.name()=='TASK'}"><c:param name="dateBasis" value="${query.dateBasis}"/></c:if>
 <c:param name="to" value="${query.to}"/>
 <c:param name="sort" value="${query.sort}"/>
 <c:param name="direction" value="${query.direction}"/>

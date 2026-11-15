@@ -112,12 +112,27 @@ public class LedgerService {
                 k.name());
     }
 
+    /** Actual signed movements in the selected calendar year, including linked reversals. */
+    @Transactional(readOnly = true)
+    public BigDecimal yearTotal(LedgerKind kind, int year) {
+        access.require("finance.read");
+        if (year < 2000 || year > 2100) throw new IllegalArgumentException("error.invalid");
+        var from = java.time.LocalDate.of(year, 1, 1);
+        return db.queryForObject(
+                "select coalesce(sum(amount_delta),0) from ledger_entries"
+                        + " where kind=? and transaction_date>=? and transaction_date<?",
+                BigDecimal.class,
+                kind.name(),
+                from,
+                from.plusYears(1));
+    }
+
     @Transactional
     public long post(LedgerKind k, @jakarta.validation.Valid LedgerForm f) {
         var a = access.require("finance.write");
         db.queryForList(
                 "select pg_advisory_xact_lock_shared(hashtextextended('FCMS_FINANCE_CUTOVER',0))");
-        if (f.getDate().isAfter(java.time.LocalDate.now())
+        if (f.getDate().isAfter(com.foresight.fcms.shared.time.ApplicationCalendar.today())
                 || f.getAmount().signum() < 0
                 || (f.getAmount().signum() == 0 && (k != LedgerKind.BULK || f.getUnits() == 0))
                 || f.getAmount().scale() > 2) throw new IllegalArgumentException("error.invalid");
@@ -202,7 +217,7 @@ public class LedgerService {
         long nextUnits = Math.addExact(current.units(), units);
         checkBalance(k, next, nextUnits);
         var f = new LedgerForm();
-        f.setDate(java.time.LocalDate.now());
+        f.setDate(com.foresight.fcms.shared.time.ApplicationCalendar.today());
         f.setDescription(reason);
         f.setCategory(original.category());
         f.setReference("REV-" + id);

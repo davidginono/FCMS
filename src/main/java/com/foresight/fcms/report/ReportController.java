@@ -24,7 +24,11 @@ public class ReportController {
     @GetMapping
     public String index(@RequestParam(required = false) Integer year, Model m, Locale locale) {
         var statement =
-                finance.statement(year == null ? java.time.LocalDate.now().getYear() : year);
+                finance.statement(
+                        year == null
+                                ? com.foresight.fcms.shared.time.ApplicationCalendar.today()
+                                        .getYear()
+                                : year);
         m.addAttribute("statement", statement);
         m.addAttribute("statementDocument", pdf.document(statement, locale));
         m.addAttribute("reportType", "income-statement");

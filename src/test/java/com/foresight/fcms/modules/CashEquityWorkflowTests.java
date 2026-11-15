@@ -1,5 +1,7 @@
 package com.foresight.fcms.modules;
 
+import static com.foresight.fcms.shared.time.ApplicationCalendar.today;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.foresight.fcms.accounting.dto.*;
@@ -67,7 +69,7 @@ class CashEquityWorkflowTests {
     final String maker = "cash-equity-maker@test.invalid",
             reader = "cash-equity-reader@test.invalid",
             stranger = "cash-equity-stranger@test.invalid";
-    final LocalDate today = LocalDate.now(),
+    final LocalDate today = today(),
             start = today.withDayOfYear(1),
             opening = start.minusYears(2);
     long makerId,

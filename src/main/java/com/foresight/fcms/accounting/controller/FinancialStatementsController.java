@@ -11,7 +11,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.*;
 
 @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('accounting.report')")
@@ -106,7 +105,7 @@ public class FinancialStatementsController {
         m.addAttribute("baseUrl", "/accounting/trial-balance");
         m.addAttribute("resourceKey", "gl-trial");
         m.addAttribute("statementAdditionalSorts", Map.of("classification", "gl.classification"));
-        m.addAttribute("today", LocalDate.now());
+        m.addAttribute("today", com.foresight.fcms.shared.time.ApplicationCalendar.today());
         m.addAttribute("reportType", "trial");
         m.addAttribute("reportTitle", "gl.trialBalance");
         m.addAttribute(
@@ -151,7 +150,7 @@ public class FinancialStatementsController {
         var result = reports.ledger(id, q);
         ledgerModel(id, result, m, locale);
         m.addAttribute("book", book);
-        m.addAttribute("today", LocalDate.now());
+        m.addAttribute("today", com.foresight.fcms.shared.time.ApplicationCalendar.today());
         m.addAttribute(
                 "statementSortKeys",
                 List.of("date", "", "description", "debit", "credit", "balance"));
@@ -207,9 +206,13 @@ public class FinancialStatementsController {
 
     private Optional<AccountingViews.Book> dates(RegisterQuery q) {
         var book = accounting.books();
-        var start = book.map(b -> b.openingDate()).orElse(LocalDate.now().withDayOfYear(1));
+        var start =
+                book.map(b -> b.openingDate())
+                        .orElse(
+                                com.foresight.fcms.shared.time.ApplicationCalendar.today()
+                                        .withDayOfYear(1));
         if (q.getFrom() == null) q.setFrom(start);
-        if (q.getTo() == null) q.setTo(LocalDate.now());
+        if (q.getTo() == null) q.setTo(com.foresight.fcms.shared.time.ApplicationCalendar.today());
         return book;
     }
 

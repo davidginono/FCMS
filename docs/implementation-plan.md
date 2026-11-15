@@ -1,5 +1,7 @@
 # FCMS completion plan
 
+Latest parity audit: [verified source contracts, fixes and final acceptance](legacy-parity-audit-20261115.md). The earlier counts and completion statement below are historical.
+
 ## Objective and scope
 Implement every missing/partial FCMS module against the read-only legacy source C:/xampp/htdocs/fcms: all five client registers including AMCOS, IAM and account/recovery workflows, tasks, staff reports/teams, leave, expenses, four operational ledgers, cloud billing, backups, dashboards and reports. The confirmed accounting expansion includes a full double-entry general ledger and financial statements. Microfinance supplies reusable UI components and the explicitly requested accounting stationery; FCMS retains its own domain and financial rules. The explicitly approved November 3 extension includes Prospective clients/proformas and the standalone Invoice creator, with facsimile exports.
 

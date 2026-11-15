@@ -1,10 +1,10 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ include file="/WEB-INF/jsp/shared/header.jspf" %>
-<div class="app-page-header">
+<c:if test="${not empty actionError}"><div class="fcms-alert" role="alert"><spring:message code="error.conflict"/></div></c:if><div class="app-page-header">
 <h1 class="app-page-title">
 <c:out value="${record.subject()}" />
 </h1>
-<c:if test="${(record.status()=='DRAFT' || record.status()=='REJECTED' || record.status()=='PLANNED' || record.status()=='IN_PROGRESS') && (record.ownerId()==actorId || (kind.name()=='TASK' && permissions.contains('task.manage')))}">
+<c:if test="${commands.prepare()}">
 <a class="app-btn btn-neutral" href="<c:url value='${baseUrl}/${record.id()}/edit'/>">
 <spring:message code="common.edit" />
 </a>
@@ -56,7 +56,7 @@
 <spring:message code="work.type" />
 </dt>
 <dd>
-<c:out value="${record.workType()}" />
+<c:choose><c:when test="${kind.name()=='REPORT' and record.workType()=='GROUP'}"><spring:message code="work.group"/></c:when><c:when test="${kind.name()=='REPORT' and (empty record.workType() or record.workType()=='INDIVIDUAL')}"><spring:message code="work.individual"/></c:when><c:otherwise><c:out value="${record.workType()}"/></c:otherwise></c:choose>
 </dd>
 </div></c:if>
 <c:if test="${kind.name()=='REPORT'}"><div>
@@ -64,7 +64,7 @@
 <spring:message code="work.outcome" />
 </dt>
 <dd>
-<c:out value="${record.outcome()}" />
+<c:choose><c:when test="${empty record.outcome()}"><spring:message code="gl.presentation.unavailable"/></c:when><c:otherwise><spring:message code="status.${record.outcome()}" text="${record.outcome()}"/></c:otherwise></c:choose>
 </dd>
 </div></c:if>
 <c:if test="${kind.name()=='REPORT'}"><div>
@@ -121,9 +121,11 @@
 </dd>
 </div>
 </c:if>
+<div><dt><spring:message code="work.createdBy"/></dt><dd><c:out value="${record.creator()}"/></dd></div>
+<div><dt><spring:message code="work.preparedBy"/></dt><dd><c:choose><c:when test="${not empty record.preparer()}"><c:out value="${record.preparer()}"/></c:when><c:otherwise><spring:message code="gl.presentation.unavailable"/></c:otherwise></c:choose></dd></div>
 </dl>
 <div class="app-actions">
-<c:if test="${kind.name()=='TASK' && (record.ownerId()==actorId || permissions.contains('task.manage')) && record.status()=='PLANNED'}">
+<c:if test="${permissions.contains('task.write') && kind.name()=='TASK' && (record.ownerId()==actorId || permissions.contains('task.manage')) && record.status()=='PLANNED'}">
 <form method="post" action="<c:url value='${baseUrl}/${record.id()}/actions/start'/>">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
 <input type="hidden" name="version" value="${record.version()}">
@@ -132,7 +134,7 @@
 </button>
 </form>
 </c:if>
-<c:if test="${kind.name()=='TASK' && (record.ownerId()==actorId || permissions.contains('task.manage')) && (record.status()=='PLANNED' || record.status()=='IN_PROGRESS')}">
+<c:if test="${permissions.contains('task.write') && kind.name()=='TASK' && (record.ownerId()==actorId || permissions.contains('task.manage')) && (record.status()=='PLANNED' || record.status()=='IN_PROGRESS')}">
 <form method="post" action="<c:url value='${baseUrl}/${record.id()}/actions/complete'/>">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
 <input type="hidden" name="version" value="${record.version()}">
@@ -141,7 +143,7 @@
 </button>
 </form>
 </c:if>
-<c:if test="${kind.name()=='TASK' && permissions.contains('task.manage') && (record.status()=='PLANNED' || record.status()=='IN_PROGRESS')}">
+<c:if test="${permissions.contains('task.write') && kind.name()=='TASK' && permissions.contains('task.manage') && (record.status()=='PLANNED' || record.status()=='IN_PROGRESS')}">
 <form method="post" action="<c:url value='${baseUrl}/${record.id()}/actions/cancel'/>">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
 <input type="hidden" name="version" value="${record.version()}">
@@ -150,7 +152,7 @@
 </button>
 </form>
 </c:if>
-<c:if test="${kind.name()!='TASK' && record.ownerId()==actorId && (record.status()=='DRAFT' || record.status()=='REJECTED')}">
+<c:if test="${commands.submit()}">
 <form method="post" action="<c:url value='${baseUrl}/${record.id()}/actions/submit'/>">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
 <input type="hidden" name="version" value="${record.version()}">
@@ -160,7 +162,7 @@
 </form>
 </c:if>
 </div>
-<c:if test="${record.status()=='SUBMITTED' && record.ownerId()!=actorId && permissions.contains(kind.claim.concat('.review'))}">
+<c:if test="${commands.review()}">
 <fieldset class="fcms-form-section">
 <legend>
 <spring:message code="work.review" />
@@ -185,5 +187,14 @@
 </div>
 </form>
 </fieldset>
+</c:if>
+<c:if test="${commands.cancel()}">
+<details class="fcms-form-section"><summary><spring:message code="work.withdraw"/></summary>
+<form method="post" action="<c:url value='${baseUrl}/${record.id()}/actions/cancel'/>">
+<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+<input type="hidden" name="version" value="${record.version()}">
+<div class="fcms-field"><label for="withdrawReason"><spring:message code="common.reason"/></label><textarea id="withdrawReason" name="comment" maxlength="1000" required></textarea></div>
+<button class="app-btn btn-neutral" type="submit"><spring:message code="work.confirmWithdraw"/></button>
+</form></details>
 </c:if>
 <%@ include file="/WEB-INF/jsp/shared/footer.jspf" %>

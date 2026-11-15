@@ -1,7 +1,7 @@
 package com.foresight.fcms.workforce.controller;
 
-import com.foresight.fcms.shared.dto.RegisterQuery;
 import com.foresight.fcms.workforce.dto.WorkForm;
+import com.foresight.fcms.workforce.dto.WorkQuery;
 import com.foresight.fcms.workforce.model.WorkKind;
 import com.foresight.fcms.workforce.service.WorkService;
 
@@ -31,14 +31,17 @@ public class WorkController {
                 "registerStatuses",
                 k == WorkKind.TASK
                         ? java.util.List.of("PLANNED", "IN_PROGRESS", "COMPLETED", "CANCELLED")
-                        : java.util.List.of("DRAFT", "SUBMITTED", "APPROVED", "REJECTED"));
+                        : k == WorkKind.REPORT
+                                ? java.util.List.of(
+                                        "DRAFT", "SUBMITTED", "APPROVED", "REJECTED", "CANCELLED")
+                                : java.util.List.of("DRAFT", "SUBMITTED", "APPROVED", "REJECTED"));
     }
 
     @GetMapping
     public String index(
-            @PathVariable String workspace, @ModelAttribute("query") RegisterQuery q, Model m) {
+            @PathVariable String workspace, @ModelAttribute("query") WorkQuery q, Model m) {
         m.addAttribute("records", work.list(WorkKind.from(workspace), q));
-        m.addAllAttributes(work.filters(WorkKind.from(workspace), q.getClientId()));
+        m.addAllAttributes(work.filters(WorkKind.from(workspace), q));
         return "work/index";
     }
 
@@ -54,8 +57,10 @@ public class WorkController {
 
     @GetMapping("/{id}")
     public String detail(@PathVariable String workspace, @PathVariable long id, Model m) {
-        m.addAttribute("record", work.find(WorkKind.from(workspace), id));
-        m.addAttribute("participants", work.participants(WorkKind.from(workspace), id));
+        var details = work.details(WorkKind.from(workspace), id);
+        m.addAttribute("record", details.record());
+        m.addAttribute("participants", details.participants());
+        m.addAttribute("commands", details.commands());
         return "work/detail";
     }
 
@@ -88,9 +93,12 @@ public class WorkController {
         var k = WorkKind.from(workspace);
         if (!b.hasErrors())
             try {
-                return "redirect:" + k.getRoute() + "/" + work.save(k, id, f);
+                return "redirect:" + k.getRoute() + "/" + work.save(k, id, f) + "?saved";
             } catch (IllegalArgumentException e) {
-                b.reject("error.invalid");
+                b.reject(
+                        "work.requestConflict".equals(e.getMessage())
+                                ? "work.requestConflict"
+                                : "error.invalid");
             } catch (org.springframework.dao.OptimisticLockingFailureException e) {
                 b.reject("error.stale");
             }
@@ -105,9 +113,17 @@ public class WorkController {
             @PathVariable long id,
             @PathVariable String action,
             @RequestParam long version,
-            @RequestParam(defaultValue = "") String comment) {
-        var k = WorkKind.from(workspace);
-        work.transition(k, id, version, action, comment);
-        return "redirect:" + k.getRoute() + "/" + id;
+            @RequestParam(defaultValue = "") String comment,
+            Model model,
+            jakarta.servlet.http.HttpServletResponse response) {
+        var kind = WorkKind.from(workspace);
+        try {
+            work.transition(kind, id, version, action, comment);
+            return "redirect:" + kind.getRoute() + "/" + id + "?saved";
+        } catch (IllegalArgumentException | org.springframework.dao.DataAccessException error) {
+            response.setStatus(409);
+            model.addAttribute("actionError", true);
+            return detail(workspace, id, model);
+        }
     }
 }

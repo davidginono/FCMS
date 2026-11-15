@@ -92,7 +92,8 @@ public class SalesForm {
         documentNumber = value;
     }
 
-    @NotNull private LocalDate documentDate = LocalDate.now();
+    @NotNull
+    private LocalDate documentDate = com.foresight.fcms.shared.time.ApplicationCalendar.today();
 
     public LocalDate getDocumentDate() {
         return documentDate;
@@ -102,7 +103,9 @@ public class SalesForm {
         documentDate = value;
     }
 
-    @NotNull private LocalDate validUntil = LocalDate.now().plusDays(30);
+    @NotNull
+    private LocalDate validUntil =
+            com.foresight.fcms.shared.time.ApplicationCalendar.today().plusDays(30);
 
     public LocalDate getValidUntil() {
         return validUntil;

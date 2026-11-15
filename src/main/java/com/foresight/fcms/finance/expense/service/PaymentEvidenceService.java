@@ -262,7 +262,8 @@ public class PaymentEvidenceService {
         if (Set.of("PENDING", "APPROVED").contains(payment.evidenceState()))
             throw new IllegalArgumentException("error.conflict");
         if (f.getPaidOn().isBefore(payment.expenseDate())
-                || f.getPaidOn().isAfter(LocalDate.now(ZoneId.of("Africa/Dar_es_Salaam"))))
+                || f.getPaidOn()
+                        .isAfter(com.foresight.fcms.shared.time.ApplicationCalendar.today()))
             throw new IllegalArgumentException("error.dates");
         if (!payment.paymentReference().isBlank()
                 && !payment.paymentReference().trim().equals(f.getPaymentReference().trim()))

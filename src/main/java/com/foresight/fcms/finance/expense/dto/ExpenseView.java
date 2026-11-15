@@ -13,4 +13,8 @@ public record ExpenseView(
         String status,
         String comment,
         String paymentReference,
-        long version) {}
+        long version,
+        Long createdBy,
+        String creator,
+        Long preparedBy,
+        String preparer) {}

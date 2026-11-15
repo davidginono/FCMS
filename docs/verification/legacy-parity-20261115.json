@@ -1,0 +1,114 @@
+{
+  "verified_utc": "2026-11-15T22:30:19.500626+00:00",
+  "scope": "Canonical FCMS workflows with documented authorization, retention and financial-integrity adaptations",
+  "war_sha256": "c4b0195a25111857fa5bf72bb1f3a8028a0b0c44b2b70609149434116467bfff",
+  "database_migrations": "V1\u2013V27, including attested provenance upgrade from V26",
+  "maven": {
+    "tests": 254,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "browser_suites": [
+    {
+      "suite": "dashboard-parity-native",
+      "checks": 279,
+      "failures": 0,
+      "javascript_errors": 0
+    },
+    {
+      "suite": "expense-assignment-native",
+      "checks": 77,
+      "failures": 0,
+      "javascript_errors": 0
+    },
+    {
+      "suite": "report-assignment-native",
+      "checks": 113,
+      "failures": 0,
+      "javascript_errors": 0
+    },
+    {
+      "suite": "parity-client-reports",
+      "checks": 62,
+      "failures": 0,
+      "javascript_errors": 0
+    },
+    {
+      "suite": "parity-billing-native",
+      "checks": 8,
+      "failures": 0,
+      "javascript_errors": 0
+    },
+    {
+      "suite": "parity-import-native",
+      "checks": 33,
+      "failures": 0,
+      "javascript_errors": 0
+    },
+    {
+      "suite": "parity-rendered-workflows",
+      "checks": 260,
+      "failures": 0,
+      "javascript_errors": 0
+    }
+  ],
+  "browser_checks": 832,
+  "original_export_suites": [
+    {
+      "directory": "operational-exports",
+      "exact_cases": 8
+    },
+    {
+      "directory": "client-exports",
+      "exact_cases": 10
+    },
+    {
+      "directory": "client-revenue-exports",
+      "exact_cases": 24
+    },
+    {
+      "directory": "client-empty-exports",
+      "exact_cases": 10
+    },
+    {
+      "directory": "client-empty-revenues",
+      "exact_cases": 24
+    },
+    {
+      "directory": "cloud-billing-exports",
+      "exact_cases": 8
+    }
+  ],
+  "original_exact_cases": 84,
+  "backup": {
+    "native_status": "READY",
+    "bytes": 5413184,
+    "restored_table_snapshots": 23,
+    "assignment_schema_version": "27"
+  },
+  "runtimes": [
+    {
+      "fixture": "category",
+      "port": 8095,
+      "sha256": "c4b0195a25111857fa5bf72bb1f3a8028a0b0c44b2b70609149434116467bfff"
+    },
+    {
+      "fixture": "dashboard-parity",
+      "port": 8092,
+      "sha256": "c4b0195a25111857fa5bf72bb1f3a8028a0b0c44b2b70609149434116467bfff"
+    },
+    {
+      "fixture": "expense-assignment",
+      "port": 8093,
+      "sha256": "c4b0195a25111857fa5bf72bb1f3a8028a0b0c44b2b70609149434116467bfff"
+    },
+    {
+      "fixture": "report-assignment",
+      "port": 8094,
+      "sha256": "c4b0195a25111857fa5bf72bb1f3a8028a0b0c44b2b70609149434116467bfff"
+    }
+  ],
+  "reference_verifier": "110 files; four bundled skills",
+  "production_deployment": false
+}

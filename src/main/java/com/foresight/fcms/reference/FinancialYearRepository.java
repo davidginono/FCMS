@@ -9,6 +9,8 @@ public interface FinancialYearRepository extends JpaRepository<FinancialYear, Lo
 
     List<FinancialYear> findAllByOrderByFyearDesc();
 
+    List<FinancialYear> findTop1001ByOrderByFyearDesc();
+
     Optional<FinancialYear> findFirstByOrderByFyearDesc();
 
     Optional<FinancialYear> findByFyear(String fyear);

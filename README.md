@@ -81,3 +81,5 @@ mail, backups, claim scopes, ledger semantics, verification and rollout requirem
 Implementation acceptance is tracked in [the completion plan](docs/implementation-plan.md).
 
 Reviewed COA reporting setup and numbered Notes are available from Accounting. Setup proposals retain independent review, approved inheritance and replacement history; statements retain dated account/transaction drills and original Microfinance print/PDF formats. See [scope and verification](docs/coa-reporting-and-notes.md). The completed local workflow inventory and current regression/export/browser evidence are recorded in [the implementation report](docs/cloud-completion-20261115.md) and [legacy inventory](docs/legacy-workflow-inventory.md).
+
+The independent [end-to-end parity audit](docs/legacy-parity-audit-20261115.md) records the verified source contracts and resolved workflow gaps: 254 tests, 832 browser checks, 84 exact export comparisons and a V27 backup restore. This acceptance supersedes the earlier inventory-only completeness statement.

@@ -24,12 +24,11 @@ public class ExpenseCategoryService {
     }
 
     private static final String WHERE =
-            " from expenses e join expense_status s on s.id=e.status_id"
-                    + " where (? or e.user_id=?) and (?::bigint is null or e.user_id=?)"
-                    + " and e.financial_year=? and lower(e.category) like ? escape '!'"
-                    + " and (?='' or e.category=?) and (?='' or s.name=?)"
-                    + " and (?::date is null or e.date_created>=?::date)"
-                    + " and (?::date is null or e.date_created<=?::date)";
+            " from expenses e join expense_status s on s.id=e.status_id where (? or e.user_id=? or"
+                    + " (? and e.created_by=?)) and (?::bigint is null or e.user_id=?) and"
+                    + " e.financial_year=? and lower(e.category) like ? escape '!' and (?='' or"
+                    + " e.category=?) and (?='' or s.name=?) and (?::date is null or"
+                    + " e.date_created>=?::date) and (?::date is null or e.date_created<=?::date)";
 
     public record Category(String category, BigDecimal amount) {}
 
@@ -43,6 +42,8 @@ public class ExpenseCategoryService {
         if (q.getYear().isBlank()) throw new IllegalArgumentException("error.invalid");
         return new Object[] {
             actor.has("expense.approve"),
+            actor.id(),
+            actor.has("expense.assign"),
             actor.id(),
             q.getOwnerId(),
             q.getOwnerId(),
@@ -79,6 +80,12 @@ public class ExpenseCategoryService {
     private BigDecimal total(Object[] parameters) {
         return db.queryForObject(
                 "select coalesce(sum(e.amount),0)" + WHERE, BigDecimal.class, parameters);
+    }
+
+    /** Whole authorized expense amount, independent of category/page count. */
+    @Transactional(readOnly = true)
+    public BigDecimal total(ExpenseQuery query) {
+        return total(parameters(query));
     }
 
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)

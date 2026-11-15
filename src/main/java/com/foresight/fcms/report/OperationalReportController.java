@@ -6,6 +6,7 @@ import com.foresight.fcms.finance.ledger.model.LedgerKind;
 import com.foresight.fcms.report.service.LedgerReportPdfService;
 import com.foresight.fcms.report.service.OperationalReportPdfService;
 import com.foresight.fcms.shared.dto.RegisterQuery;
+import com.foresight.fcms.workforce.dto.WorkQuery;
 import com.foresight.fcms.workforce.model.WorkKind;
 
 import org.springframework.http.*;
@@ -44,7 +45,7 @@ public class OperationalReportController {
 
     @GetMapping("/{workspace:tasks|leaves|staff-reports}/print.pdf")
     public ResponseEntity<byte[]> work(
-            @PathVariable String workspace, @ModelAttribute RegisterQuery query, Locale locale) {
+            @PathVariable String workspace, @ModelAttribute WorkQuery query, Locale locale) {
         return output(workspace, pdf.work(WorkKind.from(workspace), query, locale));
     }
 

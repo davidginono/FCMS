@@ -2,7 +2,9 @@ package com.foresight.fcms.finance.expense.service;
 
 import com.foresight.fcms.audit.service.AuditService;
 import com.foresight.fcms.auth.service.AccessService;
+import com.foresight.fcms.auth.service.UserDirectoryService;
 import com.foresight.fcms.finance.expense.dto.*;
+import com.foresight.fcms.reference.FinancialYearRepository;
 import com.foresight.fcms.shared.dto.*;
 
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -18,17 +20,29 @@ public class ExpenseService {
     private final JdbcTemplate db;
     private final AccessService access;
     private final AuditService audit;
+    private final UserDirectoryService users;
+    private final FinancialYearRepository years;
 
-    public ExpenseService(JdbcTemplate db, AccessService access, AuditService audit) {
+    public ExpenseService(
+            JdbcTemplate db,
+            AccessService access,
+            AuditService audit,
+            UserDirectoryService users,
+            FinancialYearRepository years) {
         this.db = db;
         this.access = access;
         this.audit = audit;
+        this.users = users;
+        this.years = years;
     }
 
     private static final String SELECT =
-            "select e.*,s.name as status,coalesce(u.first_name||' '||u.last_name,'') as owner from"
-                    + " expenses e join expense_status s on s.id=e.status_id left join"
-                    + " iam_staff_directory u on u.id=e.user_id";
+            "select e.*,s.name as status,coalesce(u.first_name||' '||u.last_name,'') as"
+                + " owner,coalesce(c.first_name||' '||c.last_name,'') as"
+                + " creator,coalesce(p.first_name||' '||p.last_name,'') as preparer from expenses e"
+                + " join expense_status s on s.id=e.status_id left join iam_staff_directory u on"
+                + " u.id=e.user_id left join iam_staff_directory c on c.id=e.created_by left join"
+                + " iam_staff_directory p on p.id=e.prepared_by";
 
     private ExpenseView row(java.sql.ResultSet r, int n) throws java.sql.SQLException {
         return new ExpenseView(
@@ -44,7 +58,11 @@ public class ExpenseService {
                 r.getString("status"),
                 r.getString("review_comment"),
                 r.getString("payment_reference"),
-                r.getLong("version"));
+                r.getLong("version"),
+                r.getObject("created_by", Long.class),
+                r.getString("creator"),
+                r.getObject("prepared_by", Long.class),
+                r.getString("preparer"));
     }
 
     @Transactional(readOnly = true)
@@ -54,12 +72,13 @@ public class ExpenseService {
         return RegisterPage.of(
                 db.query(
                         SELECT
-                                + " where (? or e.user_id=?) and (?::bigint is null or e.user_id=?)"
-                                + " and (?='' or e.financial_year=?) and (?='' or e.category=?)"
-                                + " and lower(e.description||'"
-                                + " '||e.category) like ? escape '!' and (?='' or s.name=?) and"
-                                + " (?::date is null or e.date_created>=?::date) and (?::date is"
-                                + " null or e.date_created<=?::date) order by "
+                                + " where (? or e.user_id=? or (? and e.created_by=?)) and"
+                                + " (?::bigint is null or e.user_id=?) and (?='' or"
+                                + " e.financial_year=?) and (?='' or e.category=?) and"
+                                + " lower(e.description||' '||e.category) like ? escape '!' and"
+                                + " (?='' or s.name=?) and (?::date is null or"
+                                + " e.date_created>=?::date) and (?::date is null or"
+                                + " e.date_created<=?::date) order by "
                                 + q.order(
                                         Map.of(
                                                 "id",
@@ -81,6 +100,8 @@ public class ExpenseService {
                                 + " limit ? offset ?",
                         this::row,
                         a.has("expense.approve"),
+                        a.id(),
+                        a.has("expense.assign"),
                         a.id(),
                         q.getOwnerId(),
                         q.getOwnerId(),
@@ -105,19 +126,75 @@ public class ExpenseService {
         var a = access.require("expense.read");
         return db
                 .query(
-                        SELECT + " where e.id=? and (? or e.user_id=?)",
+                        SELECT + " where e.id=? and (? or e.user_id=? or (? and e.created_by=?))",
                         this::row,
                         id,
                         a.has("expense.approve"),
+                        a.id(),
+                        a.has("expense.assign"),
                         a.id())
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("error.missing"));
     }
 
+    private boolean mayPrepare(AccessService.Actor actor, ExpenseView record) {
+        return record.ownerId() == actor.id()
+                || actor.has("expense.assign")
+                        && (Objects.equals(record.createdBy(), actor.id())
+                                || actor.has("expense.approve"));
+    }
+
+    private boolean involved(AccessService.Actor actor, ExpenseView record) {
+        return record.ownerId() == actor.id()
+                || Objects.equals(record.createdBy(), actor.id())
+                || Objects.equals(record.preparedBy(), actor.id());
+    }
+
+    public record YearChoice(long id, String label) {}
+
+    public record Options(
+            boolean assignmentAllowed,
+            List<UserDirectoryService.Choice> staff,
+            List<YearChoice> years,
+            String retainedYear) {}
+
+    @Transactional(readOnly = true)
+    public Options options(ExpenseForm form, Long id) {
+        var actor = access.require("expense.write");
+        var retained = id == null ? null : find(id);
+        if (form.getOwnerId() == null)
+            form.setOwnerId(retained == null ? actor.id() : retained.ownerId());
+        var choices =
+                years.findTop1001ByOrderByFyearDesc().stream()
+                        .map(y -> new YearChoice(y.getId(), y.getFyear()))
+                        .toList();
+        if (choices.size() > 1000) throw new IllegalArgumentException("error.narrowReport");
+        if (id == null && form.getFinancialYearId() == null && form.getDate() != null)
+            choices.stream()
+                    .filter(y -> y.label().equals(String.valueOf(form.getDate().getYear())))
+                    .findFirst()
+                    .ifPresent(y -> form.setFinancialYearId(y.id()));
+        var staff = new LinkedHashMap<Long, UserDirectoryService.Choice>();
+        if (actor.has("expense.assign")) {
+            users.selected(Set.of(form.getOwnerId())).forEach(c -> staff.put(c.id(), c));
+            users.staff("").forEach(c -> staff.putIfAbsent(c.id(), c));
+        }
+        return new Options(
+                actor.has("expense.assign"),
+                List.copyOf(staff.values()),
+                choices,
+                retained == null ? null : retained.year());
+    }
+
     @Transactional(readOnly = true)
     public @jakarta.validation.Valid ExpenseForm form(long id) {
+        var actor = access.require("expense.write");
         var r = find(id);
+        if (!mayPrepare(actor, r))
+            throw new org.springframework.security.access.AccessDeniedException("denied");
+        if (!Set.of("draft", "rejected").contains(r.status()))
+            throw new IllegalArgumentException("error.invalid");
         var f = new ExpenseForm();
         f.setDate(r.date());
         f.setCategory(r.category());
@@ -125,57 +202,132 @@ public class ExpenseService {
         f.setPayee(r.payee());
         f.setAmount(r.amount());
         f.setVersion(r.version());
+        f.setOwnerId(r.ownerId());
+        years.findByFyear(r.year()).ifPresent(y -> f.setFinancialYearId(y.getId()));
         return f;
+    }
+
+    private String creationHash(ExpenseForm form, long owner, String year) {
+        return com.foresight.fcms.shared.command.CommandFingerprint.of(
+                Long.toString(owner),
+                form.getDate().toString(),
+                form.getCategory(),
+                form.getDescription(),
+                form.getPayee(),
+                form.getAmount().stripTrailingZeros().toPlainString(),
+                year);
     }
 
     @Transactional
     public long save(Long id, @jakarta.validation.Valid ExpenseForm f) {
-        var a = access.require("expense.write");
+        var actor = access.require("expense.write");
         if (f.getAmount().signum() <= 0
                 || f.getAmount().scale() > 2
-                || f.getDate().isAfter(java.time.LocalDate.now()))
-            throw new IllegalArgumentException();
+                || f.getDate().isAfter(com.foresight.fcms.shared.time.ApplicationCalendar.today()))
+            throw new IllegalArgumentException("error.invalid");
+        ExpenseView old = id == null ? null : find(id);
+        if (old != null && !mayPrepare(actor, old))
+            throw new org.springframework.security.access.AccessDeniedException("denied");
+        if (old != null && !Set.of("draft", "rejected").contains(old.status()))
+            throw new IllegalArgumentException("error.invalid");
+        long owner =
+                f.getOwnerId() == null
+                        ? (old == null ? actor.id() : old.ownerId())
+                        : f.getOwnerId();
+        if (owner != actor.id()
+                && !actor.has("expense.assign")
+                && (old == null || owner != old.ownerId())) actor.require("expense.assign");
+        if (old != null && owner != old.ownerId()) actor.require("expense.assign");
+        if (owner != actor.id()) {
+            try {
+                users.requireActive(Set.of(owner));
+            } catch (IllegalArgumentException invalid) {
+                throw new IllegalArgumentException("expense.activeStaff");
+            }
+        }
+        String year =
+                f.getFinancialYearId() == null
+                        ? (old == null ? String.valueOf(f.getDate().getYear()) : old.year())
+                        : years.findById(f.getFinancialYearId())
+                                .orElseThrow(
+                                        () -> new IllegalArgumentException("expense.yearMissing"))
+                                .getFyear();
         if (id == null) {
-            var old =
-                    db.queryForList(
-                            "select id from expenses where user_id=? and request_key=?",
-                            Long.class,
-                            a.id(),
+            String hash = creationHash(f, owner, year);
+            db.query(
+                    "select pg_advisory_xact_lock(hashtextextended(?,0))",
+                    (r, n) -> 0,
+                    "fcms.expense-create:" + actor.id() + ":" + f.getRequestKey());
+            var previous =
+                    db.query(
+                            "select id,creation_hash,(date_created=? and user_id=? and category=?"
+                                + " and description=? and payee=? and amount=? and"
+                                + " financial_year=?) same_payload from expenses where created_by=?"
+                                + " and request_key=?",
+                            (r, n) -> new Object[] {r.getLong(1), r.getString(2), r.getBoolean(3)},
+                            f.getDate(),
+                            owner,
+                            f.getCategory(),
+                            f.getDescription(),
+                            f.getPayee(),
+                            f.getAmount(),
+                            year,
+                            actor.id(),
                             f.getRequestKey());
-            if (!old.isEmpty()) return old.getFirst();
+            if (!previous.isEmpty()) {
+                var retained = previous.getFirst();
+                if (retained[1] == null ? (boolean) retained[2] : hash.equals(retained[1]))
+                    return (long) retained[0];
+                throw new IllegalArgumentException("expense.requestConflict");
+            }
+            if (db.queryForObject(
+                    "select exists(select 1 from expenses where created_by is null and user_id=?"
+                            + " and request_key=?)",
+                    Boolean.class,
+                    owner,
+                    f.getRequestKey()))
+                throw new IllegalArgumentException("expense.requestConflict");
             id =
                     db.queryForObject(
                             "insert into"
-                                + " expenses(date_created,user_id,category,description,payee,amount,financial_year,status_id,request_key)"
-                                + " values (?,?,?,?,?,?,?,1,?) returning id",
+                                + " expenses(date_created,user_id,category,description,payee,amount,financial_year,status_id,request_key,created_by,prepared_by,creation_hash)"
+                                + " values (?,?,?,?,?,?,?,1,?,?,?,?) returning id",
                             Long.class,
                             f.getDate(),
-                            a.id(),
+                            owner,
                             f.getCategory(),
                             f.getDescription(),
                             f.getPayee(),
                             f.getAmount(),
-                            String.valueOf(f.getDate().getYear()),
-                            f.getRequestKey());
-        } else {
-            var old = find(id);
-            if (old.ownerId() != a.id() || !Set.of("draft", "rejected").contains(old.status()))
-                throw new IllegalArgumentException();
-            if (db.update(
-                            "update expenses set"
-                                + " date_created=?,category=?,description=?,payee=?,amount=?,financial_year=?,status_id=1,version=version+1,updated_at=current_timestamp"
-                                + " where id=? and version=?",
-                            f.getDate(),
-                            f.getCategory(),
-                            f.getDescription(),
-                            f.getPayee(),
-                            f.getAmount(),
-                            String.valueOf(f.getDate().getYear()),
-                            id,
-                            f.getVersion())
-                    != 1) throw new OptimisticLockingFailureException("stale");
-        }
-        audit.record(a.id(), "expense.save", "expenses", id, "Draft saved");
+                            year,
+                            f.getRequestKey(),
+                            actor.id(),
+                            actor.id(),
+                            hash);
+        } else if (db.update(
+                        "update expenses set"
+                            + " date_created=?,user_id=?,category=?,description=?,payee=?,amount=?,financial_year=?,prepared_by=?,status_id=1,version=version+1,updated_at=current_timestamp"
+                            + " where id=? and version=?",
+                        f.getDate(),
+                        owner,
+                        f.getCategory(),
+                        f.getDescription(),
+                        f.getPayee(),
+                        f.getAmount(),
+                        year,
+                        actor.id(),
+                        id,
+                        f.getVersion())
+                != 1) throw new OptimisticLockingFailureException("stale");
+        audit.record(
+                actor.id(),
+                "expense.save",
+                "expenses",
+                id,
+                "Draft saved; beforeOwner="
+                        + (old == null ? "" : old.ownerId())
+                        + "; owner="
+                        + owner);
         return id;
     }
 
@@ -195,13 +347,13 @@ public class ExpenseService {
         switch (action) {
             case "submit" -> {
                 a.require("expense.write");
-                if (old.ownerId() != a.id() || !Set.of("draft", "rejected").contains(old.status()))
+                if (!mayPrepare(a, old) || !Set.of("draft", "rejected").contains(old.status()))
                     throw new IllegalArgumentException();
                 next = "submitted";
             }
             case "approve", "reject" -> {
                 a.require("expense.approve");
-                if (old.ownerId() == a.id()
+                if (involved(a, old)
                         || !old.status().equals("submitted")
                         || comment.isBlank()
                         || comment.length() > 1000) throw new IllegalArgumentException();
@@ -218,7 +370,7 @@ public class ExpenseService {
                 a.require("finance.reverse");
                 if (old.status().equals("reversed")) return;
                 if (!old.status().equals("paid")
-                        || old.ownerId() == a.id()
+                        || involved(a, old)
                         || comment.isBlank()
                         || comment.length() > 1000) throw new IllegalArgumentException();
                 db.update(
@@ -250,7 +402,7 @@ public class ExpenseService {
                         reference,
                         next,
                         next,
-                        java.time.LocalDate.now(),
+                        com.foresight.fcms.shared.time.ApplicationCalendar.today(),
                         next,
                         a.id(),
                         next,
@@ -291,15 +443,34 @@ public class ExpenseService {
             readOnly = true,
             isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
     public ExpenseDetails details(long id, RegisterQuery q) {
+        var record = find(id);
         return new ExpenseDetails(
-                find(id),
+                record,
                 historyRows(id, q),
                 Boolean.TRUE.equals(
                         db.queryForObject(
                                 "select exists(select 1 from expense_legacy_payment_candidates"
                                         + " where expense_id=?)",
                                 Boolean.class,
-                                id)));
+                                id)),
+                commands(record));
+    }
+
+    public record Commands(boolean prepare, boolean review, boolean pay, boolean reverse) {}
+
+    private Commands commands(ExpenseView record) {
+        var actor = access.require("expense.read");
+        return new Commands(
+                actor.has("expense.write")
+                        && mayPrepare(actor, record)
+                        && Set.of("draft", "rejected").contains(record.status()),
+                actor.has("expense.approve")
+                        && !involved(actor, record)
+                        && record.status().equals("submitted"),
+                actor.has("expense.approve") && record.status().equals("approved"),
+                actor.has("finance.reverse")
+                        && !involved(actor, record)
+                        && record.status().equals("paid"));
     }
 
     public record ExpenseDetails(
@@ -307,7 +478,8 @@ public class ExpenseService {
             com.foresight.fcms.shared.dto.RegisterPage<
                             com.foresight.fcms.finance.expense.dto.ExpenseEvent>
                     history,
-            boolean paymentEvidenceAvailable) {}
+            boolean paymentEvidenceAvailable,
+            Commands commands) {}
 
     private com.foresight.fcms.shared.dto.RegisterPage<
                     com.foresight.fcms.finance.expense.dto.ExpenseEvent>

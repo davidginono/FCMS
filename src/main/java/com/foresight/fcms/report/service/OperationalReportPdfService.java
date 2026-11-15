@@ -76,6 +76,9 @@ public class OperationalReportPdfService {
 
     private String context(RegisterQuery query, Locale locale, boolean dates, boolean owners) {
         var values = new ArrayList<String>();
+        if (query instanceof com.foresight.fcms.workforce.dto.WorkQuery workQuery
+                && workQuery.getDateBasis().equals("CREATED"))
+            values.add(label("work.dateBasis", locale) + ": " + label("work.createdDate", locale));
         if (query instanceof ExpenseQuery expense) {
             if (!expense.getYear().isBlank())
                 values.add(label("common.year", locale) + ": " + expense.getYear());
@@ -161,6 +164,7 @@ public class OperationalReportPdfService {
         var rows = new ArrayList<List<String>>();
         var notes = new ArrayList<String>();
         BigDecimal allowance = BigDecimal.ZERO, amount = BigDecimal.ZERO;
+        var noted = new java.util.HashSet<Long>();
         for (var row : source) {
             String n = Integer.toString(rows.size() + 1);
             if (kind == WorkKind.TASK) {
@@ -182,7 +186,7 @@ public class OperationalReportPdfService {
                 rows.add(
                         List.of(
                                 n,
-                                row.owner(),
+                                kind == WorkKind.REPORT ? row.activityStaff() : row.owner(),
                                 kind == WorkKind.LEAVE ? row.workType() : row.client(),
                                 ApplicationTimestamps.display(row.startAt()),
                                 ApplicationTimestamps.display(row.endAt()),
@@ -201,7 +205,7 @@ public class OperationalReportPdfService {
                 details += " | " + label("work.explanation", locale) + ": " + row.explanation();
             if (!row.reviewComment().isBlank())
                 details += " | " + label("work.review", locale) + ": " + row.reviewComment();
-            notes.add(details);
+            if (kind != WorkKind.REPORT || noted.add(row.id())) notes.add(details);
         }
         if (kind == WorkKind.REPORT) return staffReportDocument(source, rows, notes, query, locale);
         boolean task = kind == WorkKind.TASK;
@@ -261,7 +265,8 @@ public class OperationalReportPdfService {
         String period = label("legacyReport.range", locale) + ": " + dateRange(query, locale);
         var headings = new ArrayList<OperationalDocument.Heading>();
         if (byStaff) {
-            String owner = source.isEmpty() ? "#" + query.getOwnerId() : source.getFirst().owner();
+            String owner =
+                    source.isEmpty() ? "#" + query.getOwnerId() : source.getFirst().activityStaff();
             headings.add(new OperationalDocument.Heading(company, 20, 10, 10, true, false));
             headings.add(
                     new OperationalDocument.Heading(

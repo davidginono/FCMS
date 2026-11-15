@@ -1,5 +1,7 @@
 package com.foresight.fcms.modules;
 
+import static com.foresight.fcms.shared.time.ApplicationCalendar.today;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.foresight.fcms.accounting.dto.*;
@@ -38,7 +40,7 @@ import java.util.concurrent.*;
 class TransactionConfigurationTests {
     static final String SCHEMA =
             "transaction_config_" + UUID.randomUUID().toString().replace("-", "");
-    static final LocalDate TODAY = LocalDate.now();
+    static final LocalDate TODAY = today();
     static long bank, income, oldMapping, oldJournal, oldSource;
     static String mappingSnapshot, journalSnapshot, linkSnapshot, linesSnapshot;
 

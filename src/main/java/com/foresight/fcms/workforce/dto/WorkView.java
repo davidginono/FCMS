@@ -21,4 +21,41 @@ public record WorkView(
         BigDecimal amount,
         String status,
         String reviewComment,
-        long version) {}
+        long version,
+        long createdBy,
+        String creator,
+        Long preparedBy,
+        String preparer,
+        String activityStaffName) {
+    /** Export presentation never changes the canonical owner/creator identity. */
+    public String activityStaff() {
+        return activityStaffName == null ? owner : activityStaffName;
+    }
+
+    public WorkView forActivityStaff(String name) {
+        return new WorkView(
+                id,
+                kind,
+                ownerId,
+                owner,
+                clientId,
+                client,
+                subject,
+                description,
+                startAt,
+                endAt,
+                workType,
+                outcome,
+                explanation,
+                allowance,
+                amount,
+                status,
+                reviewComment,
+                version,
+                createdBy,
+                creator,
+                preparedBy,
+                preparer,
+                name);
+    }
+}

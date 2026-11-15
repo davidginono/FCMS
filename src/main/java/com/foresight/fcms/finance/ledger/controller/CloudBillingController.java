@@ -24,7 +24,10 @@ public class CloudBillingController {
             @RequestParam(required = false) Integer year,
             @ModelAttribute RegisterQuery query,
             java.util.Locale locale) {
-        int selectedYear = year == null ? java.time.LocalDate.now().getYear() : year;
+        int selectedYear =
+                year == null
+                        ? com.foresight.fcms.shared.time.ApplicationCalendar.today().getYear()
+                        : year;
         return org.springframework.http.ResponseEntity.ok()
                 .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
                 .cacheControl(org.springframework.http.CacheControl.noStore())
@@ -41,7 +44,10 @@ public class CloudBillingController {
             @RequestParam(required = false) Integer year,
             @ModelAttribute("query") RegisterQuery q,
             Model m) {
-        int y = year == null ? java.time.LocalDate.now().getYear() : year;
+        int y =
+                year == null
+                        ? com.foresight.fcms.shared.time.ApplicationCalendar.today().getYear()
+                        : year;
         m.addAttribute("records", billing.list(y, q));
         m.addAttribute("year", y);
         m.addAttribute("baseUrl", "/finance/cloud-backup/billing");

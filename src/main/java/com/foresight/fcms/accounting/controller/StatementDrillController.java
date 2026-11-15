@@ -8,8 +8,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-
 @Controller
 @RequestMapping("/accounting/statements")
 @PreAuthorize("hasAuthority('accounting.report')")
@@ -38,7 +36,7 @@ public class StatementDrillController {
                             .orElseThrow(
                                     () -> new IllegalArgumentException("accounting.error.opening"))
                             .openingDate());
-        if (q.getTo() == null) q.setTo(LocalDate.now());
+        if (q.getTo() == null) q.setTo(com.foresight.fcms.shared.time.ApplicationCalendar.today());
     }
 
     @GetMapping("/{type}/lines/{line}")

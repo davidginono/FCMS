@@ -25,7 +25,7 @@ public class FinanceCutoverService {
     public java.time.Instant approve(LocalDate date, String policy) {
         var actor = access.require("accounting.review");
         if (date == null
-                || date.isAfter(LocalDate.now())
+                || date.isAfter(com.foresight.fcms.shared.time.ApplicationCalendar.today())
                 || policy == null
                 || policy.isBlank()
                 || policy.length() > 200) throw new IllegalArgumentException("error.invalid");

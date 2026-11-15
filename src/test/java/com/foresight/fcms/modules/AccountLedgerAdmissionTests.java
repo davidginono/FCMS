@@ -1,5 +1,7 @@
 package com.foresight.fcms.modules;
 
+import static com.foresight.fcms.shared.time.ApplicationCalendar.today;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -49,7 +51,7 @@ class AccountLedgerAdmissionTests {
                 .thenReturn(
                         Optional.of(
                                 new AccountingViews.Book(
-                                        LocalDate.now().withDayOfYear(1),
+                                        today().withDayOfYear(1),
                                         "Verified",
                                         "ZERO",
                                         "READY",
@@ -66,8 +68,8 @@ class AccountLedgerAdmissionTests {
 
     LedgerQuery query() {
         var q = new LedgerQuery();
-        q.setFrom(LocalDate.now().withDayOfYear(1));
-        q.setTo(LocalDate.now());
+        q.setFrom(today().withDayOfYear(1));
+        q.setTo(today());
         q.setSize(10);
         q.setPage(12);
         return q;

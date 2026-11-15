@@ -21,12 +21,12 @@
 <form:input id="subject" path="subject" type="text" />
 <form:errors path="subject" cssClass="fcms-error" />
 </div>
-<c:if test="${kind.name()=='TASK'}">
+<c:if test="${kind.name()=='TASK' or (kind.name()=='REPORT' and permissions.contains('staff-report.assign'))}">
 <div class="fcms-field">
 <label for="ownerId">
 <spring:message code="common.staff" />
 </label>
-<form:select id="ownerId" path="ownerId" data-choice-url="${pageContext.request.contextPath}/lookups/staff">
+<form:select id="ownerId" path="ownerId" required="required" data-choice-url="${pageContext.request.contextPath}/lookups/staff"><form:option value=""><spring:message code="select.select"/></form:option>
 <c:forEach items="${staff}" var="option">
 <form:option value="${option.id}">
 <c:out value="${option.name}" />
@@ -36,7 +36,9 @@
 <form:errors path="ownerId" cssClass="fcms-error" />
 </div>
 </c:if>
+<c:if test="${kind.name()!='TASK' and not (kind.name()=='REPORT' and permissions.contains('staff-report.assign'))}"><form:hidden path="ownerId"/></c:if>
 <c:if test="${kind.name()!='LEAVE'}">
+<c:choose><c:when test="${permissions.contains('client.read')}">
 <div class="fcms-field">
 <label for="clientId">
 <spring:message code="common.client" />
@@ -53,6 +55,7 @@
 </form:select>
 <form:errors path="clientId" cssClass="fcms-error" />
 </div>
+</c:when><c:otherwise><form:hidden path="clientId"/></c:otherwise></c:choose>
 <c:choose>
 <c:when test="${kind.name()=='REPORT'}">
 <div class="fcms-field">
@@ -69,7 +72,7 @@
 </form:select>
 <form:errors path="workType" cssClass="fcms-error" />
 </div>
-<div class="fcms-field" data-team-picker data-team-owner="${actorId}">
+<div class="fcms-field" data-team-picker data-team-owner="${form.ownerId}">
 <label for="participantChoice"><spring:message code="common.staff"/></label>
 <div class="fcms-choice-row"><select id="participantChoice" data-choice-url="${pageContext.request.contextPath}/lookups/staff"><option value=""></option>
 <c:forEach items="${staff}" var="option"><option value="${option.id()}"><c:out value="${option.name()}"/></option></c:forEach>

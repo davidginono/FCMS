@@ -1,8 +1,28 @@
 package com.foresight.fcms.finance.expense.dto;
 
 public class ExpenseForm {
+    @jakarta.validation.constraints.Positive private Long ownerId;
+
+    public Long getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(Long value) {
+        ownerId = value;
+    }
+
+    @jakarta.validation.constraints.Positive private Long financialYearId;
+
+    public Long getFinancialYearId() {
+        return financialYearId;
+    }
+
+    public void setFinancialYearId(Long value) {
+        financialYearId = value;
+    }
+
     @jakarta.validation.constraints.NotNull
-    private java.time.LocalDate date = java.time.LocalDate.now();
+    private java.time.LocalDate date = com.foresight.fcms.shared.time.ApplicationCalendar.today();
 
     public java.time.LocalDate getDate() {
         return date;

@@ -1,5 +1,7 @@
 package com.foresight.fcms.modules;
 
+import static com.foresight.fcms.shared.time.ApplicationCalendar.today;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.foresight.fcms.auth.dto.UserForm;
@@ -418,7 +420,7 @@ class PostgresModuleTests {
                         java.net.http.HttpRequest.newBuilder(
                                         java.net.URI.create(
                                                 base
-                                                        + "/account/password?from=2026-01-01&to=2026-11-03&unexpected=PrivateValue"))
+                                                        + "/account/password?year=2025&category=Travel%26Training&dateBasis=CREATED&from=2026-01-01&to=2026-11-03&unexpected=PrivateValue"))
                                 .GET()
                                 .build(),
                         java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -434,6 +436,9 @@ class PostgresModuleTests {
         int count = 0;
         while (links.find()) {
             count++;
+            assertTrue(links.group(1).contains("year=2025"));
+            assertTrue(links.group(1).contains("category=Travel%26Training"));
+            assertTrue(links.group(1).contains("dateBasis=CREATED"));
             assertTrue(links.group(1).contains("from=2026-01-01"));
             assertTrue(links.group(1).contains("to=2026-11-03"));
             assertFalse(links.group(1).contains("PrivateValue"));
@@ -1925,8 +1930,8 @@ class PostgresModuleTests {
     void doubleEntryAccountingCompletesReviewPostingStatementsAndControlledClosing()
             throws Exception {
         actor(reviewer);
-        var opening = java.time.LocalDate.now().withDayOfYear(1);
-        var today = java.time.LocalDate.now();
+        var opening = today().withDayOfYear(1);
+        var today = today();
         var book = accounting.books();
         Long openingSource = null;
         if (book.isEmpty()) {
@@ -2794,7 +2799,7 @@ class PostgresModuleTests {
             }
             actor(maker);
             if (sourceCoverage
-                    .through(java.time.LocalDate.now().withMonth(12).withDayOfMonth(31))
+                    .through(today().withMonth(12).withDayOfMonth(31))
                     .complete()) return;
             assertTrue(
                     progress,
@@ -3459,7 +3464,7 @@ class PostgresModuleTests {
         assertEquals("POSTED", sources.find("EXPENSE_REVERSAL", reversalSource).coverage());
         var statement =
                 statements.statements(
-                        java.time.LocalDate.now().withDayOfYear(1), java.time.LocalDate.now());
+                        today().withDayOfYear(1), today());
         assertTrue(statement.balanceSheetMatches());
         assertTrue(statement.cashFlowMatches());
         assertTrue(statement.equityMatches());

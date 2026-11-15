@@ -26,7 +26,7 @@ public class SaccosForm {
 
     @NotNull
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    private LocalDate entryDate = LocalDate.now();
+    private LocalDate entryDate = com.foresight.fcms.shared.time.ApplicationCalendar.today();
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate expireDate;

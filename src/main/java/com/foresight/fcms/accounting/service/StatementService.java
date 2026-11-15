@@ -98,12 +98,12 @@ public class StatementService {
         var transferred = new HashMap<String, BigDecimal>();
         db.query(
                 "select a.classification,coalesce(sum(l.credit-l.debit),0) amount from gl_journals"
-                    + " j join gl_lines l on l.journal_id=j.id join gl_accounts a on"
-                    + " a.id=l.account_id join gl_equity_reporting r on r.kind='JOURNAL' and"
-                    + " r.target_id=coalesce(j.reverses_id,j.id) and r.state='APPROVED' and"
-                    + " r.payload->>'category'='EARNINGS_TRANSFER' where j.state='POSTED' and"
-                    + " j.kind<>'OPENING' and j.effective_date between ? and ? group by"
-                    + " a.classification",
+                        + " j join gl_lines l on l.journal_id=j.id join gl_accounts a on"
+                        + " a.id=l.account_id join gl_equity_reporting r on r.kind='JOURNAL' and"
+                        + " r.target_id=coalesce(j.reverses_id,j.id) and r.state='APPROVED' and"
+                        + " r.payload->>'category'='EARNINGS_TRANSFER' where j.state='POSTED' and"
+                        + " j.kind<>'OPENING' and j.effective_date between ? and ? group by"
+                        + " a.classification",
                 (org.springframework.jdbc.core.RowCallbackHandler)
                         r -> transferred.put(r.getString(1), r.getBigDecimal(2)),
                 from,
@@ -475,12 +475,11 @@ public class StatementService {
         var accounts =
                 (details ? statementAccounts(type, from, to) : List.<ReportedAccount>of())
                         .stream()
-                                .map(
-                                        mapped ->
-                                                new ComparedAccount(
-                                                        mapped.row(),
-                                                        prior.get(mapped.row().id()),
-                                                        mapped.mapping()))
+                                .map(mapped ->
+                                        new ComparedAccount(
+                                                mapped.row(),
+                                                prior.get(mapped.row().id()),
+                                                mapped.mapping()))
                                 .toList();
         var cash =
                 type.equals("cash-flow")
@@ -718,24 +717,23 @@ public class StatementService {
             if (amounts.size() > 1000) throw new IllegalArgumentException("error.narrowReport");
             amounts.forEach(e -> transfers.put(e.getKey(), e.getValue()));
             return rows.stream()
-                    .map(
-                            a -> {
-                                var t = transfers.get(a.row().id());
-                                if (t == null) return a;
-                                var b = a.row();
-                                return new ReportedAccount(
-                                        new TrialRow(
-                                                b.id(),
-                                                b.code(),
-                                                b.name(),
-                                                b.classification(),
-                                                b.opening(),
-                                                b.debit().subtract(t[0]),
-                                                b.credit().subtract(t[1]),
-                                                b.closingDebit(),
-                                                b.closingCredit()),
-                                        a.mapping());
-                            })
+                    .map(a -> {
+                        var t = transfers.get(a.row().id());
+                        if (t == null) return a;
+                        var b = a.row();
+                        return new ReportedAccount(
+                                new TrialRow(
+                                        b.id(),
+                                        b.code(),
+                                        b.name(),
+                                        b.classification(),
+                                        b.opening(),
+                                        b.debit().subtract(t[0]),
+                                        b.credit().subtract(t[1]),
+                                        b.closingDebit(),
+                                        b.closingCredit()),
+                                a.mapping());
+                    })
                     .toList();
         }
         return List.copyOf(rows);
@@ -788,22 +786,16 @@ public class StatementService {
 
         public long unclassifiedCount() {
             return accounts.stream()
-                    .filter(
-                            a ->
-                                    Set.of("ASSET", "LIABILITY")
-                                            .contains(a.current().classification()))
-                    .filter(
-                            a ->
-                                    a.mapping() == null
-                                            || a.mapping().section().equals("UNCLASSIFIED"))
-                    .filter(
-                            a ->
-                                    a.current().closingDebit().signum() != 0
-                                            || a.current().closingCredit().signum() != 0
-                                            || a.previous() != null
-                                                    && (a.previous().closingDebit().signum() != 0
-                                                            || a.previous().closingCredit().signum()
-                                                                    != 0))
+                    .filter(a ->
+                            Set.of("ASSET", "LIABILITY").contains(a.current().classification()))
+                    .filter(a ->
+                            a.mapping() == null || a.mapping().section().equals("UNCLASSIFIED"))
+                    .filter(a ->
+                            a.current().closingDebit().signum() != 0
+                                    || a.current().closingCredit().signum() != 0
+                                    || a.previous() != null
+                                            && (a.previous().closingDebit().signum() != 0
+                                                    || a.previous().closingCredit().signum() != 0))
                     .count();
         }
 
@@ -833,7 +825,8 @@ public class StatementService {
                 || to == null
                 || from.isBefore(book.openingDate())
                 || to.isBefore(from)
-                || to.isAfter(LocalDate.now())) throw new IllegalArgumentException("error.dates");
+                || to.isAfter(com.foresight.fcms.shared.time.ApplicationCalendar.today()))
+            throw new IllegalArgumentException("error.dates");
         return book;
     }
 

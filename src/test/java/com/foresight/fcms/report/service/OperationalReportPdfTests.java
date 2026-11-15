@@ -67,7 +67,12 @@ class OperationalReportPdfTests {
                 new BigDecimal("100.11"),
                 "APPROVED",
                 "Independent review",
-                0);
+                0,
+                3,
+                "Synthetic creator",
+                null,
+                "",
+                null);
     }
 
     String text(byte[] bytes, String file) throws Exception {
@@ -146,7 +151,11 @@ class OperationalReportPdfTests {
                                         "PAID",
                                         "",
                                         "PAYMENT-97",
-                                        0)));
+                                        0,
+                                        null,
+                                        "",
+                                        null,
+                                        "")));
         String result = text(pdf.expenses(q, Locale.forLanguageTag("sw")), "expenses-sw");
         for (String value : List.of("99.09", "Synthetic Payee", "PAYMENT-97", "Imelipwa"))
             assertTrue(result.contains(value), result);
@@ -291,7 +300,7 @@ class OperationalReportPdfTests {
                                 .suffix()
                                 .matches(
                                         ".*[0-9]{2} [A-Za-z]{3} [0-9]{4}"
-                                            + " [0-9]{2}:[0-9]{2}:[0-9]{2}"));
+                                                + " [0-9]{2}:[0-9]{2}:[0-9]{2}"));
                 assertTrue(renderer.source.notes().isEmpty());
                 assertEquals(5, renderer.source.totals().size());
                 String content = text(bytes, "cloud-billing-fixture");

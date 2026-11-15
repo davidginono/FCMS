@@ -14,9 +14,11 @@ public class DashboardController {
     }
 
     @GetMapping("/dashboard")
-    public String index(Model model) {
-        model.addAttribute("metrics", dashboardService.metrics());
-        model.addAttribute("portfolios", dashboardService.portfolios());
+    public String index(
+            @org.springframework.web.bind.annotation.RequestParam(required = false)
+                    Long financialYearId,
+            Model model) {
+        model.addAttribute("overview", dashboardService.overview(financialYearId));
         return "dashboard/index";
     }
 }

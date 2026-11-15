@@ -26,9 +26,9 @@
 <script defer src="<c:url value='/js/ui-loading.js?v=fcms-modules-20261103-accounting1' />"></script>
 <script defer src="<c:url value='/js/select-enhancer.js?v=fcms-modules-20261103-accounting1' />"></script>
 <script defer src="<c:url value='/js/resource-split-view.js?v=fcms-modules-20261103-accounting1' />"></script>
-<link rel="stylesheet" href="<c:url value='/css/workspaces.css?v=20261103-sales1' />">
+<link rel="stylesheet" href="<c:url value='/css/workspaces.css?v=20261115-dashboard1' />">
 <script defer src="<c:url value='/js/modal-workspace.js?v=20261103-modal2'/>"></script>
-<script defer src="<c:url value='/js/live-search.js?v=fcms-modules-20261103-accounting1' />"></script><script defer src="<c:url value='/js/choice-loader.js?v=fcms-modules-20261103-accounting1' />"></script><link rel="stylesheet" href="<c:url value='/css/date-controls.css?v=20261103'/>"><script defer src="<c:url value='/js/date-controls.js?v=20261103'/>"></script></head>
+<script defer src="<c:url value='/js/live-search.js?v=fcms-modules-20261103-accounting1' />"></script><script defer src="<c:url value='/js/choice-loader.js?v=20261115-assignment1' />"></script><link rel="stylesheet" href="<c:url value='/css/date-controls.css?v=20261103'/>"><script defer src="<c:url value='/js/date-controls.js?v=20261103'/>"></script></head>
 <body class="fcms-shell aws-console" data-date-choose="<spring:message code='date.choose'/>" data-date-invalid="<spring:message code='date.invalid'/>" data-nav-open="<spring:message code='nav.open'/>" data-nav-close="<spring:message code='nav.close'/>" data-select-retry="<spring:message code='common.refresh'/>" data-select-search="<spring:message code="select.search" />" data-select-load-more="<spring:message code="select.loadMore" />" data-select-no-matches="<spring:message code="select.noMatches" />" data-shell-select="<spring:message code="select.select" />" data-shell-loading="<spring:message code="common.loading" />" data-shell-no-options="<spring:message code="select.noOptions" />">
 <%@ include file="/WEB-INF/jsp/reusableuicomponents/resource-table-labels.jspf" %>
 <a class="skip-link" href="#main-content"><spring:message code="common.skipContent"/></a>
@@ -41,4 +41,4 @@
         <main id="main-content" class="app-main" tabindex="-1">
 <c:if test="${not empty breadcrumbUrl}"><nav class="erp-page-path" aria-label="Breadcrumb"><a href="<c:url value='${breadcrumbUrl}'/>"><spring:message code="${breadcrumbLabel}"/></a><span aria-hidden="true">/</span><span aria-current="page"><spring:message code="${breadcrumbCurrent}"/></span></nav></c:if>
 
-<c:if test="${param.saved!=null and pageContext.response.status lt 400}"><div class="console-message" data-message-type="success" role="status"><span><spring:message code="common.saved"/></span><button type="button" class="app-modal-close" data-dismiss-notice aria-label="<spring:message code="common.close"/>">×</button></div></c:if>
+<c:if test="${param.saved!=null and pageContext.response.status lt 400}"><div class="console-message" data-message-type="success" role="status"><span><spring:message code="common.saved"/></span><button type="button" class="app-modal-close" data-dismiss-notice aria-label="<spring:message code="common.close"/>">&times;</button></div></c:if>

@@ -174,15 +174,14 @@ public class JournalService {
         f.setVersion(j.version());
         f.setLines(
                 j.lines().stream()
-                        .map(
-                                l -> {
-                                    var x = new JournalLineForm();
-                                    x.setAccountId(l.accountId());
-                                    x.setDebit(l.debit());
-                                    x.setCredit(l.credit());
-                                    x.setDescription(l.description());
-                                    return x;
-                                })
+                        .map(l -> {
+                            var x = new JournalLineForm();
+                            x.setAccountId(l.accountId());
+                            x.setDebit(l.debit());
+                            x.setCredit(l.credit());
+                            x.setDescription(l.description());
+                            return x;
+                        })
                         .toList());
         return f;
     }
@@ -326,7 +325,9 @@ public class JournalService {
                 AccountingService.requireReason(reason);
                 if (j.makerId() == actor.id()
                         || !j.state().equals("SUBMITTED")
-                        || j.date().isAfter(LocalDate.now()))
+                        || j.date()
+                                .isAfter(
+                                        com.foresight.fcms.shared.time.ApplicationCalendar.today()))
                     throw new IllegalArgumentException("error.invalid");
                 state = action.equals("post") ? "POSTED" : "REJECTED";
             }
@@ -352,7 +353,9 @@ public class JournalService {
     public long reverse(long id, UUID request, LocalDate date, String reason) {
         var actor = access.require("accounting.reverse");
         AccountingService.requireReason(reason);
-        if (request == null || date == null || date.isAfter(LocalDate.now()))
+        if (request == null
+                || date == null
+                || date.isAfter(com.foresight.fcms.shared.time.ApplicationCalendar.today()))
             throw new IllegalArgumentException("error.invalid");
         lock(id);
         var original = find(id);
@@ -404,7 +407,7 @@ public class JournalService {
                 || Set.of("OPENING", "REVERSAL").contains(original.kind())
                 || original.makerId() == actor
                 || date.isBefore(original.date())
-                || date.isAfter(LocalDate.now()))
+                || date.isAfter(com.foresight.fcms.shared.time.ApplicationCalendar.today()))
             throw new IllegalArgumentException("error.invalid");
         if (original.reversedBy() != null) return original.reversedBy();
         long period = period(date);

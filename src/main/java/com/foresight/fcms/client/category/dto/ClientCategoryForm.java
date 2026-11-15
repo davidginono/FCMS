@@ -23,7 +23,8 @@ public class ClientCategoryForm {
     @Size(max = 255)
     private String clientName;
 
-    @NotNull private LocalDate entryDate = LocalDate.now();
+    @NotNull
+    private LocalDate entryDate = com.foresight.fcms.shared.time.ApplicationCalendar.today();
 
     private LocalDate expireDate;
 

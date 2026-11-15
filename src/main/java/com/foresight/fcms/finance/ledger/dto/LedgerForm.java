@@ -2,7 +2,7 @@ package com.foresight.fcms.finance.ledger.dto;
 
 public class LedgerForm {
     @jakarta.validation.constraints.NotNull
-    private java.time.LocalDate date = java.time.LocalDate.now();
+    private java.time.LocalDate date = com.foresight.fcms.shared.time.ApplicationCalendar.today();
 
     public java.time.LocalDate getDate() {
         return date;

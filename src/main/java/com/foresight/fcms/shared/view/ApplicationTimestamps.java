@@ -5,7 +5,8 @@ import java.time.format.DateTimeFormatter;
 
 /** Adapted from Microfinance's application-time component; presentation only. */
 public final class ApplicationTimestamps {
-    private static final ZoneId APPLICATION_ZONE = ZoneId.of("Africa/Dar_es_Salaam");
+    private static final ZoneId APPLICATION_ZONE =
+            com.foresight.fcms.shared.time.ApplicationCalendar.ZONE;
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/uuuu");
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm");
 

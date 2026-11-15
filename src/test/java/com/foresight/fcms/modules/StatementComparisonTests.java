@@ -1,5 +1,7 @@
 package com.foresight.fcms.modules;
 
+import static com.foresight.fcms.shared.time.ApplicationCalendar.today;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.foresight.fcms.accounting.dto.*;
@@ -56,7 +58,7 @@ class StatementComparisonTests {
     @Autowired PasswordEncoder passwords;
     @Autowired PlatformTransactionManager transactions;
     final String maker = "statement-maker@test.invalid", staff = "statement-staff@test.invalid";
-    final LocalDate today = LocalDate.now(),
+    final LocalDate today = today(),
             start = today.withDayOfYear(1),
             opening = start.minusYears(2);
     long makerId, cash, income, expense, equity, ledgerAsset;

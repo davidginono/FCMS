@@ -100,7 +100,7 @@ with sync_playwright() as p:
             assert staff.locator('form[action$="/actions/submit"]').count() == 0
             assert staff.locator('form[action$="/actions/approve"]').count() == 0
             admin.goto(detail + '?lang=' + lang)
-            admin.locator('[name=comment]').fill('Synthetic independent review ' + suffix)
+            admin.locator('form[action$="/actions/approve"] [name=comment]').fill('Synthetic independent review ' + suffix)
             navigate_click(admin, 'form[action$="/actions/approve"] button:not([formaction])')
             assert admin.locator('form[action$="/actions/approve"]').count() == 0
             staff.goto(detail)

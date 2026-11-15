@@ -7,7 +7,7 @@
             <a class="app-global-brand" href="<c:url value='/dashboard' />" aria-label="FCMS console home">FCMS</a>
         </div>
         <div class="app-topbar-actions">
-            <c:forTokens items="en,sw" delims="," var="language"><c:url var="languageUrl" value=""><c:forTokens items="from,to,page,size,status,sort,direction,search,financialYearId,paymentStatusId,parentId,kind,view,reportType,ownerId,clientId,activityId,review,group,groupPage,ledgerAccount" delims="," var="filterKey"><c:if test="${not empty param[filterKey]}"><c:param name="${filterKey}" value="${param[filterKey]}"/></c:if></c:forTokens><c:param name="lang" value="${language}"/></c:url><a class="app-topbar-logout" href="<c:out value='${languageUrl}'/>">${language=='en'?'English':'Kiswahili'}</a></c:forTokens>
+            <c:forTokens items="en,sw" delims="," var="language"><c:url var="languageUrl" value=""><c:forTokens items="year,category,dateBasis,from,to,page,size,status,sort,direction,search,financialYearId,paymentStatusId,parentId,kind,view,reportType,ownerId,clientId,activityId,review,group,groupPage,ledgerAccount" delims="," var="filterKey"><c:if test="${not empty param[filterKey]}"><c:param name="${filterKey}" value="${param[filterKey]}"/></c:if></c:forTokens><c:param name="lang" value="${language}"/></c:url><a class="app-topbar-logout" href="<c:out value='${languageUrl}'/>">${language=='en'?'English':'Kiswahili'}</a></c:forTokens>
             <a class="app-user-chip" href="<c:url value='/account'/>">
                 <span class="app-icon" data-lucide="user-circle" aria-hidden="true"></span>
                 <span class="app-user-name"><c:out value="${pageContext.request.userPrincipal.name}" /></span>

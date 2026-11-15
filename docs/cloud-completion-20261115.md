@@ -1,5 +1,7 @@
 # Legacy workflow and export implementation — 15 November 2026
 
+Latest parity audit: [verified source contracts, fixes and final acceptance](legacy-parity-audit-20261115.md). The earlier counts and completion statement below are historical.
+
 ## Final local acceptance
 
 The requested implementation and legacy workflow inventory are complete within the documented single-company FCMS model. All258 canonical root PHP files map to native capabilities/components; see [the workflow inventory](legacy-workflow-inventory.md). Current source, tests, rendered checks and this report supersede historical pending notes below.

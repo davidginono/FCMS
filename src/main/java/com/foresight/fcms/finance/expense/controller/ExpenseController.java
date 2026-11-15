@@ -59,7 +59,9 @@ public class ExpenseController {
 
     @GetMapping("/new")
     public String create(Model m) {
-        m.addAttribute("form", new ExpenseForm());
+        var form = new ExpenseForm();
+        m.addAttribute("form", form);
+        m.addAttribute("formOptions", expenses.options(form, null));
         m.addAttribute("formAction", "/finance/expenses");
         return "expenses/form";
     }
@@ -69,6 +71,7 @@ public class ExpenseController {
             @PathVariable long id, @ModelAttribute("historyQuery") RegisterQuery q, Model m) {
         var details = expenses.details(id, q);
         m.addAttribute("record", details.record());
+        m.addAttribute("commands", details.commands());
         m.addAttribute("historyQuery", q);
         m.addAttribute("historyRecords", details.history());
         m.addAttribute("paymentEvidenceAvailable", details.paymentEvidenceAvailable());
@@ -78,7 +81,9 @@ public class ExpenseController {
 
     @GetMapping("/{id}/edit")
     public String edit(@PathVariable long id, Model m) {
-        m.addAttribute("form", expenses.form(id));
+        var form = expenses.form(id);
+        m.addAttribute("form", form);
+        m.addAttribute("formOptions", expenses.options(form, id));
         m.addAttribute("formAction", "/finance/expenses/" + id);
         return "expenses/form";
     }
@@ -96,12 +101,21 @@ public class ExpenseController {
             Model m) {
         if (!b.hasErrors())
             try {
-                return "redirect:/finance/expenses/" + expenses.save(id, f);
+                return "redirect:/finance/expenses/" + expenses.save(id, f) + "?saved";
             } catch (IllegalArgumentException e) {
-                b.reject("error.invalid");
+                if ("expense.activeStaff".equals(e.getMessage()))
+                    b.rejectValue("ownerId", "expense.activeStaff");
+                else if ("expense.yearMissing".equals(e.getMessage()))
+                    b.rejectValue("financialYearId", "expense.yearMissing");
+                else
+                    b.reject(
+                            "expense.requestConflict".equals(e.getMessage())
+                                    ? "expense.requestConflict"
+                                    : "error.invalid");
             } catch (org.springframework.dao.OptimisticLockingFailureException e) {
                 b.reject("error.stale");
             }
+        m.addAttribute("formOptions", expenses.options(f, id));
         m.addAttribute("formAction", id == null ? "/finance/expenses" : "/finance/expenses/" + id);
         return "expenses/form";
     }
@@ -117,7 +131,7 @@ public class ExpenseController {
             Model m) {
         try {
             expenses.transition(id, version, action, comment, reference, requestKey);
-            return "redirect:/finance/expenses/" + id;
+            return "redirect:/finance/expenses/" + id + "?saved";
         } catch (IllegalArgumentException | org.springframework.dao.DataAccessException e) {
             m.addAttribute("actionError", true);
             return detail(id, new RegisterQuery(), m);

@@ -20,6 +20,8 @@ public class UserDirectoryService {
     public List<Choice> staff(String search) {
         var a = access.current();
         if (!(a.has("task.manage")
+                || a.has("expense.assign")
+                || a.has("staff-report.assign")
                 || a.has("iam.user.manage")
                 || a.has("staff-report.write")
                 || a.has("task.read.all")
@@ -39,7 +41,13 @@ public class UserDirectoryService {
     @Transactional(readOnly = true)
     public List<Choice> selected(java.util.Collection<Long> ids) {
         var a = access.current();
-        if (!(a.has("task.manage") || a.has("staff-report.write")))
+        if (!(a.has("task.manage")
+                || a.has("staff-report.write")
+                || a.has("expense.assign")
+                || a.has("staff-report.assign")
+                || a.has("task.read.all")
+                || a.has("leave.read.all")
+                || a.has("staff-report.read.all")))
             return staff("").stream().filter(c -> ids.contains(c.id())).toList();
         if (ids.size() > 21 || ids.stream().anyMatch(java.util.Objects::isNull))
             throw new IllegalArgumentException();
@@ -54,7 +62,10 @@ public class UserDirectoryService {
     @Transactional(readOnly = true)
     public void requireActive(java.util.Collection<Long> ids) {
         var a = access.current();
-        if (!a.has("task.manage") && !a.has("staff-report.write"))
+        if (!a.has("task.manage")
+                && !a.has("staff-report.write")
+                && !a.has("expense.assign")
+                && !a.has("staff-report.assign"))
             throw new org.springframework.security.access.AccessDeniedException("denied");
         if (ids.size() > 20 || ids.stream().anyMatch(java.util.Objects::isNull))
             throw new IllegalArgumentException();
@@ -84,6 +95,8 @@ public class UserDirectoryService {
         var a = access.current();
         if (page < 0 || page > 1000 || search.length() > 100) throw new IllegalArgumentException();
         if (!(a.has("task.manage")
+                || a.has("expense.assign")
+                || a.has("staff-report.assign")
                 || a.has("iam.user.manage")
                 || a.has("staff-report.write")
                 || a.has("task.read.all")

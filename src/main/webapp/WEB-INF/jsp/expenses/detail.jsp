@@ -78,9 +78,12 @@
 <c:out value="${record.paymentReference()}" />
 </dd>
 </div>
+<div><dt><spring:message code="report.year"/></dt><dd><c:out value="${record.year()}"/></dd></div>
+<div><dt><spring:message code="work.createdBy"/></dt><dd><c:choose><c:when test="${not empty record.creator()}"><c:out value="${record.creator()}"/></c:when><c:otherwise><spring:message code="gl.presentation.unavailable"/></c:otherwise></c:choose></dd></div>
+<div><dt><spring:message code="work.preparedBy"/></dt><dd><c:choose><c:when test="${not empty record.preparer()}"><c:out value="${record.preparer()}"/></c:when><c:otherwise><spring:message code="gl.presentation.unavailable"/></c:otherwise></c:choose></dd></div>
 </dl>
 <c:if test="${paymentEvidenceAvailable and (permissions.contains('expense.evidence.write') or permissions.contains('expense.evidence.review'))}"><div class="app-actions"><a class="app-btn btn-neutral" href="<c:url value='/finance/expenses/${record.id()}/evidence'/>"><spring:message code="expense.evidence.title"/></a></div></c:if>
-<c:if test="${(record.status()=='draft' || record.status()=='rejected') && record.ownerId()==actorId}">
+<c:if test="${commands.prepare()}">
 <div class="app-actions">
 <a class="app-btn btn-neutral" href="<c:url value='/finance/expenses/${record.id()}/edit'/>">
 <spring:message code="common.edit" />
@@ -95,7 +98,7 @@
 </form>
 </div>
 </c:if>
-<c:if test="${record.status()=='submitted' && permissions.contains('expense.approve') && record.ownerId()!=actorId}">
+<c:if test="${commands.review()}">
 <details class="fcms-form-section">
 <summary>
 <spring:message code="common.approve" />
@@ -116,7 +119,7 @@
 </form>
 </details>
 </c:if>
-<c:if test="${record.status()=='submitted' && permissions.contains('expense.approve')}">
+<c:if test="${commands.review()}">
 <details class="fcms-form-section">
 <summary>
 <spring:message code="common.reject" />
@@ -137,7 +140,7 @@
 </form>
 </details>
 </c:if>
-<c:if test="${record.status()=='approved' && permissions.contains('expense.approve')}">
+<c:if test="${commands.pay()}">
 <details class="fcms-form-section">
 <summary>
 <spring:message code="expense.paid" />
@@ -158,7 +161,7 @@
 </form>
 </details>
 </c:if>
-<c:if test="${record.status()=='paid' && permissions.contains('finance.reverse') && record.ownerId()!=actorId}">
+<c:if test="${commands.reverse()}">
 <details class="fcms-form-section">
 <summary>
 <spring:message code="ledger.confirmReverse" />

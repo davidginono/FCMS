@@ -1,5 +1,7 @@
 # Legacy FCMS workflow inventory
 
+Latest parity audit: [verified source contracts, fixes and final acceptance](legacy-parity-audit-20261115.md). The earlier counts and completion statement below are historical.
+
 The sanitized ZIP's258 root PHP files are mapped individually in [the inventory](legacy-workflow-inventory.csv). Root `fcms/*.php` is the canonical source; older `CODES`/`CODE2` copies and bundled third-party libraries remain references. These mappings identify native capabilities and shared components. Only the compatibility-controller routes are PHP URL aliases. The source was inspected without running its database/authentication entrypoints.
 
 | Capability | Native workflow and verification |

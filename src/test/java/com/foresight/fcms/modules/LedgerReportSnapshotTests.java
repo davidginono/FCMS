@@ -1,5 +1,7 @@
 package com.foresight.fcms.modules;
 
+import static com.foresight.fcms.shared.time.ApplicationCalendar.today;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.foresight.fcms.finance.ledger.dto.LedgerForm;
@@ -142,8 +144,8 @@ class LedgerReportSnapshotTests {
         assertEquals(4, q.getPage());
         assertEquals(10, q.getSize());
         q.setSearch("opening");
-        q.setFrom(LocalDate.now());
-        q.setTo(LocalDate.now());
+        q.setFrom(today());
+        q.setTo(today());
         var selected = ledger.reportSnapshot(LedgerKind.BULK, q);
         assertEquals(1, selected.rows().size());
         assertEquals(100, selected.unitsIn());
@@ -211,7 +213,7 @@ class LedgerReportSnapshotTests {
                                                                 + "/print.pdf?lang="
                                                                 + lang
                                                                 + "&search=opening&from="
-                                                                + LocalDate.now()))
+                                                                + today()))
                                         .timeout(Duration.ofSeconds(45))
                                         .GET()
                                         .build(),
@@ -269,8 +271,8 @@ class LedgerReportSnapshotTests {
                 () -> ledger.reportSnapshot(LedgerKind.BULK, new RegisterQuery()));
         actor(MAKER);
         var q = new RegisterQuery();
-        q.setFrom(LocalDate.now());
-        q.setTo(LocalDate.now().minusDays(1));
+        q.setFrom(today());
+        q.setTo(today().minusDays(1));
         assertThrows(
                 IllegalArgumentException.class, () -> ledger.reportSnapshot(LedgerKind.CLOUD, q));
         assertEquals(0, q.getPage());

@@ -14,6 +14,8 @@
 <legend>
 <spring:message code="common.details" />
 </legend>
+<c:choose><c:when test="${formOptions.assignmentAllowed()}"><div class="fcms-field"><label for="ownerId"><spring:message code="common.staff"/></label><form:select id="ownerId" path="ownerId" required="required" data-choice-url="${pageContext.request.contextPath}/lookups/staff"><form:option value=""><spring:message code="select.select"/></form:option><c:forEach items="${formOptions.staff()}" var="person"><form:option value="${person.id()}"><c:out value="${person.name()}"/></form:option></c:forEach></form:select><form:errors path="ownerId" cssClass="fcms-error"/></div></c:when><c:otherwise><form:hidden path="ownerId"/></c:otherwise></c:choose>
+<div class="fcms-field"><label for="financialYearId"><spring:message code="report.year"/></label><form:select id="financialYearId" path="financialYearId"><form:option value=""><c:choose><c:when test="${not empty formOptions.retainedYear()}"><spring:message code="expense.keepYear" arguments="${formOptions.retainedYear()}" htmlEscape="true"/></c:when><c:otherwise><spring:message code="expense.dateYear"/></c:otherwise></c:choose></form:option><c:forEach items="${formOptions.years()}" var="year"><form:option value="${year.id()}"><c:out value="${year.label()}"/></form:option></c:forEach></form:select><form:errors path="financialYearId" cssClass="fcms-error"/></div>
 <div class="fcms-field">
 <label for="date">
 <spring:message code="common.date" />

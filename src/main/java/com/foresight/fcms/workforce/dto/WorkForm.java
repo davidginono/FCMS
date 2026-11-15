@@ -1,6 +1,7 @@
 package com.foresight.fcms.workforce.dto;
 
 public class WorkForm {
+    @jakarta.validation.constraints.NotNull
     @jakarta.validation.constraints.Size(max = 20)
     private java.util.List<Long> participants = new java.util.ArrayList<>();
 
@@ -12,7 +13,7 @@ public class WorkForm {
         participants = p;
     }
 
-    private Long ownerId;
+    @jakarta.validation.constraints.Positive private Long ownerId;
 
     public Long getOwnerId() {
         return ownerId;
@@ -58,7 +59,7 @@ public class WorkForm {
 
     @jakarta.validation.constraints.NotNull
     private java.time.LocalDateTime startAt =
-            java.time.LocalDateTime.now().withSecond(0).withNano(0);
+            com.foresight.fcms.shared.time.ApplicationCalendar.now().withSecond(0).withNano(0);
 
     public java.time.LocalDateTime getStartAt() {
         return startAt;
@@ -69,7 +70,8 @@ public class WorkForm {
     }
 
     @jakarta.validation.constraints.NotNull
-    private java.time.LocalDateTime endAt = java.time.LocalDateTime.now().withSecond(0).withNano(0);
+    private java.time.LocalDateTime endAt =
+            com.foresight.fcms.shared.time.ApplicationCalendar.now().withSecond(0).withNano(0);
 
     public java.time.LocalDateTime getEndAt() {
         return endAt;
