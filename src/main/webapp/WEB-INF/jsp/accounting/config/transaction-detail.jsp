@@ -1,12 +1,15 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ include file="/WEB-INF/jsp/shared/header.jspf" %>
 <%@ taglib prefix="ui" tagdir="/WEB-INF/tags" %>
-<div class="app-page-header"><h1 class="app-page-title"><spring:message code="config.transaction.details"/></h1></div>
+<link rel="stylesheet" href="<c:url value='/css/accounting-entry.css?v=20261118-split2'/>">
+<div class="app-page-header"><h1 class="app-page-title"><spring:message code="config.transaction.details"/></h1>
+<div class="app-actions"><c:if test="${permissions.contains('accounting.setup') and transaction.active() and transaction.activityActive()}"><a class="app-btn btn-neutral" href="<c:url value='/accounting/config/transactions/${transaction.id()}/template'/>"><spring:message code="config.template.edit"/></a></c:if></div>
+</div>
 <section class="erp-resource-section"><h2><spring:message code="common.details"/></h2><div class="fcms-section-body"><dl class="fcms-details">
  <div><dt><spring:message code="config.activity"/></dt><dd><a class="resource-table-id-link" href="<c:url value='/accounting/config/activities/${transaction.activityId()}'/>"><c:out value="${transaction.activityCode()}"/> <c:out value="${transaction.activityName()}"/></a></dd></div><div><dt><spring:message code="config.activity.status"/></dt><dd><spring:message code="status.${transaction.activityActive()?'ACTIVE':'INACTIVE'}"/></dd></div>
  <div><dt><spring:message code="gl.code"/></dt><dd><c:out value="${transaction.code()}"/></dd></div><div><dt><spring:message code="common.name"/></dt><dd><c:out value="${transaction.name()}"/></dd></div><div><dt><spring:message code="config.event"/></dt><dd><spring:message code="gl.event.${transaction.event()}"/></dd></div><div><dt><spring:message code="common.description"/></dt><dd><c:out value="${transaction.description()}"/></dd></div><div><dt><spring:message code="common.status"/></dt><dd><spring:message code="status.${transaction.active()?'ACTIVE':'INACTIVE'}"/></dd></div>
 </dl></div></section>
-<c:if test="${permissions.contains('accounting.setup') and transaction.active() and transaction.activityActive()}"><div class="app-actions"><a class="app-btn btn-neutral" href="<c:url value='/accounting/config/transactions/${transaction.id()}/template'/>"><spring:message code="config.template.edit"/></a></div></c:if>
+
 <c:if test="${not empty effective and (empty proposal or proposal.id()!=effective.id())}"><section class="erp-resource-section"><h2><spring:message code="config.template.effective"/></h2><div class="fcms-section-body"><c:set var="template" value="${effective}"/><%@ include file="/WEB-INF/jsp/accounting/config/template-summary.jspf" %></div></section></c:if>
 <c:choose><c:when test="${not empty proposal}"><section class="erp-resource-section"><h2><spring:message code="config.template"/></h2><div class="fcms-section-body"><c:set var="template" value="${proposal}"/><%@ include file="/WEB-INF/jsp/accounting/config/template-summary.jspf" %></div></section></c:when><c:otherwise><div class="fcms-alert" role="status"><spring:message code="config.template.missing"/></div></c:otherwise></c:choose>
 <c:if test="${not empty actionError}"><div class="fcms-alert" role="alert"><spring:message code="${actionError}"/></div></c:if>

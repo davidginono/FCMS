@@ -9,8 +9,8 @@
 <c:url var="saveUrl" value="${formAction}" />
 <form:form modelAttribute="form" method="post" action="${saveUrl}" cssClass="fcms-form" data-resource-form-page="true">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-<fieldset class="fcms-form-section">
-<legend><spring:message code="common.password"/></legend>
+<section class="erp-resource-section" aria-labelledby="account-password-section-1">
+<h2 id="account-password-section-1"><spring:message code="common.password"/></h2><div class="fcms-section-body">
 <div class="fcms-field">
 <label for="currentPassword">
 <spring:message code="account.currentPassword" />
@@ -32,7 +32,7 @@
 <form:password id="confirmPassword" path="confirmPassword" autocomplete="new-password" minlength="12" maxlength="72" required="required"/>
 <form:errors path="confirmPassword" cssClass="fcms-error" />
 </div>
-</fieldset>
+</div></section>
 <form:errors path="" element="div" cssClass="fcms-alert" role="alert" />
 <div class="fcms-form-actions">
 <a class="app-btn btn-neutral" href="<c:url value='/account' />">

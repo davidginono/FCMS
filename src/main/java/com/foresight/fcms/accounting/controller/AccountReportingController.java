@@ -1,5 +1,7 @@
 package com.foresight.fcms.accounting.controller;
 
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.foresight.fcms.shared.controller.ResourceFeedback;
 import com.foresight.fcms.accounting.dto.*;
 import com.foresight.fcms.accounting.service.AccountReportingService;
 
@@ -33,11 +35,11 @@ public class AccountReportingController {
             @PathVariable long account,
             @Valid @ModelAttribute("form") ReportingForm f,
             BindingResult b,
-            Model m) {
+            Model m, RedirectAttributes redirect) {
         if (!b.hasErrors())
             try {
                 long id = reporting.propose(account, f);
-                return "redirect:/accounting/accounts/" + account + "/reporting/" + id + "?saved";
+                return ResourceFeedback.success(redirect, "/accounting/accounts/" + account, "feedback.reportingProposed", "/accounting/accounts/" + account + "/reporting/" + id);
             } catch (OptimisticLockingFailureException e) {
                 b.reject("error.stale");
             } catch (IllegalArgumentException e) {
@@ -68,11 +70,11 @@ public class AccountReportingController {
             @PathVariable long id,
             @Valid @ModelAttribute("decisionForm") ReportingDecisionForm f,
             BindingResult b,
-            Model m) {
+            Model m, RedirectAttributes redirect) {
         if (!b.hasErrors())
             try {
                 reporting.decide(account, id, f);
-                return "redirect:/accounting/accounts/" + account + "/reporting/" + id + "?saved";
+                return ResourceFeedback.success(redirect, "/accounting/accounts/" + account, "feedback.saved", "/accounting/accounts/" + account + "/reporting/" + id);
             } catch (OptimisticLockingFailureException e) {
                 b.reject("error.stale");
             } catch (IllegalArgumentException e) {

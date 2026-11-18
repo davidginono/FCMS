@@ -42,6 +42,7 @@ Read [governance](../microfinance-ui-governance/SKILL.md), the root `AGENTS.md`,
 ## Tables, details and dashboards
 
 - Read the [table skill](../microfinance-table-standard/SKILL.md) before editing a register, preferences, selection or split pane. Title/tools stay outside the row scroller. Use existing native authorized ID links and menu-only selected-record commands.
+- Empty-table placeholders share the table skill's canvas-centered treatment: center in the visible row-scroller/container width, including overflow tables, after scrolling, resizing, preference changes and refresh. Do not center across hidden columns or the full page. Keep financial totals compact and labeled, using shared `resource-table-totals` rather than decorative KPI cards.
 - Details use a few in-place, keyboard-accessible tabs with wrapping labels. Preserve native forms and unsaved edits, reveal validation panels and print all relevant sections. Do not add scrolling tab bars or decorative single-tab previews.
 - Dashboard work uses [the dashboard contract](references/cloudscape-dashboards.md). Copy only presentation behavior; adapt all endpoint, scope and role bindings to FCMS.
 

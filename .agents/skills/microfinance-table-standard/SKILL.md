@@ -34,6 +34,7 @@ Read [governance](../microfinance-ui-governance/SKILL.md), [style](../microfinan
 - HTML-table refresh replaces authorized server body rows and synchronizes pager/sort state in place while preserving title/tools/filter nodes. Cancel obsolete requests, reject login redirects/stale results, reset selection and restore old rows on failure with a local retry. Show a real request-bound spinner inside the canvas without premature empty states.
 - JSON-backed editable grids use explicit external paging and their owning draft/command controller. The source `ResourceTable.setPage`/`resource-table:page` contract requires an FCMS implementation before use; do not use HTML row replacement on editable financial data.
 - Separate an empty register from no filter matches, retain concise recovery and correct empty-state colspan. Parent-to-register navigation preselects a visible parent filter and preserves it through paging; filter context never grants authority.
+- Center every empty-table placeholder (including No records and no filter matches) horizontally within the **visible table canvas/container width**, never across the full overflow table/column width. Use the shared `resource-table-empty-message` treatment; retain semantic spanning cells, localized copy and recovery controls. Keep it centered after horizontal scrolling, resizing, column preferences and asynchronous row replacement. Exclude title/tools/filters from the canvas geometry.
 
 ## Preferences and split details
 

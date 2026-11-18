@@ -1,5 +1,8 @@
 package com.foresight.fcms.accounting.controller;
 
+import com.foresight.fcms.shared.controller.FormErrors;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.foresight.fcms.shared.controller.ResourceFeedback;
 import com.foresight.fcms.accounting.dto.*;
 import com.foresight.fcms.accounting.service.*;
 import com.foresight.fcms.shared.dto.*;
@@ -48,14 +51,12 @@ public class TransactionConfigurationController {
 
     @InitBinder("transactionForm")
     public void bindTransaction(WebDataBinder b) {
+        b.setAutoGrowCollectionLimit(5);
         b.setAllowedFields(
                 "activityId",
-                "code",
-                "name",
+                                "name",
                 "description",
-                "event",
-                "debitAccountId",
-                "creditAccountId",
+                                "rules[*].component", "rules[*].debitAccountId", "rules[*].creditAccountId",
                 "voucherKind",
                 "cashFlow",
                 "policyReference",
@@ -64,10 +65,10 @@ public class TransactionConfigurationController {
 
     @InitBinder("templateForm")
     public void bindTemplate(WebDataBinder b) {
+        b.setAutoGrowCollectionLimit(5);
         b.setAllowedFields(
                 "version",
-                "debitAccountId",
-                "creditAccountId",
+                "rules[*].component", "rules[*].debitAccountId", "rules[*].creditAccountId",
                 "voucherKind",
                 "cashFlow",
                 "policyReference",
@@ -84,10 +85,6 @@ public class TransactionConfigurationController {
             m.addAttribute("activityForm", new ActivityForm());
         activityList(q, m);
         if (create) m.addAttribute("modalOpen", true);
-        if (created != null) {
-            m.addAttribute("createdResource", configuration.activity(created));
-            m.addAttribute("modalOpen", true);
-        }
         return "accounting/config/activities";
     }
 
@@ -97,15 +94,15 @@ public class TransactionConfigurationController {
             @Valid @ModelAttribute("activityForm") ActivityForm f,
             BindingResult b,
             @ModelAttribute("query") RegisterQuery q,
-            Model m) {
+            Model m, RedirectAttributes redirect) {
         if (!b.hasErrors())
             try {
-                return "redirect:/accounting/config/activities?created="
-                        + configuration.createActivity(f);
+                long saved = configuration.createActivity(f);
+                return ResourceFeedback.success(redirect, "/accounting/config/activities", "feedback.activityCreated", "/accounting/config/activities/" + saved);
             } catch (IllegalArgumentException e) {
-                b.reject(error(e));
-            } catch (DataIntegrityViolationException e) {
-                b.reject("error.conflict");
+                FormErrors.reject(b, e, error(e));
+            } catch (org.springframework.dao.DataAccessException e) {
+                FormErrors.conflict(b, e, java.util.Map.of("gl_activities_code_key", "code", "gl_transactions_code_key", "code"));
             }
         activityList(q, m);
         m.addAttribute("modalOpen", true);
@@ -152,17 +149,17 @@ public class TransactionConfigurationController {
             @PathVariable long id,
             @Valid @ModelAttribute("activityForm") ActivityForm f,
             BindingResult b,
-            Model m) {
+            Model m, RedirectAttributes redirect) {
         if (!b.hasErrors())
             try {
                 configuration.editActivity(id, f);
-                return "redirect:/accounting/config/activities/" + id + "?saved";
+                return ResourceFeedback.success(redirect, "/accounting/config/activities/" + id, "feedback.saved", null);
             } catch (OptimisticLockingFailureException e) {
                 b.reject("error.stale");
             } catch (IllegalArgumentException e) {
-                b.reject(error(e));
-            } catch (DataIntegrityViolationException e) {
-                b.reject("error.conflict");
+                FormErrors.reject(b, e, error(e));
+            } catch (org.springframework.dao.DataAccessException e) {
+                FormErrors.conflict(b, e, java.util.Map.of("gl_activities_code_key", "code", "gl_transactions_code_key", "code"));
             }
         m.addAttribute("activity", configuration.activity(id));
         m.addAttribute("breadcrumbCurrent", "config.activity.edit");
@@ -176,10 +173,10 @@ public class TransactionConfigurationController {
             @RequestParam long version,
             @RequestParam boolean active,
             @RequestParam String reason,
-            Model m) {
+            Model m, RedirectAttributes redirect) {
         try {
             configuration.activityState(id, version, active, reason);
-            return "redirect:/accounting/config/activities/" + id + "?saved";
+            return ResourceFeedback.success(redirect, "/accounting/config/activities/" + id, "feedback.saved", null);
         } catch (OptimisticLockingFailureException e) {
             m.addAttribute("actionError", "error.stale");
         } catch (IllegalArgumentException e) {
@@ -204,15 +201,12 @@ public class TransactionConfigurationController {
             @RequestParam(required = false) Long created,
             Model m) {
         var f = new TransactionConfigForm();
+        f.getRules().add(new PostingMappingForm.RuleForm());
         f.setActivityId(activityId);
         if (!m.containsAttribute("transactionForm")) m.addAttribute("transactionForm", f);
         transactionList(q, activityId, m);
         transactionOptions(f, m);
         if (create) m.addAttribute("modalOpen", true);
-        if (created != null) {
-            m.addAttribute("createdResource", configuration.transaction(created));
-            m.addAttribute("modalOpen", true);
-        }
         return "accounting/config/transactions";
     }
 
@@ -222,17 +216,17 @@ public class TransactionConfigurationController {
             @Valid @ModelAttribute("transactionForm") TransactionConfigForm f,
             BindingResult b,
             @ModelAttribute("query") RegisterQuery q,
-            Model m) {
+            Model m, RedirectAttributes redirect) {
         if (!b.hasErrors())
             try {
-                return "redirect:/accounting/config/transactions?created="
-                        + configuration.createTransaction(f);
+                long saved = configuration.createTransaction(f);
+                return ResourceFeedback.success(redirect, "/accounting/config/transactions" + (f.getActivityId() == null ? "" : "?activityId=" + f.getActivityId()), "feedback.transactionCreated", "/accounting/config/transactions/" + saved);
             } catch (IllegalArgumentException e) {
-                b.reject(error(e));
-            } catch (DataIntegrityViolationException e) {
-                b.reject("error.conflict");
+                FormErrors.reject(b, e, error(e));
+            } catch (org.springframework.dao.DataAccessException e) {
+                FormErrors.conflict(b, e, java.util.Map.of("gl_activities_code_key", "code", "gl_transactions_code_key", "code"));
             }
-        transactionList(q, null, m);
+        transactionList(q, f.getActivityId(), m);
         transactionOptions(f, m);
         m.addAttribute("modalOpen", true);
         return "accounting/config/transactions";
@@ -266,7 +260,7 @@ public class TransactionConfigurationController {
                 /* A missing submitted choice stays a validation error. */
             }
         m.addAttribute("activities", choices.values());
-        m.addAttribute("events", PostingMappingService.EVENTS);
+        if(f.getRules().isEmpty())f.getRules().add(new PostingMappingForm.RuleForm());
         accountOptions(f, m);
     }
 
@@ -274,7 +268,7 @@ public class TransactionConfigurationController {
         var choices = new LinkedHashMap<Long, AccountingService.Choice>();
         accounts.choices("", 0, true).items().forEach(c -> choices.put(c.id(), c));
         accounts.selected(
-                        java.util.stream.Stream.of(f.getDebitAccountId(), f.getCreditAccountId())
+                        f.getRules().stream().flatMap(r->java.util.stream.Stream.of(r.getDebitAccountId(),r.getCreditAccountId()))
                                 .filter(Objects::nonNull)
                                 .distinct()
                                 .toList())
@@ -293,6 +287,8 @@ public class TransactionConfigurationController {
         m.addAttribute("selectedReview", review);
         m.addAttribute("transaction", detail.transaction());
         m.addAttribute("proposal", detail.proposal());
+        m.addAttribute("proposalRules",detail.proposal()==null?List.of():templates.rules(detail.proposal().id()));
+        m.addAttribute("effectiveRules",detail.effective()==null?List.of():templates.rules(detail.effective().id()));
         m.addAttribute("effective", detail.effective());
         m.addAttribute("records", detail.pending());
         m.addAttribute("baseUrl", "/accounting/config/transactions/" + id);
@@ -310,8 +306,9 @@ public class TransactionConfigurationController {
         f.setVersion(detail.transaction().version());
         var p = detail.proposal();
         if (p != null) {
-            f.setDebitAccountId(p.debitAccountId());
-            f.setCreditAccountId(p.creditAccountId());
+            for(var rule : templates.rules(p.id())) {
+                var r=new PostingMappingForm.RuleForm();r.setComponent(rule.component());r.setDebitAccountId(rule.debitAccountId());r.setCreditAccountId(rule.creditAccountId());f.getRules().add(r);
+            }
             f.setVoucherKind(p.voucherKind());
             f.setCashFlow(p.cashFlow());
             f.setPolicyReference(p.policyReference());
@@ -327,26 +324,26 @@ public class TransactionConfigurationController {
             @PathVariable long id,
             @Valid @ModelAttribute("templateForm") TransactionTemplateForm f,
             BindingResult b,
-            Model m) {
+            Model m, RedirectAttributes redirect) {
         if (!b.hasErrors())
             try {
-                return "redirect:/accounting/config/transactions/"
+                return ResourceFeedback.success(redirect, "/accounting/config/transactions/"
                         + id
                         + "?review="
-                        + configuration.saveTemplate(id, f)
-                        + "&saved";
+                        + configuration.saveTemplate(id, f), "feedback.saved", null);
             } catch (OptimisticLockingFailureException e) {
                 b.reject("error.stale");
             } catch (IllegalArgumentException e) {
-                b.reject(error(e));
-            } catch (DataIntegrityViolationException e) {
-                b.reject("error.conflict");
+                FormErrors.reject(b, e, error(e));
+            } catch (org.springframework.dao.DataAccessException e) {
+                FormErrors.conflict(b, e, java.util.Map.of("gl_activities_code_key", "code", "gl_transactions_code_key", "code"));
             }
         templateContext(id, f, m);
         return "accounting/config/template-edit";
     }
 
     private void templateContext(long id, PostingMappingForm f, Model m) {
+        if(f.getRules().isEmpty())f.getRules().add(new PostingMappingForm.RuleForm());
         m.addAttribute("transaction", configuration.transaction(id));
         m.addAttribute("breadcrumbCurrent", "config.template.edit");
         accountOptions(f, m);
@@ -361,14 +358,13 @@ public class TransactionConfigurationController {
             @RequestParam long transactionVersion,
             @RequestParam String reason,
             @ModelAttribute("query") RegisterQuery q,
-            Model m) {
+            Model m, RedirectAttributes redirect) {
         try {
             configuration.reviewTemplate(id, template, version, transactionVersion, action, reason);
-            return "redirect:/accounting/config/transactions/"
+            return ResourceFeedback.success(redirect, "/accounting/config/transactions/"
                     + id
                     + "?review="
-                    + template
-                    + "&saved";
+                    + template, "feedback.saved", null);
         } catch (OptimisticLockingFailureException e) {
             m.addAttribute("actionError", "error.stale");
         } catch (IllegalArgumentException e) {
@@ -385,10 +381,10 @@ public class TransactionConfigurationController {
             @RequestParam boolean active,
             @RequestParam String reason,
             @ModelAttribute("query") RegisterQuery q,
-            Model m) {
+            Model m, RedirectAttributes redirect) {
         try {
             configuration.transactionState(id, version, active, reason);
-            return "redirect:/accounting/config/transactions/" + id + "?saved";
+            return ResourceFeedback.success(redirect, "/accounting/config/transactions/" + id, "feedback.saved", null);
         } catch (OptimisticLockingFailureException e) {
             m.addAttribute("actionError", "error.stale");
         } catch (IllegalArgumentException e) {
@@ -409,7 +405,8 @@ public class TransactionConfigurationController {
     private static String error(IllegalArgumentException e) {
         return e.getMessage() != null
                         && (e.getMessage().startsWith("config.error.")
-                                || e.getMessage().startsWith("accounting.error."))
+                                || e.getMessage().startsWith("accounting.error.")
+                                || e.getMessage().startsWith("voucher.error."))
                 ? e.getMessage()
                 : "error.invalid";
     }

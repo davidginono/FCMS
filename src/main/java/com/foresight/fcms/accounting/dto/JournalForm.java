@@ -81,18 +81,8 @@ public class JournalForm {
         this.requestKey = value;
     }
 
-    private long version = 0;
-
-    public long getVersion() {
-        return version;
-    }
-
-    public void setVersion(long value) {
-        this.version = value;
-    }
-
     @jakarta.validation.constraints.NotNull
-    @jakarta.validation.constraints.Size(min = 2, max = 50)
+    @jakarta.validation.constraints.Size(min = 2, max = 500)
     private java.util.List<@jakarta.validation.Valid JournalLineForm> lines =
             new java.util.ArrayList<>(
                     java.util.List.of(new JournalLineForm(), new JournalLineForm()));

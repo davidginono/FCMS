@@ -4,11 +4,51 @@
 <h1 class="app-page-title">
 <c:out value="${record.subject()}" />
 </h1>
+<div class="app-actions">
 <c:if test="${commands.prepare()}">
 <a class="app-btn btn-neutral" href="<c:url value='${baseUrl}/${record.id()}/edit'/>">
 <spring:message code="common.edit" />
 </a>
 </c:if>
+<c:if test="${permissions.contains('task.write') && kind.name()=='TASK' && (record.ownerId()==actorId || permissions.contains('task.manage')) && record.status()=='PLANNED'}">
+<form method="post" action="<c:url value='${baseUrl}/${record.id()}/actions/start'/>">
+<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+<input type="hidden" name="version" value="${record.version()}">
+<button class="app-btn btn-neutral" type="submit">
+<spring:message code="work.startAction" />
+</button>
+</form>
+</c:if>
+<c:if test="${permissions.contains('task.write') && kind.name()=='TASK' && (record.ownerId()==actorId || permissions.contains('task.manage')) && (record.status()=='PLANNED' || record.status()=='IN_PROGRESS')}">
+<form method="post" action="<c:url value='${baseUrl}/${record.id()}/actions/complete'/>">
+<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+<input type="hidden" name="version" value="${record.version()}">
+<button class="app-btn btn-neutral" type="submit">
+<spring:message code="work.complete" />
+</button>
+</form>
+</c:if>
+<c:if test="${permissions.contains('task.write') && kind.name()=='TASK' && permissions.contains('task.manage') && (record.status()=='PLANNED' || record.status()=='IN_PROGRESS')}">
+<form method="post" action="<c:url value='${baseUrl}/${record.id()}/actions/cancel'/>">
+<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+<input type="hidden" name="version" value="${record.version()}">
+<button class="app-btn btn-neutral" type="submit">
+<spring:message code="work.cancel" />
+</button>
+</form>
+</c:if>
+<c:if test="${commands.submit()}">
+<form method="post" action="<c:url value='${baseUrl}/${record.id()}/actions/submit'/>">
+<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+<input type="hidden" name="version" value="${record.version()}">
+<button class="app-btn btn-neutral" type="submit">
+<spring:message code="common.submit" />
+</button>
+</form>
+</c:if>
+
+
+</div>
 </div>
 <dl class="fcms-details">
 <div>
@@ -124,49 +164,12 @@
 <div><dt><spring:message code="work.createdBy"/></dt><dd><c:out value="${record.creator()}"/></dd></div>
 <div><dt><spring:message code="work.preparedBy"/></dt><dd><c:choose><c:when test="${not empty record.preparer()}"><c:out value="${record.preparer()}"/></c:when><c:otherwise><spring:message code="gl.presentation.unavailable"/></c:otherwise></c:choose></dd></div>
 </dl>
-<div class="app-actions">
-<c:if test="${permissions.contains('task.write') && kind.name()=='TASK' && (record.ownerId()==actorId || permissions.contains('task.manage')) && record.status()=='PLANNED'}">
-<form method="post" action="<c:url value='${baseUrl}/${record.id()}/actions/start'/>">
-<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-<input type="hidden" name="version" value="${record.version()}">
-<button class="app-btn btn-neutral" type="submit">
-<spring:message code="work.startAction" />
-</button>
-</form>
-</c:if>
-<c:if test="${permissions.contains('task.write') && kind.name()=='TASK' && (record.ownerId()==actorId || permissions.contains('task.manage')) && (record.status()=='PLANNED' || record.status()=='IN_PROGRESS')}">
-<form method="post" action="<c:url value='${baseUrl}/${record.id()}/actions/complete'/>">
-<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-<input type="hidden" name="version" value="${record.version()}">
-<button class="app-btn btn-neutral" type="submit">
-<spring:message code="work.complete" />
-</button>
-</form>
-</c:if>
-<c:if test="${permissions.contains('task.write') && kind.name()=='TASK' && permissions.contains('task.manage') && (record.status()=='PLANNED' || record.status()=='IN_PROGRESS')}">
-<form method="post" action="<c:url value='${baseUrl}/${record.id()}/actions/cancel'/>">
-<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-<input type="hidden" name="version" value="${record.version()}">
-<button class="app-btn btn-neutral" type="submit">
-<spring:message code="work.cancel" />
-</button>
-</form>
-</c:if>
-<c:if test="${commands.submit()}">
-<form method="post" action="<c:url value='${baseUrl}/${record.id()}/actions/submit'/>">
-<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-<input type="hidden" name="version" value="${record.version()}">
-<button class="app-btn btn-neutral" type="submit">
-<spring:message code="common.submit" />
-</button>
-</form>
-</c:if>
-</div>
+
 <c:if test="${commands.review()}">
-<fieldset class="fcms-form-section">
-<legend>
+<section class="erp-resource-section" aria-labelledby="work-detail-section-1">
+<h2 id="work-detail-section-1">
 <spring:message code="work.review" />
-</legend>
+</h2><div class="fcms-section-body">
 <form method="post" action="<c:url value='${baseUrl}/${record.id()}/actions/approve'/>">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
 <input type="hidden" name="version" value="${record.version()}">
@@ -186,7 +189,7 @@
 </button>
 </div>
 </form>
-</fieldset>
+</div></section>
 </c:if>
 <c:if test="${commands.cancel()}">
 <details class="fcms-form-section"><summary><spring:message code="work.withdraw"/></summary>

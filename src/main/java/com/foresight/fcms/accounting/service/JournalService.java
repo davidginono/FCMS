@@ -1,5 +1,6 @@
 package com.foresight.fcms.accounting.service;
 
+import com.foresight.fcms.shared.validation.FieldValidationException;
 import com.foresight.fcms.accounting.dto.*;
 import com.foresight.fcms.accounting.dto.AccountingViews.*;
 import com.foresight.fcms.audit.service.AuditService;
@@ -123,7 +124,7 @@ public class JournalService {
         var lines =
                 db.query(
                         "select account_id,account_code,account_name,debit,credit,description from"
-                                + " gl_lines where journal_id=? order by line_number limit 50",
+                                + " gl_lines where journal_id=? order by line_number limit 500",
                         (r, n) ->
                                 new Line(
                                         r.getLong(1),
@@ -156,89 +157,55 @@ public class JournalService {
                 List.copyOf(lines));
     }
 
-    @Transactional(readOnly = true)
-    public JournalForm form(long id) {
-        var actor = access.require("accounting.write");
-        var j = find(id);
-        if (j.makerId() != actor.id()
-                || !Set.of("DRAFT", "REJECTED").contains(j.state())
-                || j.kind().equals("REVERSAL")
-                || j.sourceLinked()) throw new IllegalArgumentException("error.invalid");
-        var f = new JournalForm();
-        f.setKind(j.kind());
-        f.setReference(j.reference());
-        f.setDescription(j.description());
-        f.setEvidenceReference(j.evidenceReference());
-        f.setDate(j.date());
-        f.setCashFlow(j.cashFlow());
-        f.setVersion(j.version());
-        f.setLines(
-                j.lines().stream()
-                        .map(l -> {
-                            var x = new JournalLineForm();
-                            x.setAccountId(l.accountId());
-                            x.setDebit(l.debit());
-                            x.setCredit(l.credit());
-                            x.setDescription(l.description());
-                            return x;
-                        })
-                        .toList());
-        return f;
-    }
-
     @Transactional
-    public long save(Long id, @jakarta.validation.Valid JournalForm f) {
+    public long createDraft(@jakarta.validation.Valid JournalForm f) {
         var actor = access.require("accounting.write");
         String hash = fingerprint(f);
-        if (id == null) {
-            db.queryForList(
-                    "select pg_advisory_xact_lock(hashtextextended(?,0))",
-                    "FCMS_GL/" + actor.id() + "/" + f.getRequestKey());
-            var old =
-                    db.queryForList(
-                            "select id,payload_hash from gl_journals where maker_id=? and"
-                                    + " request_key=?",
-                            actor.id(),
-                            f.getRequestKey());
-            if (!old.isEmpty()) {
-                if (!hash.equals(old.getFirst().get("payload_hash")))
-                    throw new IllegalArgumentException("error.conflict");
-                return ((Number) old.getFirst().get("id")).longValue();
-            }
-        } else {
-            lock(id);
-            var old = find(id);
-            if (old.makerId() != actor.id()
-                    || !Set.of("DRAFT", "REJECTED").contains(old.state())
-                    || !old.kind().equals(f.getKind())
-                    || old.sourceLinked()) throw new IllegalArgumentException("error.invalid");
+        db.queryForList(
+                "select pg_advisory_xact_lock(hashtextextended(?,0))",
+                "FCMS_GL/" + actor.id() + "/" + f.getRequestKey());
+        var old =
+                db.queryForList(
+                        "select id,payload_hash from gl_journals where maker_id=? and"
+                                + " request_key=?",
+                        actor.id(),
+                        f.getRequestKey());
+        if (!old.isEmpty()) {
+            if (!hash.equals(old.getFirst().get("payload_hash")))
+                throw new IllegalArgumentException("error.conflict");
+            return ((Number) old.getFirst().get("id")).longValue();
         }
         long period = period(f.getDate());
         var ids = new HashSet<Long>();
         BigDecimal debit = BigDecimal.ZERO, credit = BigDecimal.ZERO;
-        for (var l : f.getLines()) {
+        for (int row = 0; row < f.getLines().size(); row++) {
+            var l = f.getLines().get(row);
             if (l.getDebit().signum() < 0
                     || l.getCredit().signum() < 0
                     || ((l.getDebit().signum() > 0) == (l.getCredit().signum() > 0)))
-                throw new IllegalArgumentException("accounting.error.lines");
+                throw new FieldValidationException("accounting.error.lines", "lines[" + row + "].debit", "lines[" + row + "].credit");
             ids.add(l.getAccountId());
             debit = debit.add(l.getDebit());
             credit = credit.add(l.getCredit());
         }
         if (debit.signum() <= 0 || debit.compareTo(credit) != 0)
-            throw new IllegalArgumentException("accounting.error.balance");
+            throw new FieldValidationException("accounting.error.balance", "lines");
         var accounts =
                 db.query(
                         "select id,code,name from gl_accounts where active and depth=4 and id=any"
                                 + " (?) order by id for share",
                         (r, n) -> new PostingAccount(r.getLong(1), r.getString(2), r.getString(3)),
                         (Object) ids.toArray(Long[]::new));
-        if (accounts.size() != ids.size())
-            throw new IllegalArgumentException("accounting.error.accounts");
+        if (accounts.size() != ids.size()) {
+            var available = accounts.stream().map(PostingAccount::id).collect(java.util.stream.Collectors.toSet());
+            var fields = new ArrayList<String>();
+            for (int row = 0; row < f.getLines().size(); row++)
+                if (!available.contains(f.getLines().get(row).getAccountId())) fields.add("lines[" + row + "].accountId");
+            throw new FieldValidationException("accounting.error.accounts", fields.toArray(String[]::new));
+        }
         var byId = new HashMap<Long, PostingAccount>();
         accounts.forEach(a -> byId.put(a.id(), a));
-        if (id == null)
-            id =
+        long id =
                     db.queryForObject(
                             "insert into"
                                 + " gl_journals(kind,reference,description,evidence_reference,effective_date,period_id,cash_flow,state,maker_id,request_key,payload_hash)"
@@ -254,23 +221,6 @@ public class JournalService {
                             actor.id(),
                             f.getRequestKey(),
                             hash);
-        else {
-            if (db.update(
-                            "update gl_journals set"
-                                + " reference=?,description=?,evidence_reference=?,effective_date=?,period_id=?,cash_flow=?,payload_hash=?,state='DRAFT',checker_id=null,review_comment='',version=version+1"
-                                + " where id=? and version=?",
-                            f.getReference().trim(),
-                            f.getDescription().trim(),
-                            f.getEvidenceReference().trim(),
-                            f.getDate(),
-                            period,
-                            f.getCashFlow(),
-                            hash,
-                            id,
-                            f.getVersion())
-                    != 1) throw new OptimisticLockingFailureException("stale");
-            db.update("delete from gl_lines where journal_id=?", id);
-        }
         final long journalId = id;
         var numbered = new ArrayList<Numbered>();
         for (int n = 0; n < f.getLines().size(); n++)
@@ -456,7 +406,7 @@ public class JournalService {
                                 + " ends_on for share",
                         Long.class,
                         date);
-        if (ids.size() != 1) throw new IllegalArgumentException("accounting.error.period");
+        if (ids.size() != 1) throw new FieldValidationException("accounting.error.period", "date");
         return ids.getFirst();
     }
 

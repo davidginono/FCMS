@@ -85,6 +85,7 @@ class LedgerReportSnapshotTests {
 
     @BeforeAll
     void fixtures() {
+        OperationalTestClaims.enable(db);
         for (var row : Map.of(MAKER, 1, STAFF, 2).entrySet())
             db.update(
                     "insert into users(first_name,last_name,email,password,status_id,role_id)"
@@ -95,11 +96,12 @@ class LedgerReportSnapshotTests {
         for (var kind : LedgerKind.values()) {
             actor(MAKER);
             var opening = form("100.35", "Ledger facsimile opening");
-            if (kind == LedgerKind.BULK) opening.setUnits(100);
+            if (kind == LedgerKind.BULK) {opening.setUnits(100);opening.setOperation("STOCK_PURCHASE");}
             ledger.post(kind, opening);
             var out = form("10.10", "Ledger facsimile correction source");
             if (kind != LedgerKind.INCOME) out.setDirection("OUT");
             if (kind == LedgerKind.BULK) {
+                out.setOperation("CLIENT_SALE");
                 out.setUnits(11);
                 out.setUnitDirection("OUT");
             }
@@ -132,8 +134,8 @@ class LedgerReportSnapshotTests {
         q.setSort("date");
         q.setDirection("asc");
         var source = ledger.reportSnapshot(LedgerKind.BULK, q);
-        assertEquals(0, new BigDecimal("110.45").compareTo(source.amountIn()));
-        assertEquals(0, new BigDecimal("10.10").compareTo(source.amountOut()));
+        assertEquals(0, new BigDecimal("10.10").compareTo(source.amountIn()));
+        assertEquals(0, new BigDecimal("110.45").compareTo(source.amountOut()));
         assertEquals(114, source.unitsIn());
         assertEquals(11, source.unitsOut());
         assertEquals(103, source.currentUnits());
@@ -218,6 +220,11 @@ class LedgerReportSnapshotTests {
                                         .GET()
                                         .build(),
                                 HttpResponse.BodyHandlers.ofByteArray());
+                if (kind == LedgerKind.INCOME) {
+                    assertEquals(410, response.statusCode(), kind + " " + lang);
+                    assertEquals(0, response.body().length);
+                    continue;
+                }
                 assertEquals(200, response.statusCode(), kind + " " + lang);
                 assertTrue(
                         response.headers()
@@ -258,7 +265,7 @@ class LedgerReportSnapshotTests {
                                     .GET()
                                     .build(),
                             HttpResponse.BodyHandlers.ofString());
-            assertEquals(403, response.statusCode());
+            assertEquals(kind == LedgerKind.INCOME ? 410 : 403, response.statusCode());
         }
     }
 

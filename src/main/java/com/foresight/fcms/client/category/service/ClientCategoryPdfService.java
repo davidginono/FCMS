@@ -50,7 +50,7 @@ public class ClientCategoryPdfService {
                                 money(row.systemInstallFee()),
                                 money(row.systemReinstallFee()),
                                 money(row.androidFee()),
-                                row.financialYear(),
+                                text(row.financialYear()),
                                 pdf.label(row.paymentStatus())));
             return pdf.render(
                     "CLIENT_" + category.name() + "_REGISTER",
@@ -138,6 +138,8 @@ public class ClientCategoryPdfService {
                 revenueTotals(category, source.totals()),
                 (category == ClientCategory.MICROFINANCE || category == ClientCategory.OTHERS)
                         ? List.of(10f, 62f, 20f, 30f, 30f, 20f, 20f, 20f, 20f, 20f, 20f)
+                        : category == ClientCategory.AMCOS
+                        ? List.of(8f, 45f, 16f, 16f, 18f, 18f, 16f, 16f, 18f, 15f, 15f, 16f, 15f)
                         : List.of(
                                 8f, 45f, 16f, 16f, 14f, 15f, 18f, 18f, 16f, 16f, 18f, 15f, 15f, 16f,
                                 15f));

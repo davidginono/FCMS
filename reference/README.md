@@ -1,6 +1,6 @@
 # Legacy FCMS PHP reference
 
-[fcms-php-reference.zip](fcms-php-reference.zip) contains the PHP/XAMPP source snapshot used to reference legacy FCMS workflows. Snapshot date: **2026-11-15**. Its top-level directory is `fcms/`.
+[fcms-php-reference.zip](fcms-php-reference.zip) contains the PHP/XAMPP source snapshot used to reference legacy FCMS workflows. Snapshot date: **2026-11-16**. Its top-level directory is `fcms/`.
 
 The snapshot comes from the current `C:/xampp/htdocs/fcms` directory, including the newer prospects and invoice workflows. The older `C:/xampp/htdocs/fcms.zip` archive is not bundled: it exceeds GitHub's normal file limit and is not the current sanitized source snapshot.
 
@@ -30,7 +30,7 @@ Start with the root PHP files. `CODES/`, `CODE2/` and `images/` contain historic
 
 | Area | Starting points inside `fcms/` |
 | --- | --- |
-| Navigation and dashboards | `admin_sidebar.php`, `admin_navigation.php`, `user_dashboard.php` |
+| Login, workspace separation and dashboards | `index.php`, `auth_workspace.php`, `client_lifecycle.php`, `admin.php`, `admin_sidebar.php`, `admin_navigation.php`, `user_dashboard.php`, `user_navigation.php`, `tests/user_workspace_test.php` |
 | Clients and AMCOS | `saccos.php`, `amcos.php`, `union.php`, `microfinance.php`, `other_client.php`, corresponding `add_*`, `update_*` and `view_*` files |
 | User administration and accounts | `users.php`, `add_user.php`, `update_user.php`, `account.php`, `user_account.php`, `change_password.php` |
 | Leave, tasks and activity reports | `leaves.php`, `user_leaves.php`, `all_task.php`, `user_tasks.php`, `staff_report.php`, `user_staff_report.php` |
@@ -54,7 +54,7 @@ Uploads, profile pictures, sessions, backups, logs, local configuration, nested 
 To refresh from an authorized local PHP source checkout:
 
 ```powershell
-python scripts/package-legacy-reference.py --source C:/xampp/htdocs/fcms --date 2026-11-15
+python scripts/package-legacy-reference.py --source C:/xampp/htdocs/fcms --date 2026-11-16
 ```
 
 Review the resulting redactions and exclusions, verify ZIP integrity and the manifest, and lint changed PHP copies before publishing an updated snapshot. The builder reads PHP and SQL as text; it does not execute either language or connect to a database.

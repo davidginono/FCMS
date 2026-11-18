@@ -1,0 +1,82 @@
+/* Microfinance shell.css: classic navy identity bar and white text-led service tree.
+   FCMS retains its own identity, routes, permissions and native forms. */
+.fcms-shell .app-topbar {height:auto;min-height:38px;background:#232f3e;border-bottom:1px solid #161e2d;color:#f2f3f3;}
+.fcms-shell .app-topbar-inner {min-height:38px;height:auto;gap:12px;padding:0 12px;flex-wrap:wrap;}
+.fcms-shell .app-topbar-left {flex:1 1 320px;gap:16px;min-width:0;}
+.fcms-shell .app-global-brand {display:inline-flex;align-items:center;gap:8px;color:#fff;font-size:21px;line-height:23px;font-weight:700;text-decoration:none;white-space:nowrap;}
+.app-global-brand img {width:28px;height:28px;object-fit:contain;background:#fff;border:1px solid #545b64;}
+.app-global-search {display:block;position:relative;flex:0 1 320px;width:min(22vw,320px);min-width:140px;max-width:320px;height:auto;min-height:0;padding:0;border:0;background:transparent;margin:3px 8px 3px 0;}
+.app-global-search > svg {position:absolute;inset-inline-start:9px;top:7px;width:16px;height:16px;color:#d5dbdb;pointer-events:none;}
+.app-global-search input {display:block;box-sizing:border-box;width:100%;height:30px;min-width:0;padding:4px 8px 4px 32px;border:1px solid #879596;border-radius:2px;background:#161e2d;color:#fff;font-size:13px;line-height:20px;}
+.app-global-search input::placeholder {color:#aab7b8;}
+.app-navigation-search-results {position:absolute;top:calc(100% + 2px);inset-inline:0;z-index:70;max-height:min(400px,60dvh);overflow:auto;background:#232f3e;border:1px solid #879596;box-shadow:0 2px 4px #0003;}
+.app-navigation-search-results[hidden] {display:none;}
+.app-navigation-search-results a {display:block;padding:7px 12px;color:#fff;text-decoration:none;font-size:13px;line-height:20px;overflow-wrap:anywhere;}
+.app-navigation-search-results a:is(:hover,:focus-visible,[aria-selected=true]) {background:#414d5c;color:#fff;}
+.fcms-shell .app-topbar-actions {gap:12px;min-height:38px;max-width:100%;margin-inline-start:auto;}
+.fcms-shell .app-topbar-actions form {margin:0;}
+.app-language-control {display:flex;align-items:center;gap:6px;flex:0 0 auto;}
+.app-language-control select {box-sizing:border-box;width:64px;height:30px;padding:3px 6px;border:1px solid #879596;border-radius:2px;background:#161e2d;color:#fff;font:inherit;color-scheme:dark;}
+.app-language-control select:focus-visible {outline:2px solid #539fe5;outline-offset:2px;}
+.app-account-copy {display:block;max-width:220px;font-size:13px;line-height:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.app-profile-control {position:relative;}
+.app-profile-toggle {display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:0;background:transparent;color:#d5dbdb;cursor:pointer;}
+.app-profile-toggle svg {width:24px;height:24px;}
+.app-profile-panel {position:absolute;top:calc(100% + 4px);inset-inline-end:0;z-index:70;box-sizing:border-box;width:min(280px,calc(100vw - 24px));padding:12px;background:white;color:#16191f;border:1px solid #879596;box-shadow:0 2px 4px #0003;}
+.app-profile-panel[hidden] {display:none;}
+.app-profile-panel a {display:block;padding:6px 0;color:#0073bb;font-size:14px;text-decoration:none;}
+.app-profile-identity {margin:0 0 8px;overflow-wrap:anywhere;font-size:13px;}
+.fcms-shell .app-topbar-logout {border:1px solid #879596;background:transparent;color:#fff;font-size:13px;line-height:20px;min-height:28px;padding:3px 8px;}
+.fcms-shell .app-topbar-logout:hover,.app-profile-toggle:hover {background:#414d5c;}
+/* Cloudscape side-navigation: service identity, section groups and a shallow disclosure tree. */
+.fcms-shell .app-sidebar-overlay {inset-block-start:var(--fcms-topbar-height,38px);}
+.fcms-shell .app-sidebar {width:280px;max-width:calc(100vw - 32px);background:#fff;border-color:#c6c6cd;box-shadow:none;top:var(--fcms-topbar-height,38px);height:calc(100dvh - var(--fcms-topbar-height,38px));}
+.app-sidebar-toggle-row {display:flex;flex:none;align-items:center;justify-content:space-between;min-height:62px;padding:12px 16px 12px 28px;border-bottom:1px solid #c6c6cd;background:#fff;gap:12px;}
+.app-sidebar-toggle-label {min-width:0;margin:0;color:#0f141a;font-size:18px;font-weight:700;line-height:22px;}
+.app-sidebar-home,.app-sidebar-home:visited {color:inherit;text-decoration:none;}
+.app-sidebar-home:hover {color:#006ce0;text-decoration:underline;}
+.app-sidebar-close {display:flex;align-items:center;justify-content:center;width:32px;height:32px;min-width:32px;border:0;border-radius:50%;background:transparent;color:#424650;cursor:pointer;}
+.app-sidebar-close svg {width:16px;height:16px;}
+.app-sidebar-close:hover {background:#f2f3f3;color:#0f141a;}
+.app-sidebar-expand-icon {display:none;}
+.fcms-shell .app-sidebar-nav {min-height:0;padding:16px 0 24px;background:#fff;scrollbar-color:#b4b4bb #fff;}
+.fcms-shell .app-sidebar-section {padding:0;margin:0;}
+.fcms-shell .app-sidebar-section-group {margin:20px 20px 0;padding:20px 0 0;border-top:1px solid #c6c6cd;}
+.fcms-shell .app-sidebar-group-title {margin:0;padding:4px 8px 8px;color:#0f141a;font-size:18px;font-weight:700;line-height:22px;}
+.fcms-shell details.app-sidebar-section-group > summary {display:flex;align-items:center;gap:4px;list-style:none;cursor:pointer;}
+.fcms-shell details.app-sidebar-section-group > summary:hover {color:#006ce0;}
+.fcms-shell details.app-sidebar-section-group > .app-sidebar-link {padding-inline-start:28px;}
+.fcms-shell .app-sidebar-link {display:flex;align-items:flex-start;box-sizing:border-box;width:100%;min-height:28px;margin:0;padding:4px 28px;border:0;border-radius:0;background:transparent;color:#424650;font-size:14px;font-weight:400;line-height:20px;text-decoration:none;box-shadow:none;}
+.fcms-shell .app-sidebar-section-group>.app-sidebar-link {padding-inline:8px;}
+.fcms-shell .app-sidebar-label {min-width:0;overflow-wrap:break-word;}
+.fcms-shell .app-sidebar-link:hover {background:transparent;color:#006ce0;text-decoration:underline;}
+.fcms-shell .app-sidebar-section > summary {position:relative;display:flex;align-items:center;gap:4px;min-height:28px;margin:4px 0 0;padding:4px 8px;color:#0f141a;font-size:14px;font-weight:700;line-height:20px;list-style:none;cursor:pointer;}
+.fcms-shell .app-sidebar-section > summary:hover {color:#006ce0;}
+.fcms-shell .app-sidebar-section > .app-sidebar-link {padding-inline-start:28px;padding-inline-end:8px;}
+.fcms-shell .app-sidebar-section-group > .app-sidebar-section > summary {padding-inline-start:28px;}
+.fcms-shell .app-sidebar-section-group > .app-sidebar-section > .app-sidebar-link {padding-inline-start:48px;}
+.fcms-shell .app-sidebar-nav > .app-sidebar-section > .app-sidebar-link {padding-inline:28px;}
+.fcms-shell .app-sidebar-link:is(.is-active,[aria-current=page],[data-workspace-nav-pending]) {color:#006ce0;background:transparent;font-weight:700;border:0;}
+:is(.app-sidebar-section,.app-sidebar-section-group) > summary::-webkit-details-marker {display:none;}
+:is(.app-sidebar-section,.app-sidebar-section-group) > summary::marker {content:"";}
+.app-navigation-caret {width:16px;height:16px;flex:0 0 16px;fill:currentColor;}
+details:not([open]) > summary > .app-navigation-caret {transform:rotate(-90deg);}
+.fcms-shell :is(.app-sidebar-home,.app-sidebar-close,.app-sidebar-link,.app-sidebar-heading,.app-sidebar-group-title,.app-global-brand,.app-global-search input,.app-profile-toggle,.app-profile-panel a):focus-visible {outline:2px solid #006ce0;outline-offset:2px;border-radius:2px;}
+@media(min-width:900px){
+ .fcms-shell .app-topbar [data-fcms-sidebar-toggle] {display:none;}
+ .fcms-shell.fcms-navigation-closed .app-sidebar {width:40px;background:#fff;border-right:0;}
+ .fcms-navigation-closed .app-sidebar-toggle-row {padding:8px 4px;min-height:48px;justify-content:center;background:#fff;border-bottom:0;}
+ .fcms-navigation-closed .app-sidebar-close {width:32px;min-width:32px;height:32px;}
+ .fcms-navigation-closed :is(.app-sidebar-toggle-label,.app-sidebar-collapse-icon) {display:none;}
+ .fcms-navigation-closed .app-sidebar-expand-icon {display:block;}
+ .fcms-navigation-closed .app-sidebar-nav {visibility:hidden;pointer-events:none;}
+}
+@media(max-width:1023px){.app-account-copy{display:none;}}
+@media(max-width:767px){.fcms-shell .app-topbar-left{flex:0 1 auto;}.app-global-search{display:none;}.fcms-shell .app-topbar-inner{flex-wrap:wrap;}.fcms-shell .app-topbar-actions{flex-wrap:wrap;gap:8px;}}
+@media(max-width:899px){
+ .fcms-shell .app-topbar-inner {gap:4px 8px;}
+ .fcms-shell .app-topbar-left {flex-basis:210px;gap:8px;}
+ .app-global-search {flex:1 1 140px;width:auto;margin-inline-end:0;}
+ .fcms-shell .app-sidebar {width:284px;}
+ .fcms-shell .app-sidebar-link,.fcms-shell :is(.app-sidebar-section,.app-sidebar-section-group)>summary {min-height:40px;padding-top:10px;padding-bottom:10px;}
+}

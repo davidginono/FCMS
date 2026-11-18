@@ -1,6 +1,13 @@
 package com.foresight.fcms.accounting.dto;
 
 public class AccountForm {
+    @jakarta.validation.constraints.NotNull
+    @jakarta.validation.constraints.Pattern(regexp = "|GROUP|POSTING")
+    private String mode = "";
+
+    public String getMode() { return mode; }
+    public void setMode(String value) { mode = value; }
+
     @jakarta.validation.constraints.NotNull private Long parentId;
 
     public Long getParentId() {

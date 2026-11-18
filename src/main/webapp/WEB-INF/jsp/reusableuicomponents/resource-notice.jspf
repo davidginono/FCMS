@@ -1,0 +1,4 @@
+<%@ page pageEncoding="UTF-8" %>
+<c:if test="${not empty resourceNotice}">
+<ui:flashbar type="${resourceNotice.type()}" messageKey="${resourceNotice.messageKey()}" resourceUrl="${resourceNotice.resourceUrl()}"/>
+</c:if>

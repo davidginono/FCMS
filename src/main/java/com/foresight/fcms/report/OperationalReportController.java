@@ -1,8 +1,7 @@
 package com.foresight.fcms.report;
 
-import com.foresight.fcms.finance.expense.dto.ExpenseCategoryQuery;
-import com.foresight.fcms.finance.expense.dto.ExpenseQuery;
 import com.foresight.fcms.finance.ledger.model.LedgerKind;
+import com.foresight.fcms.finance.ledger.dto.LedgerQuery;
 import com.foresight.fcms.report.service.LedgerReportPdfService;
 import com.foresight.fcms.report.service.OperationalReportPdfService;
 import com.foresight.fcms.shared.dto.RegisterQuery;
@@ -26,21 +25,10 @@ public class OperationalReportController {
         this.ledgerPdf = ledgerPdf;
     }
 
-    @GetMapping("/finance/{ledger:income|petty-cash|cloud-backup|bulk-sms}/print.pdf")
+    @GetMapping("/finance/{ledger:petty-cash|cloud-backup|bulk-sms}/print.pdf")
     public ResponseEntity<byte[]> ledger(
-            @PathVariable String ledger, @ModelAttribute RegisterQuery query, Locale locale) {
+            @PathVariable String ledger, @ModelAttribute LedgerQuery query, Locale locale) {
         return output(ledger, ledgerPdf.render(LedgerKind.from(ledger), query, locale));
-    }
-
-    @GetMapping("/finance/expenses/print.pdf")
-    public ResponseEntity<byte[]> expenses(@ModelAttribute ExpenseQuery query, Locale locale) {
-        return output("expenses", pdf.expenses(query, locale));
-    }
-
-    @GetMapping("/finance/expenses/categories/print.pdf")
-    public ResponseEntity<byte[]> expenseCategories(
-            @ModelAttribute ExpenseCategoryQuery query, Locale locale) {
-        return output("expense-categories", pdf.expenseCategories(query, locale));
     }
 
     @GetMapping("/{workspace:tasks|leaves|staff-reports}/print.pdf")
@@ -49,7 +37,7 @@ public class OperationalReportController {
         return output(workspace, pdf.work(WorkKind.from(workspace), query, locale));
     }
 
-    @GetMapping("/finance/{ledger:income|petty-cash|cloud-backup|bulk-sms}/{id}/print.pdf")
+    @GetMapping("/finance/{ledger:petty-cash|cloud-backup|bulk-sms}/{id}/print.pdf")
     public ResponseEntity<byte[]> receipt(
             @PathVariable String ledger, @PathVariable long id, Locale locale) {
         return output(ledger + "-" + id, pdf.receipt(LedgerKind.from(ledger), id, locale));

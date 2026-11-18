@@ -1,6 +1,11 @@
 package com.foresight.fcms.auth.controller;
 
+import com.foresight.fcms.shared.controller.FormErrors;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.foresight.fcms.shared.controller.ResourceFeedback;
 import com.foresight.fcms.auth.dto.UserForm;
+import com.foresight.fcms.auth.dto.UserFormSession;
+import com.foresight.fcms.auth.service.AccessService;
 import com.foresight.fcms.auth.service.UserAdministrationService;
 import com.foresight.fcms.shared.dto.RegisterQuery;
 
@@ -15,9 +20,21 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/admin/users")
 public class UserAdministrationController {
     private final UserAdministrationService users;
+    private final AccessService access;
 
-    public UserAdministrationController(UserAdministrationService users) {
+    public UserAdministrationController(UserAdministrationService users, AccessService access) {
         this.users = users;
+        this.access = access;
+    }
+
+    @GetMapping("/form-session")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<UserFormSession> formSession(
+            org.springframework.security.web.csrf.CsrfToken csrf) {
+        var actor = access.require("iam.user.manage");
+        return org.springframework.http.ResponseEntity.ok()
+                .cacheControl(org.springframework.http.CacheControl.noStore())
+                .body(new UserFormSession(Long.toString(actor.id()), csrf.getParameterName(), csrf.getToken()));
     }
 
     @GetMapping
@@ -36,9 +53,8 @@ public class UserAdministrationController {
 
     @GetMapping("/{id}")
     public String detail(@PathVariable long id, Model m) {
-        m.addAttribute("record", users.find(id));
-        m.addAttribute("breadcrumbCurrent", "iam.user.details");
-        return "users/detail";
+        access.require("iam.user.manage");
+        return "redirect:/admin/users/" + id + "/edit";
     }
 
     @GetMapping("/{id}/edit")
@@ -49,8 +65,8 @@ public class UserAdministrationController {
     }
 
     @PostMapping
-    public String save(@Valid @ModelAttribute("form") UserForm f, BindingResult b, Model m) {
-        return save(null, f, b, m);
+    public String save(@Valid @ModelAttribute("form") UserForm f, BindingResult b, Model m, RedirectAttributes redirect) {
+        return save(null, f, b, m, redirect);
     }
 
     @PostMapping("/{id}")
@@ -58,19 +74,22 @@ public class UserAdministrationController {
             @PathVariable Long id,
             @Valid @ModelAttribute("form") UserForm f,
             BindingResult b,
-            Model m) {
+            Model m, RedirectAttributes redirect) {
         if (!b.hasErrors())
             try {
-                return "redirect:/admin/users/" + users.save(id, f);
+                long saved = users.save(id, f);
+                return ResourceFeedback.success(redirect, "/admin/users", id == null ? "feedback.userCreated" : "feedback.saved", "/admin/users/" + saved + "/edit");
             } catch (IllegalArgumentException e) {
-                b.reject(
+                if (java.util.Set.of("error.passwordDefault", "error.password").contains(e.getMessage())) b.rejectValue("password", e.getMessage());
+                else FormErrors.reject(b, e,
                         "error.passwordDefault".equals(e.getMessage())
                                 ? "error.passwordDefault"
-                                : "error.invalid");
+                                : "error.lastAdmin".equals(e.getMessage())
+                                        ? "error.lastAdmin" : "error.invalid");
             } catch (org.springframework.dao.OptimisticLockingFailureException e) {
                 b.reject("error.stale");
-            } catch (org.springframework.dao.DataIntegrityViolationException e) {
-                b.reject("error.conflict");
+            } catch (org.springframework.dao.DataAccessException e) {
+                FormErrors.conflict(b, e, java.util.Map.of("users_email_lower_uq", "email", "users_email_uq", "email"));
             }
         formContext(m, id);
         return "users/form";

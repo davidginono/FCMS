@@ -185,6 +185,7 @@ class TransactionConfigurationTests {
                                 String.class,
                                 oldJournal);
                 flyway.migrate();
+                OperationalTestClaims.enable(db);
             };
         }
 
@@ -244,11 +245,9 @@ class TransactionConfigurationTests {
     TransactionConfigForm transaction(String code) {
         var f = new TransactionConfigForm();
         f.setActivityId(activity());
-        f.setCode(code);
         f.setName("Synthetic " + code);
-        f.setEvent("INCOME_IN");
-        f.setDebitAccountId(bank);
-        f.setCreditAccountId(income);
+        f.setEvent("MANUAL_JOURNAL");
+        var rule=new PostingMappingForm.RuleForm();rule.setDebitAccountId(bank);rule.setCreditAccountId(income);f.getRules().add(rule);
         f.setVoucherKind("RECEIPT");
         f.setCashFlow("OPERATING");
         f.setPolicyReference("Reviewed synthetic treatment");
@@ -258,8 +257,7 @@ class TransactionConfigurationTests {
     TransactionTemplateForm edit(long id, String policy) {
         var f = new TransactionTemplateForm();
         f.setVersion(config.transaction(id).version());
-        f.setDebitAccountId(bank);
-        f.setCreditAccountId(income);
+        var rule=new PostingMappingForm.RuleForm();rule.setDebitAccountId(bank);rule.setCreditAccountId(income);f.getRules().add(rule);
         f.setVoucherKind("RECEIPT");
         f.setCashFlow("OPERATING");
         f.setPolicyReference(policy);
@@ -333,12 +331,13 @@ class TransactionConfigurationTests {
     void metadataIsIdempotentBoundedAndVersioned() {
         actor(1);
         var f = new ActivityForm();
-        f.setCode("VERIFIED");
         f.setName("Verified activity");
         long id = config.createActivity(f);
         assertEquals(id, config.createActivity(f));
         f.setName("Conflicting retry");
         assertThrows(IllegalArgumentException.class, () -> config.createActivity(f));
+        assertTrue(config.activity(id).code().matches("ACT-[0-9]{6,}"));
+        f.setCode(config.activity(id).code());
         f.setName("Edited activity");
         f.setVersion(0);
         config.editActivity(id, f);
@@ -346,7 +345,6 @@ class TransactionConfigurationTests {
         assertThrows(OptimisticLockingFailureException.class, () -> config.editActivity(id, f));
         for (int n = 0; n < 31; n++) {
             var a = new ActivityForm();
-            a.setCode("PAGE" + String.format("%02d", n));
             a.setName("Pagination fixture");
             config.createActivity(a);
         }
@@ -358,7 +356,8 @@ class TransactionConfigurationTests {
         var page = config.activities(q);
         assertEquals(10, page.rows().size());
         assertTrue(page.hasNext());
-        assertEquals("PAGE00", page.rows().getFirst().code());
+        assertTrue(page.rows().getFirst().code().matches("ACT-[0-9]{6,}"));
+        assertTrue(page.rows().stream().map(a->a.code()).toList().equals(page.rows().stream().map(a->a.code()).sorted().toList()));
         q.setPage(3);
         assertEquals(1, config.activities(q).rows().size());
         config.activityState(id, 1, false, "Synthetic retirement");
@@ -543,6 +542,7 @@ class TransactionConfigurationTests {
         assertThrows(
                 AccessDeniedException.class, () -> config.transactions(new RegisterQuery(), null));
         db.update("insert into user_claims(user_id,claim) values (6,'accounting.read')");
+        db.update("insert into user_claims(user_id,claim) values (6,'workspace.admin')");
         assertFalse(config.transactions(new RegisterQuery(), null).rows().isEmpty());
         var activity = new ActivityForm();
         activity.setCode("DENIED");

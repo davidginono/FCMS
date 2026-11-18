@@ -1,22 +1,21 @@
 <%@ page pageEncoding="UTF-8" %>
-<div class="app-modal-overlay config-create-modal" id="config-create-modal" data-auto-open="${modalOpen}" data-created="${not empty createdResource}" ${modalOpen?'':'hidden'}>
+<div class="app-modal-overlay config-create-modal" id="config-create-modal" data-auto-open="${modalOpen}" ${modalOpen?'':'hidden'}>
  <div class="app-modal-panel" role="dialog" aria-modal="true" aria-labelledby="config-modal-title" tabindex="-1">
   <div class="app-modal-header"><h2 id="config-modal-title"><spring:message code="${configKind=='activities'?'config.activity.create':'config.transaction.create'}"/></h2><button type="button" class="app-modal-close" data-config-close aria-label="<spring:message code='common.close'/>">&#215;</button></div>
-  <div class="app-modal-body"><c:choose><c:when test="${not empty createdResource}"><div class="console-message" role="status" data-message-type="success"><spring:message code="common.saved"/></div><dl class="fcms-details"><div><dt><spring:message code="gl.code"/></dt><dd><c:out value="${createdResource.code()}"/></dd></div><div><dt><spring:message code="common.name"/></dt><dd><c:out value="${createdResource.name()}"/></dd></div></dl></c:when><c:otherwise>
-   <c:url var="createUrl" value="/accounting/config/${configKind}"/>
-   <form:form method="post" modelAttribute="${configKind=='activities'?'activityForm':'transactionForm'}" action="${createUrl}" cssClass="fcms-form config-modal-form">
+  <c:url var="createUrl" value="/accounting/config/${configKind}"/>
+  <form:form method="post" modelAttribute="${configKind=='activities'?'activityForm':'transactionForm'}" action="${createUrl}" cssClass="fcms-form config-modal-form" data-resource-create="true">
+   <div class="app-modal-body config-modal-fields">
     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"><form:hidden path="requestKey"/>
     <c:choose><c:when test="${configKind=='activities'}"><%@ include file="/WEB-INF/jsp/accounting/config/activity-fields.jspf" %></c:when><c:otherwise>
      <div class="fcms-field"><label for="activityId"><spring:message code="config.activity"/></label><form:select path="activityId" id="activityId" data-choice-url="${pageContext.request.contextPath}/accounting/config/activities/choices"><form:option value=""/><form:options items="${activities}" itemValue="id" itemLabel="name"/></form:select><form:errors path="activityId" cssClass="fcms-error"/></div>
-     <ui:field path="code" label="gl.code" type="text"/><ui:field path="name" label="common.name" type="text"/>
-     <div class="fcms-field"><label for="event"><spring:message code="config.event"/></label><form:select path="event" id="event"><c:forEach items="${events}" var="event"><form:option value="${event}"><spring:message code="gl.event.${event}"/></form:option></c:forEach></form:select><form:errors path="event" cssClass="fcms-error"/></div>
+     <ui:field path="name" label="common.name" type="text"/>
+
      <div class="fcms-field"><label for="transactionDescription"><spring:message code="common.description"/></label><form:textarea path="description" id="transactionDescription" maxlength="500"/><form:errors path="description" cssClass="fcms-error"/></div>
-     <fieldset class="fcms-form-section"><legend><spring:message code="config.template"/></legend><%@ include file="/WEB-INF/jsp/accounting/config/template-fields.jspf" %></fieldset>
+     <section class="erp-resource-section" aria-labelledby="accounting-config-create-modal-section-1"><h2 id="accounting-config-create-modal-section-1"><spring:message code="config.template"/></h2><div class="fcms-section-body"><%@ include file="/WEB-INF/jsp/accounting/config/template-fields.jspf" %></div></section>
     </c:otherwise></c:choose>
     <form:errors path="" element="div" cssClass="fcms-alert" role="alert"/>
-    <div class="fcms-form-actions"><button type="button" class="app-btn btn-neutral" data-config-close><spring:message code="common.cancel"/></button><button class="app-btn btn-launch" type="submit"><spring:message code="common.create"/></button></div>
-   </form:form>
-  </c:otherwise></c:choose></div>
+    <form:errors path="requestKey" element="div" cssClass="fcms-alert" role="alert"/></div><div class="fcms-form-actions config-modal-actions"><button type="button" class="app-btn btn-neutral" data-config-close><spring:message code="common.cancel"/></button><button class="app-btn btn-launch" type="submit"><spring:message code="common.create"/></button></div>
+  </form:form>
  </div>
 </div>
 

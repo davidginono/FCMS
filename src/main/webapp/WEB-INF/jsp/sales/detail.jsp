@@ -4,8 +4,7 @@
 <div class="fcms-form-actions">
 <c:if test="${permissions.contains(kind.claim.concat('.write'))}"><a class="app-btn btn-neutral" href="<c:url value='${kind.route}/${record.id()}/edit'/>"><spring:message code="common.edit"/></a></c:if>
 <c:if test="${permissions.contains(kind.claim.concat('.export'))}">
-<a class="app-btn btn-neutral" href="<c:url value='${kind.route}/${record.id()}/document.pdf?download=true'/>"><spring:message code="common.pdf"/></a>
-<a class="app-btn btn-neutral" target="_blank" rel="noopener" href="<c:url value='${kind.route}/${record.id()}/document.pdf'/>"><spring:message code="common.print"/></a></c:if></div></div>
+<a class="app-btn btn-neutral" target="_blank" rel="noopener" href="<c:url value='${kind.route}/${record.id()}/document.pdf'/>"><ui:reportExport format="print"/></a><a class="app-btn btn-neutral" href="<c:url value='${kind.route}/${record.id()}/document.pdf?download=true'/>"><ui:reportExport format="pdf"/></a></c:if></div></div>
 <section class="erp-resource-section"><h2><spring:message code="common.client"/></h2><div class="fcms-section-body"><dl class="fcms-details">
 <div><dt><spring:message code="sales.clientType"/></dt><dd><spring:message code="sales.type.${record.data().clientType}"/></dd></div>
 <div><dt><spring:message code="common.name"/></dt><dd><c:out value="${record.data().clientName}"/></dd></div>

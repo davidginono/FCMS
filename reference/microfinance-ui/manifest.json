@@ -845,8 +845,8 @@
       "path": ".agents/skills/microfinance-ui-governance/SKILL.md",
       "source": "Microfinance/.agents/skills/microfinance-ui-governance/SKILL.md",
       "sourceSha256": "19facfa24ac8f7e20f464fef5e0360e9c4bb664dd0d98dcc337924272b572fff",
-      "sha256": "824621588cac3707f5e95ef6efafa2dee7a81b3cd0a11fbbcdbc90d292ad5c0c",
-      "bytes": 7045,
+      "sha256": "ee7bff75414c2d51a27e3bc4f1321db961c4152a60129d16e26c82605230f49b",
+      "bytes": 7616,
       "treatment": "adapted for portable FCMS routing, current UI requirements and existing financial/security ownership"
     },
     {
@@ -877,16 +877,16 @@
       "path": ".agents/skills/microfinance-ui-style/SKILL.md",
       "source": "Microfinance/.agents/skills/microfinance-ui-style/SKILL.md",
       "sourceSha256": "4d4d40fa038a77f6a4c3c9458766beac134e53cbfbe290fa3077b087f4b25c38",
-      "sha256": "949ac77e5011f18233110391cc17adc9c2c4199d444f1c32f1611a83a925da50",
-      "bytes": 7676,
+      "sha256": "b0ca70497af30632f2895a5057447f72cd38f0174b5bbb2605bd33ac927af9c1",
+      "bytes": 8060,
       "treatment": "adapted for portable FCMS routing, current UI requirements and existing financial/security ownership"
     },
     {
       "path": ".agents/skills/microfinance-table-standard/SKILL.md",
       "source": "Microfinance/.agents/skills/microfinance-table-standard/SKILL.md",
       "sourceSha256": "9b9a14d4120d142b2b92f8d319202634921c27a3c7eb246750b08448b34c912d",
-      "sha256": "cfb330d382d26ba7de3554fad6ffa2196cef9f3c08084c64dac5c9d0e03771e9",
-      "bytes": 8245,
+      "sha256": "6a47f04cdb3de44847820793c75fc846ef38aa0a7960d140a44a2a6697d8d576",
+      "bytes": 8735,
       "treatment": "adapted for portable FCMS routing, current UI requirements and existing financial/security ownership"
     }
   ]

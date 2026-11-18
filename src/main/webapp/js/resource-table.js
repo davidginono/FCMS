@@ -41,7 +41,20 @@
             const parent = empty.parentElement; empty.remove(); if (empty === header) break; empty = parent;
         }
     }
+    function centerEmptyRows(table) {
+        if (!table.closest('.erp-table-scroll') || table.closest('[data-table-presentation="statement"]')) return;
+        [...table.tBodies].forEach(body => [...body.rows].forEach(row => {
+            if (row.cells.length !== 1 || row.cells[0].colSpan < 2 || row.matches('.app-loading-row') ||
+                (body.rows.length !== 1 && !row.matches('.resource-table-no-matches,[data-table-empty]'))) return;
+            const cell = row.cells[0];
+            if (cell.classList.contains('resource-table-empty-cell')) return;
+            const content = cell.querySelector(':scope > .resource-table-empty-message') || node('div', 'resource-table-empty-message');
+            content.append(...[...cell.childNodes].filter(child => child !== content)); cell.append(content);
+            cell.classList.add('resource-table-empty-cell');
+        }));
+    }
     function syncRowCount(heading, table, l, source) {
+        centerEmptyRows(table);
         if (!heading) return;
         let counter=heading.parentElement.querySelector('.app-table-count');
         const serverCounter=source?.querySelector('.app-table-count:not([data-visible-row-count])');
@@ -471,26 +484,39 @@
             queryUrl=new URL(location.href);syncSortHeaders();
             navigation.querySelectorAll('a[href]').forEach(link=>{link.href=retainOrder(new URL(link.href,location.href)).href;});
         },{signal});
-        const errorRow = node('tr','resource-table-load-error'), errorCell = node('td','',l.loadError);
+        const refreshError = node('div','app-loading-error resource-table-load-error');
+        refreshError.setAttribute('role','alert');
+        refreshError.append(node('span','',l.loadError));
         let retryTarget=queryUrl;
         const retry = node('button','app-btn btn-neutral resource-table-retry',l.refresh);
         retry.type='button'; retry.addEventListener('click',()=>void updateTable(retryTarget));
-        errorCell.append(retry);
-        errorCell.colSpan = headers.length; errorCell.setAttribute('role','alert'); errorRow.append(errorCell);
+        refreshError.append(retry);
         const updateTable = async (target, changeHistory = true) => {
             const url = new URL(target || queryUrl, location.href);
             if (url.origin !== location.origin) return;
             // Statement metadata, matching totals and rows must advance together.
             if (statementMode) {
-                clearSelection(); window.AppLoading?.begin(region); location.assign(url.href); return;
+                clearSelection();
+                if(window.WorkspaceNavigation){window.WorkspaceNavigation.navigate(url.href,{force:true});return;}
+                window.AppLoading?.begin(region); location.assign(url.href); return;
             }
             retryTarget=url;
             const current = ++version; request?.abort(); const currentRequest = new AbortController(); request=currentRequest;
             const timeout = setTimeout(()=>currentRequest.abort(),20000);
-            clearSelection(); errorRow.remove();window.AppLoading?.begin(region);
+            clearSelection();
+            if(refreshError.contains(document.activeElement))(refresh || scroller).focus();
+            refreshError.remove();window.AppLoading?.begin(region);
             try {
                 const response = await fetch(url.href,{credentials:'same-origin',cache:'no-store',headers:{Accept:'text/html'},signal:currentRequest.signal});
-                if (!response.ok || response.redirected) throw new Error('table');
+                if (current !== version || !region.isConnected) return;
+                const responseUrl = new URL(response.url || url.href,location.href);
+                if (responseUrl.origin !== location.origin) throw new Error('table');
+                if (response.redirected && /\/login\/?$/.test(responseUrl.pathname)) {
+                    if (window.WorkspaceNavigation) window.WorkspaceNavigation.navigate(responseUrl.href);
+                    else location.assign(responseUrl.href);
+                    return;
+                }
+                if (!response.ok) throw new Error('table');
                 const page = new DOMParser().parseFromString(await response.text(),'text/html');
                 if (current !== version || !region.isConnected) return;
                 const fresh = [...page.querySelectorAll('[data-resource-table]')].find(item=>item.dataset.resourceTable===region.dataset.resourceTable);
@@ -498,6 +524,7 @@
                 let freshHeaders = [...(freshTable?.tHead?.rows[0]?.cells || [])];
                 if (actionHeaders.length) freshHeaders = [null,...freshHeaders.filter(item=>!item.hasAttribute('data-table-actions-header'))];
                 if (!freshTable?.tBodies[0] || freshHeaders.length !== headers.length) throw new Error('table');
+                if (response.redirected) url.href = responseUrl.href;
                 window.AppLoading?.end(region);
                 [...table.tBodies].forEach((body,index)=>body.replaceChildren(...[...(freshTable.tBodies[index]?.childNodes || [])].map(child=>document.importNode(child,true))));
                 noMatches = undefined;
@@ -564,12 +591,17 @@
                 renderPager(freshPager);
                 if(changeHistory){history.replaceState(history.state,'',url.href);document.dispatchEvent(new Event('resource-table:query'));}
                 syncCount(fresh);
+                document.querySelectorAll('[data-table-context-for]').forEach(context => {
+                    if (context.dataset.tableContextFor !== region.dataset.resourceTable) return;
+                    const source = [...page.querySelectorAll('[data-table-context-for]')].find(item => item.dataset.tableContextFor === context.dataset.tableContextFor);
+                    if (source) {context.replaceChildren(...[...source.childNodes].map(child=>document.importNode(child,true)));context.hidden=source.hidden;}
+                });
                 region.dispatchEvent(new CustomEvent('resource-table:updated',{bubbles:true}));
                 queueMicrotask(()=>{apply();applySearch();syncSelection();});
             } catch (error) {
                 if(current===version && region.isConnected) {
                     window.AppLoading?.end(region);
-                    table.tBodies[0].prepend(errorRow);
+                    scroller.before(refreshError);
                 }
             } finally {clearTimeout(timeout);if(current===version)window.AppLoading?.end(region);}
         };
@@ -780,6 +812,7 @@
             window.FcmsModalWorkspace?.sync();
             dialog.showModal(); close.focus();
         });
+        region.addEventListener('resource-table:rows-added', () => {apply();syncSelection();syncCount();},{signal});
         if (showTools && !statementMode) window.ResourceSplitView?.init(region, {headers, originalCells, selectable, labels:l});
     }
     window.ResourceTable = {setPage: (region, state) => {
@@ -798,6 +831,7 @@
         (root || document).querySelectorAll('[data-resource-table]').forEach(init);
         (root || document).querySelectorAll('.erp-table-wrap:not([data-resource-table]),[data-dashboard-widget]').forEach(initSummaryCount);
         (root || document).querySelectorAll('table[data-table-sort-mode="local"]').forEach(localSort);
+        (root || document).querySelectorAll('.erp-table-scroll .erp-table').forEach(centerEmptyRows);
         document.querySelectorAll('[data-table-pagination-used]').forEach(pager => pager.remove());
         document.querySelectorAll('[data-table-pagination-shell]').forEach(shell => {
             if (!shell.querySelector('[data-table-pagination]')) shell.remove();

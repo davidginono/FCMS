@@ -255,7 +255,7 @@ public class SourcePostingService {
         String lineDescription =
                 source.description().substring(0, Math.min(500, source.description().length()));
         voucher.getLines().forEach(line -> line.setDescription(lineDescription));
-        long journal = journals.save(null, voucher);
+        long journal = journals.createDraft(voucher);
         bindings.bind(kind, id, journal, mapping.id(), f.getEvidenceReference());
         return journal;
     }

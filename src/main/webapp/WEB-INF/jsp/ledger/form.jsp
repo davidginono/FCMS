@@ -2,17 +2,17 @@
 <%@ include file="/WEB-INF/jsp/shared/header.jspf" %>
 <div class="app-page-header">
 <h1 class="app-page-title">
-<spring:message code="${kind.title}" />
+<spring:message code="${empty form.operation?kind.title:'ledger.operation.'.concat(form.operation)}" />
 </h1>
 </div>
 <c:url var="saveUrl" value="${formAction}" />
-<form:form modelAttribute="form" method="post" action="${saveUrl}" cssClass="fcms-form" data-resource-form-page="true">
+<form:form modelAttribute="form" method="post" action="${saveUrl}" cssClass="fcms-form" data-resource-create="true" data-resource-form-page="true">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-<form:hidden path="requestKey"/>
-<fieldset class="fcms-form-section">
-<legend>
+<form:hidden path="requestKey"/><form:hidden path="operation"/>
+<section class="erp-resource-section" aria-labelledby="ledger-form-section-1">
+<h2 id="ledger-form-section-1">
 <spring:message code="common.details" />
-</legend>
+</h2><div class="fcms-section-body">
 <div class="fcms-field">
 <label for="date">
 <spring:message code="common.date" />
@@ -20,13 +20,13 @@
 <form:input id="date" path="date" type="date" />
 <form:errors path="date" cssClass="fcms-error" />
 </div>
-<div class="fcms-field">
+<c:choose><c:when test="${kind.name()=='BULK'}"><form:hidden path="category"/></c:when><c:otherwise><div class="fcms-field">
 <label for="category">
 <spring:message code="ledger.category" />
 </label>
 <form:input id="category" path="category" type="text" />
 <form:errors path="category" cssClass="fcms-error" />
-</div>
+</div></c:otherwise></c:choose>
 <div class="fcms-field">
 <label for="description">
 <spring:message code="common.description" />
@@ -61,7 +61,7 @@
 </form:select>
 <form:errors path="paymentMode" cssClass="fcms-error" />
 </div>
-<c:if test="${kind.name()!='INCOME'}">
+<c:if test="${kind.name()=='CLOUD'}">
 <div class="fcms-field">
 <label for="direction">
 <spring:message code="ledger.direction" />
@@ -106,24 +106,10 @@
 <form:input id="units" path="units" type="number" min="0" step="1" />
 <form:errors path="units" cssClass="fcms-error" />
 </div>
-<div class="fcms-field">
-<label for="unitDirection">
-<spring:message code="ledger.unitDirection" />
-</label>
-<form:select id="unitDirection" path="unitDirection">
-<form:option value="IN">
-<spring:message code="ledger.in" />
-</form:option>
-<form:option value="OUT">
-<spring:message code="ledger.out" />
-</form:option>
-</form:select>
-<form:errors path="unitDirection" cssClass="fcms-error" />
-</div>
 </c:if>
-</fieldset>
+</div></section>
 <form:errors path="" element="div" cssClass="fcms-alert" role="alert" />
-<div class="fcms-form-actions">
+<form:errors path="requestKey" element="div" cssClass="fcms-alert" role="alert"/><div class="fcms-form-actions">
 <a class="app-btn btn-neutral" href="<c:url value='${baseUrl}' />">
 <spring:message code="common.cancel" />
 </a>

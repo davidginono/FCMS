@@ -32,7 +32,7 @@ public class ClientRevenueService {
                             + (table.equals("saccos") ? "+cloud_backup_fee+ess_fee" : "");
             String cost =
                     "programmer_cost"
-                            + (full ? "+commission" : "")
+                            + (Set.of("saccos", "unions").contains(table) ? "+commission" : "")
                             + (table.equals("saccos") ? "+android_cost+cloud_backup_cost" : "");
             results.add(
                     db.queryForObject(
@@ -69,7 +69,7 @@ public class ClientRevenueService {
                             + " filter(where client_status_id=2),count(*) filter(where"
                             + " client_status_id=3),"
                             + "coalesce(sum(annual_fee),0),coalesce(sum(amount),0),"
-                            + (full ? "coalesce(sum(withholding_tax),0)," : "0,")
+                            + (Set.of("saccos", "unions").contains(table) ? "coalesce(sum(withholding_tax),0)," : "0,")
                             + "coalesce(sum(training_fee),0),coalesce(sum(system_install_fee),0),"
                             + "coalesce(sum(android_fee),0),coalesce(sum(system_reinstall_fee),0),"
                             + (full
@@ -81,7 +81,7 @@ public class ClientRevenueService {
                                     : "0,0,0")
                             + " from "
                             + table
-                            + " where visible and financial_year_id=?";
+                            + (table.equals("other_clients") ? " where visible" : " where visible and financial_year_id=?");
             results.add(
                     db.queryForObject(
                             sql,
@@ -133,7 +133,7 @@ public class ClientRevenueService {
                                         r.getBigDecimal(15),
                                         r.getBigDecimal(16));
                             },
-                            financialYearId));
+                            table.equals("other_clients") ? new Object[0] : new Object[]{financialYearId}));
         }
         return List.copyOf(results);
     }

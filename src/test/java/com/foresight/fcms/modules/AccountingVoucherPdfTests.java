@@ -111,7 +111,9 @@ class AccountingVoucherPdfTests {
                                 "cash_delta",
                                 new BigDecimal(kind.equals("RECEIPT") ? "100.35" : "-100.35")));
         when(db.queryForList(anyString(), eq(Long.class), eq(42L))).thenReturn(List.of(1L));
-        return new JournalDocumentService(db, journals).document(42, locale);
+        var vouchers=mock(VoucherService.class);
+        when(vouchers.header(42)).thenReturn(Optional.empty());
+        return new JournalDocumentService(db, journals, vouchers).document(42, locale);
     }
 
     @Test

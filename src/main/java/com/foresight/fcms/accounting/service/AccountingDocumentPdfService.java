@@ -142,6 +142,19 @@ public class AccountingDocumentPdfService {
                                 line.debit().signum() == 0 ? "" : money(line.debit(), locale),
                                 line.credit().signum() == 0 ? "" : money(line.credit(), locale)));
         }
+        if(source.header()!=null) {
+            rows.clear();
+            for(var transaction:source.transactions()) {
+                String description=transaction.description();
+                if(!transaction.transactionName().isBlank())description+="\n"+transaction.transactionName();
+                if(!transaction.component().equals("TOTAL"))description+="\n"+text("voucher.component."+transaction.component(),locale);
+                if(receipt)rows.add(List.of(Integer.toString(rows.size()+1),description,money(transaction.amount(),locale)));
+                else for(var entry:transaction.postings().stream().sorted(java.util.Comparator.comparingInt(e->e.side().equals("CREDIT")?0:1)).toList()) {
+                    boolean debit=entry.side().equals("DEBIT");
+                    rows.add(List.of(Integer.toString(rows.size()+1),description,entry.account().name(),debit?money(entry.amount(),locale):"",debit?"":money(entry.amount(),locale)));
+                }
+            }
+        }
         var totals = new ArrayList<Field>();
         if (!receipt) {
             totals.add(field("gl.document.totalDebit", money(j.total(), locale), locale));
@@ -179,21 +192,21 @@ public class AccountingDocumentPdfService {
                 text("gl.kind." + j.kind(), locale),
                 "FCMS",
                 "",
-                "#" + j.id(),
+                source.header()==null?"#"+j.id():source.header().number(),
                 text("status." + j.state(), locale),
                 List.of(
-                        field("gl.voucherId", Long.toString(j.id()), locale),
+                        field("gl.voucherId", source.header()==null?Long.toString(j.id()):source.header().number(), locale),
                         field("common.date", ApplicationTimestamps.date(j.date()), locale),
                         field("common.status", text("status." + j.state(), locale), locale)),
                 text(receipt ? "gl.document.payerDetails" : "gl.document.payeeDetails", locale),
                 List.of(
-                        field("common.name", "", locale),
+                        field("common.name", source.header()==null?"":source.header().party(), locale),
                         field("gl.document.company", "", locale),
                         field("gl.document.address", "", locale),
                         field("gl.document.phone", "", locale),
                         field("common.email", "", locale)),
                 text(receipt ? "gl.document.receiptDetails" : "gl.document.paymentDetails", locale),
-                List.of(
+                receipt && source.header()!=null?List.of(field("common.reference",j.reference(),locale),field("common.date",ApplicationTimestamps.date(j.date()),locale)):List.of(
                         field(
                                 "gl.document.moneyAccount",
                                 String.join("\n", source.moneyAccounts()),
@@ -295,7 +308,7 @@ public class AccountingDocumentPdfService {
                 "FCMS",
                 "",
                 text("gl.kind." + journal.kind(), locale),
-                "#" + journal.id(),
+                source.header()==null?"#"+journal.id():source.header().number(),
                 text("status." + journal.state(), locale),
                 text("gl.voucherId", locale),
                 text("common.date", locale),

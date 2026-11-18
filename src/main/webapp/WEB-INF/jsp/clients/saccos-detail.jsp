@@ -9,13 +9,14 @@
 <c:out value="${saccos.saccosName()}" />
 </h1>
     </div>
-    <div class="app-actions">
+    <div class="app-actions"><c:if test="${permissions.contains('client.write')}"><a class="app-btn btn-neutral" href="<c:url value='/clients/saccos/${saccos.id()}/contract/edit'/>"><spring:message code="client.updateContract"/></a><a class="app-btn btn-neutral" href="<c:url value='/clients/saccos/${saccos.id()}/lifecycle'/>"><spring:message code="client.manageLifecycle"/></a></c:if>
+
         <a class="app-btn btn-neutral" href="<c:url value='/clients/saccos' />">
             <span class="app-icon" data-lucide="arrow-left" aria-hidden="true">
 </span>
             <span><spring:message code="common.back"/></span>
         </a>
-        <c:if test="${permissions.contains('client.write')}"><a class="app-btn btn-primary" href="<c:url value='/clients/saccos/${saccos.id()}/edit' />">
+        <c:if test="${permissions.contains('client.write')}"><a class="app-btn btn-neutral" href="<c:url value='/clients/saccos/${saccos.id()}/edit' />">
             <span class="app-icon" data-lucide="edit-3" aria-hidden="true">
 </span>
             <span><spring:message code="common.edit"/></span>
@@ -25,13 +26,7 @@
 </div>
 
 <c:if test="${not empty successMessage}">
-    <div class="app-alert app-alert-success">
-        <span class="app-icon" data-lucide="check-circle-2" aria-hidden="true">
-</span>
-        <span>
-<spring:message code="common.saved"/>
-</span>
-    </div>
+    <ui:flashbar type="success" messageKey="common.saved"/>
 </c:if>
 
 <section class="app-card">

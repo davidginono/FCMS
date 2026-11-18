@@ -1,24 +1,39 @@
-<header class="app-topbar">
-    <div class="app-topbar-inner">
-        <div class="app-topbar-left">
-            <button data-fcms-sidebar-toggle type="button" class="app-icon-button" aria-controls="fcms-sidebar" aria-expanded="false" aria-label="Open navigation">
-                <span class="app-icon" data-lucide="menu" aria-hidden="true"></span>
-            </button>
-            <a class="app-global-brand" href="<c:url value='/dashboard' />" aria-label="FCMS console home">FCMS</a>
-        </div>
-        <div class="app-topbar-actions">
-            <c:forTokens items="en,sw" delims="," var="language"><c:url var="languageUrl" value=""><c:forTokens items="year,category,dateBasis,from,to,page,size,status,sort,direction,search,financialYearId,paymentStatusId,parentId,kind,view,reportType,ownerId,clientId,activityId,review,group,groupPage,ledgerAccount" delims="," var="filterKey"><c:if test="${not empty param[filterKey]}"><c:param name="${filterKey}" value="${param[filterKey]}"/></c:if></c:forTokens><c:param name="lang" value="${language}"/></c:url><a class="app-topbar-logout" href="<c:out value='${languageUrl}'/>">${language=='en'?'English':'Kiswahili'}</a></c:forTokens>
-            <a class="app-user-chip" href="<c:url value='/account'/>">
-                <span class="app-icon" data-lucide="user-circle" aria-hidden="true"></span>
-                <span class="app-user-name"><c:out value="${pageContext.request.userPrincipal.name}" /></span>
-            </a>
-            <form method="post" action="<c:url value='/logout' />">
+<header class="app-topbar" id="fcms-topbar">
+ <div class="app-topbar-inner">
+  <div class="app-topbar-left">
+   <button data-fcms-sidebar-toggle type="button" class="app-icon-button" aria-controls="fcms-sidebar" aria-expanded="false" aria-label="<spring:message code='nav.open'/>"><span class="app-icon" data-lucide="menu" aria-hidden="true"></span></button>
+   <a class="app-global-brand" href="<c:url value='/dashboard'/>"><img src="<c:url value='/img/app-logo.png'/>" alt="" width="28" height="28"><span>FCMS</span></a>
+   <div class="app-global-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="consoleNavigationSearch" type="search" maxlength="100" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="navigation-search-results" placeholder="<spring:message code='nav.search'/>" aria-label="<spring:message code='nav.search'/>">
+    <div id="navigation-search-results" class="app-navigation-search-results" role="listbox" aria-label="<spring:message code='nav.searchResults'/>" hidden></div>
+   </div>
+  </div>
+  <div class="app-topbar-actions">
+   <c:url var="languageAction" value="" />
+   <form method="get" action="<c:out value='${languageAction}'/>" class="app-language-control" data-shell-language>
+    <select id="lang" name="lang" data-native-select="true" aria-label="<spring:message code='nav.language'/>">
+     <option value="en" lang="en"<c:if test="${pageContext.response.locale.language != 'sw'}"> selected</c:if>>ENG</option>
+     <option value="sw" lang="sw"<c:if test="${pageContext.response.locale.language == 'sw'}"> selected</c:if>>SW</option>
+    </select>
+    <c:forTokens items="year,category,dateBasis,from,to,page,size,status,sort,direction,search,financialYearId,paymentStatusId,parentId,kind,view,reportType,ownerId,clientId,activityId,review,group,groupPage,ledgerAccount" delims="," var="filterKey"><c:if test="${not empty param[filterKey]}"><input type="hidden" name="${filterKey}" value="<c:out value='${param[filterKey]}'/>"></c:if></c:forTokens>
+    <noscript><button type="submit" class="app-topbar-logout"><spring:message code="common.apply" /></button></noscript>
+   </form>
+   <span class="app-account-copy"><c:out value="${pageContext.request.userPrincipal.name}"/></span>
+   <div class="app-profile-control">
+    <button type="button" class="app-profile-toggle" data-shell-profile-toggle aria-controls="fcms-profile-panel" aria-expanded="false" aria-label="<spring:message code='nav.account'/>"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg></button>
+    <div id="fcms-profile-panel" class="app-profile-panel" hidden>
+     <div class="app-profile-identity"><c:out value="${pageContext.request.userPrincipal.name}"/></div>
+     <c:if test="${permissions.contains('account.write')}"><a href="<c:url value='/account'/>"><spring:message code="nav.account"/></a></c:if>
+    </div>
+   </div>
+            <form method="post" action="<c:url value='/logout' />" data-shell-logout data-login-url="<c:url value='/login' />">
                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                 <button type="submit" class="app-topbar-logout">
                     <span class="app-icon" data-lucide="log-out" aria-hidden="true"></span>
                     <spring:message code="nav.logout" />
                 </button>
             </form>
-        </div>
-    </div>
+  </div>
+ </div>
 </header>

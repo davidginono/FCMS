@@ -19,4 +19,10 @@ public record LedgerView(
         String actor,
         Long reversalOf,
         Long reversedBy,
-        String client) {}
+        String client) {
+    public BigDecimal amountIn() { return amount.max(BigDecimal.ZERO); }
+    public BigDecimal amountOut() { return amount.negate().max(BigDecimal.ZERO); }
+    public long unitsIn() { return Math.max(units, 0); }
+    public long unitsOut() { return Math.max(-units, 0); }
+    public long unitsBefore() { return Math.subtractExact(unitBalance, units); }
+}

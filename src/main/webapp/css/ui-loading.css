@@ -1,6 +1,26 @@
-/* Keep ready content sharp; pending indicators occupy only their own component. */
-.app-loading-status {display:flex;align-items:center;justify-content:center;min-height:64px;gap:8px;color:#545b64;}
-.app-loading-spinner {display:inline-block;flex:none;width:20px;height:20px;box-sizing:border-box;border:2px solid #d5dbdb;border-top-color:#545b64;border-radius:50%;animation:aws-console-spin .7s linear infinite;}
+/* Cloudscape spinner geometry/motion, adapted to Microfinance's JSP size contract.
+   Copyright Amazon.com, Inc. or its affiliates. SPDX-License-Identifier: Apache-2.0
+   See js/vendor/cloudscape-icons.LICENSE and .NOTICE; provenance in docs/reused-accounting-ui.md. */
+@keyframes app-spinner-rotator {to{transform:rotate(360deg)}}
+@keyframes app-spinner-left {0%,100%{transform:rotate(0deg)}50%{transform:rotate(120deg)}}
+@keyframes app-spinner-right {0%,100%{transform:rotate(90deg)}50%{transform:rotate(-30deg)}}
+.app-loading-spinner {display:inline-block;flex:none;vertical-align:middle;box-sizing:border-box;width:20px;height:20px;line-height:0;color:inherit;border:0;background:none;animation:app-spinner-rotator .7s linear infinite;}
+.app-spinner-circle {display:inline-block;position:relative;width:50%;height:100%;overflow:hidden;}
+.app-spinner-circle::after {content:"";position:absolute;box-sizing:border-box;top:0;width:200%;height:100%;border:2px solid currentColor;border-right-color:transparent;border-bottom-color:transparent;border-radius:50%;animation-duration:1.5s;animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
+.app-spinner-left::after {left:0;animation-name:app-spinner-left;}
+.app-spinner-right::after {left:-100%;animation-name:app-spinner-right;}
+.app-loading-spinner[data-loading-size=small] {width:16px;height:16px;}
+.app-loading-spinner[data-loading-size=large] {width:32px;height:32px;}
+.app-loading-status {display:flex;align-items:center;justify-content:center;min-height:96px;gap:8px;color:#687078;}
+.app-loading-status[data-loading-size=small] {display:inline-flex;min-height:20px;vertical-align:middle;}
+.app-loading-status[data-loading-size=large] {min-height:180px;}
+.app-loading-error,.workspace-navigation-error {display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:12px 0;padding:8px 12px;border:1px solid #d13212;background:#fff3f1;color:#16191f;}
+.app-action-loading {margin-inline:6px;vertical-align:middle;}
+.is-action-loading {position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;}
+.is-action-loading > .app-action-label {display:inline-flex;align-items:center;gap:inherit;min-width:0;}
+.is-action-loading > .app-action-loading {min-height:0;margin:0;color:inherit;pointer-events:none;order:-1;}
+:is(.app-icon-button,.resource-table-icon).is-action-loading > .app-action-label {opacity:0;}
+:is(.app-icon-button,.resource-table-icon).is-action-loading > .app-action-loading {position:absolute;inset:0;}
 .aws-console .erp-table tbody tr.app-loading-row > td {padding:24px!important;text-align:center!important;vertical-align:middle;height:96px;}
 .aws-console .erp-table tbody tr:not(.app-loading-row) > td[colspan]:only-child {text-align:center!important;vertical-align:middle;white-space:normal;}
 .aws-console .erp-table-wrap.is-loading {overflow:visible!important;}
@@ -9,5 +29,12 @@
 .aws-console .erp-table-wrap.is-loading .aws-table-loader {display:none!important;}
 .neo-select-loading {display:flex;justify-content:center;align-items:center;min-height:40px;flex:none;border-top:1px solid #eaeded;}
 .neo-select-loading .app-loading-status {min-height:40px;}
-@media(prefers-reduced-motion:reduce){.app-loading-spinner{animation-duration:1.8s;}}
-@media print{.app-loading-status,.app-loading-row,.neo-select-loading{display:none!important;}}
+html[data-workspace-loading] #main-content,
+#main-content[data-workspace-initializing] {position:relative;min-height:55vh;}
+html[data-workspace-loading] #main-content > :not([data-workspace-boot-status]):not(#workspace-navigation-feedback),
+#main-content[data-workspace-initializing] > :not([data-workspace-boot-status]) {visibility:hidden!important;opacity:0!important;pointer-events:none!important;}
+.workspace-initializing-status,.workspace-navigation-pending {position:absolute;top:24px;inset-inline:0;display:flex;justify-content:center;min-width:0;color:#687078;}
+.app-sidebar-link[data-workspace-nav-pending] {background:#f1faff;}
+@media(forced-colors:active){.app-loading-spinner{color:CanvasText;}}
+@media(prefers-reduced-motion:reduce){.app-loading-spinner,.app-spinner-circle::after{animation:none;}.app-spinner-right::after{transform:rotate(90deg);}}
+@media print{.app-loading-status,.app-loading-row,.neo-select-loading,.workspace-navigation-pending,.workspace-initializing-status{display:none!important;}}

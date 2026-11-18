@@ -4,10 +4,12 @@
   "version": "0.1.0",
   "scripts": {
     "build:css": "tailwindcss -i ./src/main/resources/static/css/tailwind.css -o ./src/main/resources/static/css/app.css --minify && node ./scripts/sync-webapp-assets.mjs",
-    "watch:css": "tailwindcss -i ./src/main/resources/static/css/tailwind.css -o ./src/main/resources/static/css/app.css --watch"
+    "watch:css": "tailwindcss -i ./src/main/resources/static/css/tailwind.css -o ./src/main/resources/static/css/app.css --watch",
+    "test:ui": "node --test scripts/tests/*.test.mjs"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.0",
+    "jsdom": "29.1.1",
     "tailwindcss": "^4.1.0"
   }
 }

@@ -37,6 +37,8 @@ Run:
 $env:FCMS_DB_URL='jdbc:postgresql://localhost:5432/fcms'
 $env:FCMS_DB_USERNAME='fcms'
 $env:FCMS_DB_PASSWORD='fcms'
+$env:FCMS_BACKUP_PG_DUMP='C:/Program Files/PostgreSQL/18/bin/pg_dump.exe'
+$env:FCMS_BACKUP_INTERVAL='10000'
 mvn spring-boot:run
 ```
 
@@ -49,6 +51,8 @@ docker compose up -d
 $env:FCMS_DB_URL='jdbc:postgresql://localhost:55432/fcms'
 $env:FCMS_DB_USERNAME='fcms'
 $env:FCMS_DB_PASSWORD='fcms'
+$env:FCMS_BACKUP_PG_DUMP='C:/Program Files/PostgreSQL/18/bin/pg_dump.exe'
+$env:FCMS_BACKUP_INTERVAL='10000'
 mvn spring-boot:run
 ```
 
@@ -58,6 +62,9 @@ FCMS now includes company client registers (SACCOS, AMCOS, Union, Microfinance a
 Other Clients), staff tasks/reports/leave, expense review and payment workflows,
 income/petty-cash/cloud/bulk-SMS ledgers, user administration, account recovery,
 financial statements and database backup workflows.
+
+Accounts Clerk, Staff, Administrator and Director have separate workspaces.
+Staff see their own leave requests and reports. See [role bundles and recording workflows](docs/business-workspaces.md).
 
 `V1__initial_schema.sql` creates the first operational slice: users, roles,
 account statuses, financial years, SACCO clients, tasks, expenses, and reference

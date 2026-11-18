@@ -122,6 +122,7 @@ class ExpenseAssignmentParityIntegrationTests {
 
     @BeforeAll
     void migrateAndSeed() throws Exception {
+        OperationalTestClaims.enable(db);
         db.update("insert into roles(role_id,role_name) values (98,'Synthetic assignment claims')");
         owner = user("assign-owner", 2);
         other = user("assign-other", 2);
@@ -166,10 +167,11 @@ class ExpenseAssignmentParityIntegrationTests {
                 .target("latest")
                 .load()
                 .migrate();
+        OperationalTestClaims.enable(db);
         for (String claim :
-                List.of("expense.read", "expense.write", "expense.assign", "dashboard.read"))
+                List.of("workspace.admin", "expense.read", "expense.write", "expense.assign", "dashboard.read"))
             db.update("insert into user_claims(user_id,claim) values (?,?)", limited, claim);
-        for (String claim : List.of("expense.approve", "finance.reverse"))
+        for (String claim : List.of("workspace.admin", "expense.approve", "finance.reverse"))
             db.update("insert into user_claims(user_id,claim) values (?,?)", owner, claim);
         Files.createDirectories(Path.of(".verification"));
         Files.writeString(Path.of(".verification/expense-assignment-schema.txt"), SCHEMA);
@@ -530,64 +532,17 @@ class ExpenseAssignmentParityIntegrationTests {
     }
 
     @Test
-    void nativeLocalizedOnBehalfFormsProtectCsrfIgnoreForgedMakerAndRecoverFields()
-            throws Exception {
-        var web = browser("assign-maker");
-        var page = get(web, "/finance/expenses/new?lang=sw");
-        assertEquals(200, page.statusCode());
-        assertTrue(page.body().contains("name=\"ownerId\""));
-        assertTrue(page.body().contains("name=\"financialYearId\""));
-        var fields =
-                new HashMap<String, String>(
-                        Map.of(
-                                "ownerId",
-                                Long.toString(owner),
-                                "financialYearId",
-                                Long.toString(year2025),
-                                "date",
-                                "2026-11-01",
-                                "category",
-                                "Synthetic native assignment",
-                                "description",
-                                "Synthetic native on behalf",
-                                "payee",
-                                "Synthetic",
-                                "amount",
-                                "123.45",
-                                "requestKey",
-                                field(page.body(), "requestKey"),
-                                "version",
-                                "0"));
-        assertEquals(403, post(web, "/finance/expenses", fields).statusCode());
-        fields.put("_csrf", field(page.body(), "_csrf"));
-        fields.put("createdBy", Long.toString(reviewer));
-        fields.put("preparedBy", Long.toString(reviewer));
-        fields.put("amount", "0.00");
-        var invalid = post(web, "/finance/expenses", fields);
-        assertEquals(200, invalid.statusCode());
-        assertTrue(invalid.body().contains("123.45") || invalid.body().contains("0.00"));
-        assertTrue(invalid.body().contains("Synthetic native assignment"));
-        assertTrue(invalid.body().contains(fields.get("requestKey")));
-        fields.put("amount", "123.45");
-        var saved = post(web, "/finance/expenses", fields);
-        assertEquals(302, saved.statusCode());
-        String location = saved.headers().firstValue("location").orElseThrow();
-        String path = URI.create(location).getPath();
-        long id = Long.parseLong(path.substring(path.lastIndexOf('/') + 1));
-        actor("assign-maker");
-        var record = expenses.find(id);
-        assertEquals(owner, record.ownerId());
-        assertEquals(maker, record.createdBy());
-        assertEquals("2025", record.year());
-        var detail = get(web, "/finance/expenses/" + id);
-        assertEquals(200, detail.statusCode());
-        assertTrue(detail.body().contains("assign-maker"));
-        assertTrue(detail.body().contains("assign-owner"));
-        assertTrue(detail.body().contains("2025"));
-        var user = browser("assign-other");
-        assertEquals(400, get(user, "/finance/expenses/" + id).statusCode());
-        var personal = get(user, "/finance/expenses/new");
-        assertFalse(
-                Pattern.compile("<select[^>]*name=\"ownerId\"").matcher(personal.body()).find());
+    void retiredExpensePagesAndCommandsAreGoneAndCannotCreateLegacyRecords() throws Exception {
+        var web=browser("assign-maker");
+        var page=get(web,"/finance/expenses/new?lang=sw");
+        assertEquals(410,page.statusCode());
+        assertEquals(410,get(web,"/finance/expenses").statusCode());
+        var values=new HashMap<String,String>();values.put("description","Retired entry");
+        assertEquals(403,post(web,"/finance/expenses",values).statusCode());
+        values.put("_csrf",field(get(web,"/account").body(),"_csrf"));
+        long before=db.queryForObject("select count(*) from expenses",Long.class);
+        assertEquals(410,post(web,"/finance/expenses",values).statusCode());
+        assertEquals(before,db.queryForObject("select count(*) from expenses",Long.class));
+        assertEquals(410,get(browser("assign-other"),"/finance/expenses/new").statusCode());
     }
 }

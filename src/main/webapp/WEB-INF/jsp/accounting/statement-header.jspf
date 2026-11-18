@@ -1,0 +1,13 @@
+<%@ page pageEncoding="UTF-8" %>
+<div class="app-page-header fs-report-header">
+<h1 class="app-page-title"><spring:message code="gl.preview"/></h1>
+<div class="app-actions" data-fs-actions>
+<c:if test="${not empty statement}">
+<c:choose><c:when test="${reportType=='trial'}"><c:set var="reportExportPath" value="/accounting/trial-balance"/></c:when><c:otherwise><c:set var="reportExportPath" value="/accounting/statements/${reportType}"/></c:otherwise></c:choose>
+<c:url var="pdfUrl" value="${reportExportPath}/print.pdf"><c:param name="from" value="${query.from}"/><c:param name="to" value="${query.to}"/><c:if test="${reportType=='trial'}"><c:param name="search" value="${query.search}"/><c:param name="sort" value="${query.sort}"/><c:param name="direction" value="${query.direction}"/></c:if></c:url>
+<c:url var="printUrl" value="${reportExportPath}/print"><c:param name="from" value="${query.from}"/><c:param name="to" value="${query.to}"/><c:if test="${reportType=='trial'}"><c:param name="search" value="${query.search}"/><c:param name="sort" value="${query.sort}"/><c:param name="direction" value="${query.direction}"/></c:if></c:url>
+<a class="app-btn btn-neutral" data-print-action href="<c:out value='${printUrl}'/>"><ui:reportExport format="print"/></a>
+<a class="app-btn btn-neutral" data-download-action href="<c:out value='${pdfUrl}'/>"><ui:reportExport format="pdf"/></a>
+</c:if>
+</div>
+</div>

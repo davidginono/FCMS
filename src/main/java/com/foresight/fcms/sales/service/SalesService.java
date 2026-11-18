@@ -1,5 +1,6 @@
 package com.foresight.fcms.sales.service;
 
+import com.foresight.fcms.shared.validation.FieldValidationException;
 import com.foresight.fcms.audit.service.AuditService;
 import com.foresight.fcms.auth.service.AccessService;
 import com.foresight.fcms.sales.dto.*;
@@ -237,13 +238,16 @@ public class SalesService {
         var actor = access.require(kind.getClaim() + ".write");
         actor.require(kind.getClaim() + ".read");
         if (!validator.validate(f).isEmpty()) throw new IllegalArgumentException("error.invalid");
-        if (!kind.getTypes().contains(f.getClientType())
-                || !Set.of("TZS", "USD", "KES", "EUR", "GBP").contains(f.getCurrency())
-                || !Set.of("CASH", "CHEQUE", "BANK_TRANSFER").contains(f.getPaymentMethod()))
-            throw new IllegalArgumentException("error.invalid");
-        if (f.getDocumentDate().isBefore(LocalDate.of(1900, 1, 1))
-                || f.getValidUntil().isBefore(f.getDocumentDate()))
-            throw new IllegalArgumentException("error.dates");
+        if (!kind.getTypes().contains(f.getClientType()))
+            throw new FieldValidationException("error.invalid", "clientType");
+        if (!Set.of("TZS", "USD", "KES", "EUR", "GBP").contains(f.getCurrency()))
+            throw new FieldValidationException("error.invalid", "currency");
+        if (!Set.of("CASH", "CHEQUE", "BANK_TRANSFER").contains(f.getPaymentMethod()))
+            throw new FieldValidationException("error.invalid", "paymentMethod");
+        if (f.getDocumentDate().isBefore(LocalDate.of(1900, 1, 1)))
+            throw new FieldValidationException("error.dates", "documentDate");
+        if (f.getValidUntil().isBefore(f.getDocumentDate()))
+            throw new FieldValidationException("error.dates", "validUntil");
         f.setClientName(clean(f.getClientName(), 150, false));
         f.setDocumentNumber(clean(f.getDocumentNumber(), 60, false));
         f.setRegion(clean(f.getRegion(), 100, false));

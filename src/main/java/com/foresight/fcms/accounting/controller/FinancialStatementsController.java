@@ -48,7 +48,7 @@ public class FinancialStatementsController {
         dates(q);
         m.addAttribute("reportType", type);
         m.addAttribute("reportTitle", "gl.statement." + type);
-        m.addAttribute("breadcrumbCurrent", "gl.statement." + type);
+        m.addAttribute("breadcrumbCurrent", "gl.preview");
         m.addAttribute("book", accounting.books().orElse(null));
         if (accounting.books().map(b -> b.ready()).orElse(false)) {
             var comparison = reports.comparison(type, q.getFrom(), q.getTo());

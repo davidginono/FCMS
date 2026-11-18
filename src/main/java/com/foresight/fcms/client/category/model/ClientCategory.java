@@ -3,7 +3,7 @@ package com.foresight.fcms.client.category.model;
 import java.util.Arrays;
 
 public enum ClientCategory {
-    AMCOS("amcos", "amcos", "AMCOS", "AMCOS", "AMCOS Name", "", true, true, true, true),
+    AMCOS("amcos", "amcos", "AMCOS", "AMCOS", "AMCOS Name", "", false, false, true, true),
     UNIONS(
             "unions",
             "unions",
@@ -118,6 +118,26 @@ public enum ClientCategory {
 
     public boolean isHostingSupported() {
         return hostingSupported;
+    }
+
+    public boolean isFinancialYearSupported() {
+        return this != OTHERS;
+    }
+
+    public boolean isFinancialYearEditable() {
+        return this == MICROFINANCE;
+    }
+
+    public boolean isOperationalStatusSupported() {
+        return this != OTHERS;
+    }
+
+    public boolean isContractOnCreate() {
+        return this == OTHERS;
+    }
+
+    public boolean isProgrammerCostOnCreate() {
+        return this != MICROFINANCE;
     }
 
     public static ClientCategory fromSlug(String slug) {

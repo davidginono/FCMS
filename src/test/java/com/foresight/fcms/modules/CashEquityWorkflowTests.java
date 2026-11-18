@@ -26,7 +26,6 @@ import java.net.http.*;
 import java.nio.file.*;
 import java.time.*;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.regex.Pattern;
 
 @SpringBootTest(
@@ -151,59 +150,24 @@ class CashEquityWorkflowTests {
         f.getLines().get(0).setDebit(new BigDecimal(amount));
         f.getLines().get(1).setAccountId(credit);
         f.getLines().get(1).setCredit(new BigDecimal(amount));
-        long id = journals.save(null, f);
+        long id = journals.createDraft(f);
         journals.transition(id, 0, "submit", "");
         actor("admin@fcms.local");
         journals.transition(id, 1, "post", "Independent fixture review");
         return id;
     }
 
-    ReportingDecisionForm decision(String action, long version) {
-        var f = new ReportingDecisionForm();
-        f.setAction(action);
-        f.setVersion(version);
-        f.setReason("Independent reporting review");
-        return f;
-    }
-
     long tag(long journal, Category category) {
-        actor(maker);
-        var f = reporting.movementForm(journal);
-        f.setCategory(category);
-        f.setReason("Evidence-based equity movement");
-        long id = reporting.classify(journal, f);
-        actor("admin@fcms.local");
-        reporting.decide(id, decision("approve", 0));
-        return id;
-    }
-
-    Form setup() {
-        var f = reporting.form();
-        for (var item :
-                List.of(
-                        new String[] {"Owner capital", "Mtaji wa wamiliki", "311001", "false"},
-                        new String[] {
-                            "Reserves / retained earnings",
-                            "Akiba / faida iliyobaki",
-                            "321001",
-                            "true"
-                        })) {
-            var c = new ComponentForm();
-            c.setName(item[0]);
-            c.setNameSw(item[1]);
-            c.setAccounts(item[2]);
-            c.setRetained(Boolean.parseBoolean(item[3]));
-            f.getComponents().add(c);
-        }
-        f.setReason("Approved component membership");
-        return f;
+        return AccountingHistoryFixtures.equity(db, "JOURNAL", journal, Map.of("category", category), maker, "admin@fcms.local");
     }
 
     @BeforeAll
     void fixture() throws Exception {
+        OperationalTestClaims.enable(db);
         Files.createDirectories(PROOF);
         makerId = user(maker, 1);
         readerId = user(reader, 2);
+        db.update("insert into user_claims(user_id,claim) values (?,'workspace.admin')", readerId);
         user(stranger, 2);
         user("cash-equity-checker@test.invalid", 1);
         db.update(
@@ -212,19 +176,9 @@ class CashEquityWorkflowTests {
                 readerId,
                 readerId);
         actor(maker);
-        var b = new BookForm();
-        b.setOpeningDate(opening);
-        b.setOpeningMode("ZERO");
-        b.setPolicyReference("Cash/equity fixture");
-        accounts.configure(b);
-        actor("admin@fcms.local");
-        accounts.approveBooks(0, "Independent opening review");
+        AccountingHistoryFixtures.books(db, opening, "ZERO", maker, "admin@fcms.local");
         for (int y = opening.getYear(); y <= today.getYear(); y++) {
-            var p = new PeriodForm();
-            p.setName("Cash equity " + y);
-            p.setStartsOn(LocalDate.of(y, 1, 1));
-            p.setEndsOn(LocalDate.of(y, 12, 31));
-            accounts.createPeriod(p);
+            AccountingHistoryFixtures.period(db, "Cash equity " + y, LocalDate.of(y, 1, 1), LocalDate.of(y, 12, 31), maker);
         }
         actor(maker);
         cash = account("111001", "Cash", "ASSET", true);
@@ -329,25 +283,16 @@ class CashEquityWorkflowTests {
 
     @Test
     @Order(2)
-    void setupIsReviewedIdempotentAndCannotPublishItsOwnProposal() {
-        var f = setup();
-        setupRevision = reporting.propose(f);
-        assertEquals(setupRevision, reporting.propose(f));
-        assertTrue(reporting.effective().components().isEmpty());
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> reporting.decide(setupRevision, decision("approve", 0)));
-        actor(reader);
-        assertThrows(
-                org.springframework.security.access.AccessDeniedException.class,
-                () -> reporting.revision(setupRevision));
-        actor("admin@fcms.local");
-        reporting.decide(setupRevision, decision("approve", 0));
-        assertEquals(2, reporting.effective().components().size());
-        assertEquals("APPROVED", reporting.revision(setupRevision).state());
-        actor(maker);
-        f.setReason("Changed retry");
-        assertThrows(IllegalArgumentException.class, () -> reporting.propose(f));
+    void retainedApprovedMetadataRemainsAvailableOnlyToReportReaders() {
+        var setup = new Setup(List.of(
+                new Component("Owner capital", "Mtaji wa wamiliki", List.of(capital), false),
+                new Component("Reserves / retained earnings", "Akiba / faida iliyobaki", List.of(reserve), true)));
+        setupRevision = AccountingHistoryFixtures.equity(db, "SETUP", 0, setup, maker, "admin@fcms.local");
+        assertEquals(setup, reporting.effective());
+        assertTrue(reporting.effectiveRevisionIds(start, today).contains(setupRevision));
+        actor(stranger);
+        assertThrows(org.springframework.security.access.AccessDeniedException.class, reporting::effective);
+        assertThrows(org.springframework.security.access.AccessDeniedException.class, () -> reporting.effectiveRevisionIds(start, today));
     }
 
     public record OracleInput(StatementService.Comparison source, List<Movement> movements) {}
@@ -464,14 +409,9 @@ class CashEquityWorkflowTests {
     @Test
     @Order(5)
     void invalidMovementCategoriesAndForgedAccountsDoNotPublish() {
-        var f = reporting.movementForm(earnings);
-        f.setCategory(Category.CONTRIBUTION);
-        f.setReason("Wrong category");
-        assertThrows(IllegalArgumentException.class, () -> reporting.classify(earnings, f));
-        var setup = reporting.form();
-        setup.getComponents().getFirst().setAccounts("111001");
-        setup.setReason("Wrong account type");
-        assertThrows(IllegalArgumentException.class, () -> reporting.propose(setup));
+        assertThrows(org.springframework.dao.DataAccessException.class,
+                () -> AccountingHistoryFixtures.equity(db, "JOURNAL", earnings,
+                        Map.of("category", Category.CONTRIBUTION), maker, "admin@fcms.local"));
         actor(stranger);
         assertThrows(
                 org.springframework.security.access.AccessDeniedException.class,
@@ -483,29 +423,12 @@ class CashEquityWorkflowTests {
 
     @Test
     @Order(6)
-    void replacementsRetainHistoryAndDatabaseRejectsPayloadTampering() {
-        var f = reporting.form();
-        f.setReason("Retained reviewed replacement");
-        long id = reporting.propose(f);
-        actor("admin@fcms.local");
-        reporting.decide(id, decision("approve", 0));
-        assertEquals("RETIRED", reporting.revision(setupRevision).state());
-        assertEquals("APPROVED", reporting.revision(id).state());
-        assertEquals(
-                1,
-                db.queryForObject(
-                        "select count(*) from gl_equity_reporting where kind='SETUP' and"
-                                + " state='APPROVED'",
-                        Integer.class));
-        assertThrows(
-                org.springframework.dao.DataAccessException.class,
-                () ->
-                        db.update(
-                                "update gl_equity_reporting set payload='{}'::jsonb where id=?",
-                                id));
-        assertThrows(
-                org.springframework.dao.DataAccessException.class,
+    void retainedEvidenceRejectsPayloadTamperingAndDeletion() {
+        assertThrows(org.springframework.dao.DataAccessException.class,
+                () -> db.update("update gl_equity_reporting set payload='{}'::jsonb where id=?", setupRevision));
+        assertThrows(org.springframework.dao.DataAccessException.class,
                 () -> db.update("delete from gl_equity_reporting where id=?", setupRevision));
+        assertEquals(2, reporting.effective().components().size());
     }
 
     HttpResponse<String> get(HttpClient client, String route) throws Exception {
@@ -638,7 +561,7 @@ class CashEquityWorkflowTests {
                         "/accounting/equity-reporting/new",
                         "/accounting/equity-reporting/movements/" + contribution,
                         "/accounting/equity-reporting/" + setupRevision)) {
-            assertEquals(200, get(web, route).statusCode(), route);
+            assertEquals(410, get(web, route).statusCode(), route);
         }
         for (String suffix : List.of("/print", "/print.pdf")) {
             var exported = get(web, line + suffix + range);
@@ -656,34 +579,10 @@ class CashEquityWorkflowTests {
         assertEquals(200, entryPaper.statusCode());
         assertTrue(entryPaper.body().contains("fs-paper fs-trial"));
         assertTrue(entryPaper.body().contains("/accounting/journals/"));
-        var form = get(web, "/accounting/equity-reporting/new");
-        var fields = hidden(form.body());
-        fields.put("reason", "");
-        var invalid = post(web, "/accounting/equity-reporting", fields);
-        assertEquals(200, invalid.statusCode());
-        assertTrue(invalid.body().contains("Owner capital"));
-        assertTrue(invalid.body().contains("reason.errors"));
-        fields.put("reason", "Native retained proposal <script>literal</script>");
-        fields.put("operation", "save");
-        var saved = post(web, "/accounting/equity-reporting", fields);
-        assertEquals(302, saved.statusCode());
-        var location = saved.headers().firstValue("Location").orElseThrow();
-        var detail = get(web, location);
-        assertEquals(200, detail.statusCode());
-        assertTrue(detail.body().contains("&lt;script&gt;literal&lt;/script&gt;"));
-        assertFalse(detail.body().contains("value=\"approve\""));
-        var decision = hidden(detail.body());
-        decision.put("action", "cancel");
-        decision.put("reason", "Cancel native fixture");
-        String decisionPath = URI.create(location).getPath() + "/decision";
-        assertEquals(302, post(web, decisionPath, decision).statusCode());
-        assertEquals(
-                403,
-                post(web, "/accounting/equity-reporting", Map.of("reason", "No CSRF"))
-                        .statusCode());
+        assertEquals(403, post(web, "/accounting/equity-reporting", Map.of("reason", "No CSRF")).statusCode());
         var read = login(reader);
-        assertEquals(200, get(read, "/accounting/equity-reporting").statusCode());
-        assertEquals(403, get(read, "/accounting/equity-reporting/new").statusCode());
+        assertEquals(410, get(read, "/accounting/equity-reporting").statusCode());
+        assertEquals(410, get(read, "/accounting/equity-reporting/new").statusCode());
         var denied = login(stranger);
         assertEquals(403, get(denied, line + range).statusCode());
     }
@@ -734,95 +633,29 @@ class CashEquityWorkflowTests {
 
     @Test
     @Order(9)
-    void concurrentRetriesHaveOneRevisionAndOneIndependentReview() throws Exception {
-        var f = reporting.form();
-        f.setReason("Concurrent reporting request");
-        var pool = Executors.newFixedThreadPool(2);
-        var ready = new CountDownLatch(2);
-        var go = new CountDownLatch(1);
-        var jobs = new ArrayList<Future<Long>>();
-        try {
-            for (int i = 0; i < 2; i++)
-                jobs.add(
-                        pool.submit(
-                                () -> {
-                                    actor(maker);
-                                    ready.countDown();
-                                    go.await();
-                                    try {
-                                        return reporting.propose(f);
-                                    } finally {
-                                        clear();
-                                    }
-                                }));
-            assertTrue(ready.await(10, TimeUnit.SECONDS));
-            go.countDown();
-            long id = jobs.getFirst().get(30, TimeUnit.SECONDS);
-            assertEquals(id, jobs.getLast().get(30, TimeUnit.SECONDS));
-            var reviews = new ArrayList<Future<Boolean>>();
-            var gate = new CountDownLatch(1);
-            for (String who : List.of("admin@fcms.local", "cash-equity-checker@test.invalid"))
-                reviews.add(
-                        pool.submit(
-                                () -> {
-                                    actor(who);
-                                    gate.await();
-                                    try {
-                                        reporting.decide(id, decision("approve", 0));
-                                        return true;
-                                    } catch (org.springframework.dao
-                                                    .OptimisticLockingFailureException
-                                            | IllegalArgumentException e) {
-                                        return false;
-                                    } finally {
-                                        clear();
-                                    }
-                                }));
-            gate.countDown();
-            int successes = 0;
-            for (var result : reviews) if (result.get(30, TimeUnit.SECONDS)) successes++;
-            assertEquals(1, successes);
-            actor(maker);
-            assertEquals("APPROVED", reporting.revision(id).state());
-            assertEquals(
-                    1,
-                    db.queryForObject(
-                            "select count(*) from gl_equity_reporting where kind='SETUP' and"
-                                    + " state='APPROVED'",
-                            Integer.class));
-        } finally {
-            go.countDown();
-            pool.shutdownNow();
+    void retiredWorkspacesRejectEveryDirectEntryAndMutationWithoutChangingHistory() throws Exception {
+        var web = login(maker);
+        var csrf = hidden(get(web, "/accounting/accounts").body());
+        String before = db.queryForObject("select md5(string_agg(row_to_json(r)::text,'' order by id)) from gl_equity_reporting r", String.class);
+        for (String base : List.of("/accounting/books", "/accounting/periods", "/accounting/equity-reporting")) {
+            for (String suffix : List.of("", "/new", "/edit", "/1", "/1/decision", "/1/state", "/approve", "/movements", "/movements/1", "/print.pdf", "/export.csv")) {
+                String route = base + suffix;
+                assertEquals(410, get(web, route).statusCode(), route);
+                assertEquals(410, post(web, route, csrf).statusCode(), route);
+            }
         }
+        assertEquals(before, db.queryForObject("select md5(string_agg(row_to_json(r)::text,'' order by id)) from gl_equity_reporting r", String.class));
+        String navigation = get(web, "/accounting/accounts").body();
+        assertFalse(navigation.contains("href=\"/accounting/books"));
+        assertFalse(navigation.contains("href=\"/accounting/periods"));
+        assertFalse(navigation.contains("href=\"/accounting/equity-reporting"));
+        assertTrue(accounts.books().orElseThrow().ready());
+        assertEquals(moneyBefore, digest());
     }
 
     @Test
     @Order(10)
-    void failedAuditRollsBackReplacementAndUnclassifiedMovementsStayVisible() {
-        var f = reporting.form();
-        Long base = f.getBaseId();
-        f.setReason("Audit rollback fixture");
-        long id = reporting.propose(f);
-        db.execute(
-                "create function fail_equity_audit() returns trigger language plpgsql as $$ begin"
-                    + " if new.action='accounting.equity.approve' then raise exception 'Synthetic"
-                    + " audit failure'; end if; return new; end $$");
-        db.execute(
-                "create trigger fail_equity_audit before insert on audit_events for each row"
-                        + " execute function fail_equity_audit()");
-        try {
-            actor("admin@fcms.local");
-            assertThrows(
-                    org.springframework.dao.DataAccessException.class,
-                    () -> reporting.decide(id, decision("approve", 0)));
-            assertEquals("APPROVED", reporting.revision(base).state());
-            assertEquals("PENDING", reporting.revision(id).state());
-        } finally {
-            db.execute("drop trigger fail_equity_audit on audit_events");
-            db.execute("drop function fail_equity_audit()");
-        }
-        actor(maker);
-        reporting.decide(id, decision("cancel", 0));
+    void unclassifiedMovementsAndUnavailableHistoryStayVisible() {
         var tx = new org.springframework.transaction.support.TransactionTemplate(transactions);
         tx.executeWithoutResult(
                 status -> {

@@ -6,32 +6,32 @@
 </h1>
 </div>
 <c:url var="saveUrl" value="${formAction}" />
-<form:form modelAttribute="form" method="post" action="${saveUrl}" cssClass="fcms-form" data-resource-form-page="true" enctype="multipart/form-data">
+<form:form modelAttribute="form" method="post" action="${saveUrl}" cssClass="fcms-form" data-resource-create="${formAction == '/clients/saccos'}" data-resource-form-page="true" enctype="multipart/form-data">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
 <form:hidden path="version"/>
-<fieldset class="fcms-form-section">
-<legend>
+<section class="erp-resource-section" aria-labelledby="clients-saccos-form-section-1">
+<h2 id="clients-saccos-form-section-1">
 <spring:message code="common.details" />
-</legend>
+</h2><div class="fcms-section-body">
 <div class="fcms-field">
 <label for="saccosName">
 <spring:message code="common.name" />
 </label>
-<form:input id="saccosName" path="saccosName" type="text" />
+<form:input id="saccosName" path="saccosName" type="text" maxlength="255" required="required" />
 <form:errors path="saccosName" cssClass="fcms-error" />
 </div>
 <div class="fcms-field">
 <label for="region">
 <spring:message code="client.region" />
 </label>
-<form:input id="region" path="region" type="text" />
+<form:input id="region" path="region" type="text" maxlength="255" required="required" />
 <form:errors path="region" cssClass="fcms-error" />
 </div>
 <div class="fcms-field">
 <label for="entryDate">
 <spring:message code="client.entryDate" />
 </label>
-<form:input id="entryDate" path="entryDate" type="date" />
+<form:input id="entryDate" path="entryDate" type="date" required="required" />
 <form:errors path="entryDate" cssClass="fcms-error" />
 </div>
 <div class="fcms-field">
@@ -41,6 +41,7 @@
 <form:input id="expireDate" path="expireDate" type="date" />
 <form:errors path="expireDate" cssClass="fcms-error" />
 </div>
+<c:if test="${empty saccosId}">
 <div class="fcms-field">
 <label for="financialYearId">
 <spring:message code="report.year" />
@@ -54,9 +55,10 @@
 </form:select>
 <form:errors path="financialYearId" cssClass="fcms-error" />
 </div>
+</c:if>
 <div class="fcms-field">
 <label for="paymentStatusId">
-<spring:message code="common.status" />
+<spring:message code="client.paymentStatus" />
 </label>
 <form:select id="paymentStatusId" path="paymentStatusId">
 <c:forEach items="${paymentStatuses}" var="option">
@@ -75,8 +77,8 @@
 <form:option value="ACTIVE">
 <spring:message code="status.ACTIVE" text="ACTIVE"/>
 </form:option>
-<form:option value="DORMANT">
-<spring:message code="status.DORMANT" text="DORMANT"/>
+<form:option value="INACTIVE">
+<spring:message code="status.INACTIVE" text="INACTIVE"/>
 </form:option>
 </form:select>
 <form:errors path="operationalStatus" cssClass="fcms-error" />
@@ -95,17 +97,12 @@
 </form:select>
 <form:errors path="invoiceStatus" cssClass="fcms-error" />
 </div>
-<div class="fcms-field">
-<label for="contractUpload">
-<spring:message code="client.contract" />
-</label>
-<input type="file" id="contractUpload" name="contractUpload" accept="application/pdf,.pdf">
-</div>
-</fieldset>
-<fieldset class="fcms-form-section">
-<legend>
-<spring:message code="client.billing" />
-</legend>
+
+</div></section>
+<section class="erp-resource-section" aria-labelledby="clients-saccos-form-section-2">
+<h2 id="clients-saccos-form-section-2">
+<spring:message code="client.billing" /> (TZS)
+</h2><div class="fcms-section-body">
 <div class="fcms-field">
 <label for="annualFee">
 <spring:message code="client.annualFee" />
@@ -120,6 +117,7 @@
 <form:input id="amount" path="amount" type="number" step="0.01" min="0" />
 <form:errors path="amount" cssClass="fcms-error" />
 </div>
+<c:if test="${not empty saccosId}">
 <div class="fcms-field">
 <label for="datePaid">
 <spring:message code="client.datePaid" />
@@ -127,10 +125,11 @@
 <form:input id="datePaid" path="datePaid" type="date" />
 <form:errors path="datePaid" cssClass="fcms-error" />
 </div>
-</fieldset>
+</c:if>
+</div></section>
 <details class="fcms-form-section">
 <summary>
-<spring:message code="client.fees" />
+<spring:message code="client.fees" /> (TZS)
 </summary>
 <div class="fcms-field">
 <label for="withholdingTax">
@@ -202,6 +201,7 @@
 <form:input id="androidCost" path="androidCost" type="number" step="0.01" min="0" />
 <form:errors path="androidCost" cssClass="fcms-error" />
 </div>
+<c:if test="${not empty saccosId}">
 <div class="fcms-field">
 <label for="essFee">
 <spring:message code="client.essFee" />
@@ -209,6 +209,7 @@
 <form:input id="essFee" path="essFee" type="number" step="0.01" min="0" />
 <form:errors path="essFee" cssClass="fcms-error" />
 </div>
+</c:if>
 <div class="fcms-field">
 <label for="cloudBackupFee">
 <spring:message code="client.cloudBackupFee" />
@@ -225,12 +226,12 @@
 </div>
 </details>
 <form:errors path="" element="div" cssClass="fcms-alert" role="alert" />
-<div class="fcms-form-actions">
+<form:errors path="version" element="div" cssClass="fcms-alert" role="alert"/><div class="fcms-form-actions">
 <a class="app-btn btn-neutral" href="<c:url value='/clients/saccos' />">
 <spring:message code="common.cancel" />
 </a>
 <button class="app-btn btn-launch" type="submit">
-<spring:message code="common.save" />
+<spring:message code="${formAction == '/clients/saccos' ? 'common.create' : 'common.save'}" />
 </button>
 </div>
 </form:form>

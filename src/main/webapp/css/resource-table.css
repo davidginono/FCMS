@@ -1,6 +1,14 @@
 /* Console table: only the data canvas owns horizontal scrolling. */
 .aws-console [data-resource-table] { min-width:0; max-width:100%; overflow:visible; }
 .aws-console [data-resource-table] > .resource-table-summary {padding:10px 20px;border-bottom:1px solid #eaeded;font-variant-numeric:tabular-nums;}
+.resource-table-totals {display:flex;flex-wrap:wrap;gap:12px 24px;margin:0;padding:12px 20px;border-bottom:1px solid #eaeded;}
+.resource-table-totals > div {display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;min-width:0;}
+.resource-table-totals dt {color:#545b64;font-size:13px;line-height:18px;}
+.resource-table-totals dd {margin:0;font-size:13px;line-height:18px;font-weight:700;font-variant-numeric:tabular-nums;}
+.aws-console .ledger-register .erp-table thead th[data-table-sort-key^="amount"],
+.aws-console .ledger-register .erp-table thead th[data-table-sort-key^="units"],
+.aws-console .ledger-register .erp-table thead th[data-table-sort-key="balance"] {min-width:7rem;}
+@media(max-width:600px){.resource-table-totals{padding:12px;gap:8px 16px;}}
 .aws-console [data-resource-table] > .app-table-titlebar { flex-wrap:wrap; background:#fafafa !important; gap:8px 16px; padding:16px 20px 12px; border-bottom:0 !important; }
 .aws-console .app-table-titlebar :is(h2,h3),.aws-console [data-dashboard-widget][data-table-summary-count] > .erp-panel-header :is(h2,h3,.erp-panel-title) { margin:0; font-size:20px!important; font-weight:700; line-height:28px; text-transform:none !important; letter-spacing:normal; }
 .aws-console [data-resource-table] .resource-table-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:6px; margin-left:auto; min-width:0; padding:0 !important; }
@@ -95,8 +103,17 @@
 .aws-console [data-resource-table] {border:1px solid #d5dbdb;border-radius:0;background:#fff;box-shadow:0 1px 1px #879596;padding:0;}
 .aws-console [data-resource-table] .erp-table {border-collapse:separate;border-spacing:0;margin:0;font-size:13px!important;line-height:18px;}
 .aws-console [data-resource-table] .erp-table :is(th,td) {border:0;border-bottom:1px solid #eaeded;padding-left:12px!important;padding-right:12px!important;text-align:left!important;}
-.aws-console [data-resource-table] .erp-table th {position:sticky;top:0;z-index:2;}
-.aws-console [data-resource-table] .erp-table th:not(:last-child)::after {content:"";position:absolute;right:0;top:25%;height:50%;border-right:1px solid #eaeded;pointer-events:none;}
+.aws-console [data-resource-table] .erp-table thead > tr > th {position:sticky;top:0;z-index:2;}
+.aws-console [data-resource-table] .erp-table tbody th {position:static;top:auto;z-index:auto;}
+/* Microfinance header dividers stay inside visible column headers, including after preferences reorder/hide columns. */
+.aws-console [data-resource-table] .erp-table thead > tr > th:not([hidden]):has(~ th:not([hidden]))::after {
+    content:"";
+    position:absolute;
+    inset-block:8px;
+    inset-inline-end:0;
+    border-inline-end:1px solid #d5dbdb;
+    pointer-events:none;
+}
 .aws-console [data-resource-table] .erp-table td {background:#fff;color:#16191f;font-size:13px!important;line-height:18px!important;}
 .aws-console [data-resource-table] .erp-table td a {color:#0073bb;}
 .aws-console [data-resource-table] .erp-table a.resource-table-id-link,
@@ -160,7 +177,11 @@
 .aws-console [data-resource-table] .resource-table-actions .resource-table-menu :is(button,a.app-btn):is(:disabled,[aria-disabled="true"]) {background:#fff!important;border-color:transparent!important;color:#aab7b8!important;cursor:default;}
 @media(max-width:600px){.resource-table-dialog-body{grid-template-columns:minmax(0,1fr);gap:12px}.resource-table-dialog-body .resource-table-column-options{border-left:0;border-top:1px solid #d5dbdb;padding:16px 0 0}.aws-console [data-resource-table]>.app-table-titlebar{padding:12px}.aws-console .resource-table-tools{padding:0 12px 12px}}
 
-.resource-table-retry {margin-left:12px;}
+.resource-table-load-error {margin:12px 20px;min-width:0;}
+.resource-table-load-error > span {flex:1 1 16rem;min-width:0;overflow-wrap:anywhere;}
+.resource-table-load-error > .resource-table-retry {margin:0;}
+@media(max-width:600px){.resource-table-load-error{margin:12px;}}
+@media print{.resource-table-load-error{display:none!important;}}
 
 .aws-console .app-table-titlebar .app-table-count,.aws-console [data-table-summary-count] > .erp-panel-header .app-table-count {font-size:20px;line-height:28px;font-weight:400;color:#545b64;}
 
@@ -169,10 +190,18 @@
     min-width:100%; width:100%;
 }
 .aws-console [data-resource-table]:not([data-table-presentation="statement"]) .erp-table th {vertical-align:middle;}
+/* Header widths must also constrain empty registers, which have no data cells to size columns. */
+.aws-console [data-resource-table]:not([data-table-presentation="statement"]) .erp-table thead > tr > th:not(.resource-table-selection) {
+    min-width:9rem;
+    overflow-wrap:normal;
+    word-break:normal;
+}
 .aws-console [data-resource-table] .resource-table-sort {gap:8px;}
 .aws-console [data-resource-table].resource-table-wrap-lines .erp-table :is(th,td) {
-    white-space:normal; overflow-wrap:anywhere;
+    white-space:normal;
 }
+.aws-console [data-resource-table].resource-table-wrap-lines .erp-table td {overflow-wrap:anywhere;}
+.aws-console [data-resource-table] .resource-table-sort > span {overflow-wrap:normal;word-break:normal;}
 .aws-console [data-resource-table].resource-table-wrap-lines .erp-table td {
     min-width:6rem; max-width:28rem; vertical-align:top;
 }
@@ -184,8 +213,16 @@
 .aws-console [data-resource-table] .erp-table-scroll:has(tbody>tr:only-child>td[colspan]) {
     min-height:100px;
 }
-.aws-console [data-resource-table] .erp-table tbody>tr:only-child>td[colspan] {
-    padding:28px 16px!important; color:#545b64; text-align:center!important;
+/* Center empty copy in the visible canvas, including when columns overflow or scroll. */
+.aws-console .erp-table-scroll {container-type:inline-size;}
+.aws-console .erp-table tbody > tr > td.resource-table-empty-cell {
+    padding:0!important; max-width:none!important; vertical-align:middle; color:#545b64;
+}
+.resource-table-empty-message {
+    box-sizing:border-box; position:sticky; inset-inline-start:0;
+    width:100cqw; max-width:100%; min-height:100px; padding:28px 16px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:8px; text-align:center; white-space:normal; overflow-wrap:anywhere;
 }
 @media (min-width:1024px) {
     .aws-console .resource-table-filters>label:has(input[type=search]) {flex-grow:2!important;}

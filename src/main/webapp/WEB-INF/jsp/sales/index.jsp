@@ -32,8 +32,7 @@
 <td><a class="app-btn btn-neutral" href="<c:url value='${baseUrl}/${row.id()}'/>"><spring:message code="common.view"/></a>
 <c:if test="${permissions.contains(kind.claim.concat('.write'))}"><a class="app-btn btn-neutral" href="<c:url value='${baseUrl}/${row.id()}/edit'/>"><spring:message code="common.edit"/></a></c:if>
 <c:if test="${permissions.contains(kind.claim.concat('.export'))}">
-<a class="app-btn btn-neutral" href="<c:url value='${baseUrl}/${row.id()}/document.pdf?download=true'/>"><spring:message code="common.pdf"/></a>
-<a class="app-btn btn-neutral" target="_blank" rel="noopener" href="<c:url value='${baseUrl}/${row.id()}/document.pdf'/>"><spring:message code="common.print"/></a></c:if></td>
+<a class="app-btn btn-neutral" target="_blank" rel="noopener" href="<c:url value='${baseUrl}/${row.id()}/document.pdf'/>"><ui:reportExport format="print"/></a><a class="app-btn btn-neutral" href="<c:url value='${baseUrl}/${row.id()}/document.pdf?download=true'/>"><ui:reportExport format="pdf"/></a></c:if></td>
 </tr></c:forEach>
 <c:if test="${empty records.rows()}"><tr><td colspan="8"><spring:message code="common.noRecords"/></td></tr></c:if>
 </tbody></table></div>

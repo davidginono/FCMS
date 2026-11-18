@@ -1,5 +1,7 @@
 package com.foresight.fcms.accounting.controller;
 
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.foresight.fcms.shared.controller.ResourceFeedback;
 import com.foresight.fcms.accounting.dto.SourcePreparationForm;
 import com.foresight.fcms.accounting.service.SourcePostingService;
 import com.foresight.fcms.shared.dto.RegisterQuery;
@@ -77,12 +79,13 @@ public class PostingSourcesController {
             @Valid @ModelAttribute("form") SourcePreparationForm form,
             BindingResult b,
             @ModelAttribute("query") RegisterQuery q,
-            Model m) {
+            Model m, RedirectAttributes redirect) {
         if (b.hasFieldErrors("mappingId") || b.hasFieldErrors("requestKey"))
             b.reject("error.invalid");
         if (!b.hasErrors())
             try {
-                return "redirect:/accounting/journals/" + sources.prepare(kind, id, form);
+                long saved = sources.prepare(kind, id, form);
+                return ResourceFeedback.success(redirect, "/accounting/journals", "feedback.voucherDraftCreated", "/accounting/journals/" + saved);
             } catch (IllegalArgumentException e) {
                 b.reject(
                         e.getMessage() != null

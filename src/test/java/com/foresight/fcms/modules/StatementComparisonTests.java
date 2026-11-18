@@ -71,22 +71,13 @@ class StatementComparisonTests {
 
     @BeforeAll
     void setup() {
+        OperationalTestClaims.enable(db);
         makerId = user(maker, 1);
         user(staff, 2);
         actor(maker);
-        var book = new BookForm();
-        book.setOpeningDate(opening);
-        book.setOpeningMode("ZERO");
-        book.setPolicyReference("Comparative fixture opening");
-        accounting.configure(book);
-        actor("admin@fcms.local");
-        accounting.approveBooks(0, "Independent opening review");
+        AccountingHistoryFixtures.books(db, opening, "ZERO", maker, "admin@fcms.local");
         for (int year = opening.getYear(); year <= today.getYear(); year++) {
-            var period = new PeriodForm();
-            period.setName("Comparative " + year);
-            period.setStartsOn(LocalDate.of(year, 1, 1));
-            period.setEndsOn(LocalDate.of(year, 12, 31));
-            accounting.createPeriod(period);
+            AccountingHistoryFixtures.period(db, "Comparative " + year, LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31), maker);
         }
         actor(maker);
         cash = account("111001", "Bank", "ASSET", true);
@@ -179,7 +170,7 @@ class StatementComparisonTests {
         f.getLines().get(0).setDebit(new BigDecimal(amount));
         f.getLines().get(1).setAccountId(credit);
         f.getLines().get(1).setCredit(new BigDecimal(amount));
-        long id = journals.save(null, f);
+        long id = journals.createDraft(f);
         journals.transition(id, 0, "submit", "");
         actor("admin@fcms.local");
         journals.transition(id, 1, "post", "Independent fixture review");
@@ -466,7 +457,7 @@ class StatementComparisonTests {
         third.setAccountId(income);
         third.setCredit(new BigDecimal("1.75"));
         f.getLines().add(third);
-        long split = journals.save(null, f);
+        long split = journals.createDraft(f);
         journals.transition(split, 0, "submit", "");
         actor("admin@fcms.local");
         journals.transition(split, 1, "post", "Independent split review");

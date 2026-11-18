@@ -18,6 +18,7 @@ import java.util.*;
 public class PostingMappingService {
     public static final List<String> EVENTS =
             List.of(
+                    "MANUAL_JOURNAL",
                     "INCOME_IN",
                     "PETTY_IN",
                     "PETTY_OUT",
@@ -79,40 +80,6 @@ public class PostingMappingService {
                 r.getLong("transaction_id"),
                 r.getString("transaction_code"),
                 r.getString("transaction_name"));
-    }
-
-    @Transactional(readOnly = true)
-    public RegisterPage<PostingMapping> list(RegisterQuery q) {
-        access.require("accounting.read");
-        q.validate();
-        if (!Set.of("", "PENDING", "APPROVED", "REJECTED", "RETIRED", "CANCELLED")
-                .contains(q.getStatus())) throw new IllegalArgumentException("error.invalid");
-        return RegisterPage.of(
-                db.query(
-                        SELECT
-                                + " where lower(m.source_event||' '||m.policy_reference||'"
-                                + " '||d.code||' '||d.name||' '||c.code||' '||c.name) like ? escape"
-                                + " '!' and (?='' or m.state=?) order by "
-                                + q.order(
-                                        Map.ofEntries(
-                                                Map.entry("id", "m.id"),
-                                                Map.entry("event", "m.source_event"),
-                                                Map.entry("debit", "debit_account"),
-                                                Map.entry("credit", "credit_account"),
-                                                Map.entry("kind", "m.voucher_kind"),
-                                                Map.entry("cashFlow", "m.cash_flow"),
-                                                Map.entry("policy", "m.policy_reference"),
-                                                Map.entry("status", "m.state"),
-                                                Map.entry("maker", "maker"),
-                                                Map.entry("date", "m.created_at")))
-                                + " limit ? offset ?",
-                        this::row,
-                        q.pattern(),
-                        q.getStatus(),
-                        q.getStatus(),
-                        q.getSize() + 1,
-                        q.offset()),
-                q);
     }
 
     @Transactional(readOnly = true)
@@ -255,6 +222,58 @@ public class PostingMappingService {
         return mapping;
     }
 
+    public record Rule(String component, long debitAccountId, String debitAccount, long creditAccountId, String creditAccount) {}
+    public record VoucherTemplate(long id,long activityId,String name,String kind,String flow,List<Rule> rules) {}
+
+    @Transactional
+    public Map<Long,VoucherTemplate> voucherTemplates(Collection<Long> requested) {
+        access.require("accounting.write");
+        if(requested.size()>50)throw new IllegalArgumentException("error.invalid");
+        if(requested.isEmpty())return Map.of();
+        var ids=requested.stream().distinct().sorted().toArray(Long[]::new);
+        // Match the catalogue's activity -> transaction -> revision lock order for the entire form.
+        db.queryForList("select id from gl_activities where id in (select t.activity_id from gl_transactions t join gl_posting_mappings m on m.transaction_id=t.id where m.id=any(?)) order by id for share",Long.class,(Object)ids);
+        db.queryForList("select id from gl_transactions where id in (select transaction_id from gl_posting_mappings where id=any(?)) order by id for share",Long.class,(Object)ids);
+        db.queryForList("select id from gl_posting_mappings where id=any(?) order by id for share",Long.class,(Object)ids);
+        var rules=new HashMap<Long,List<Rule>>();
+        db.query("select r.mapping_id,r.component,r.debit_account_id,d.code||' '||d.name,r.credit_account_id,c.code||' '||c.name from gl_mapping_rules r join gl_accounts d on d.id=r.debit_account_id join gl_accounts c on c.id=r.credit_account_id where r.mapping_id=any(?) order by r.mapping_id,r.component",
+                (org.springframework.jdbc.core.RowCallbackHandler)r->rules.computeIfAbsent(r.getLong(1),key->new ArrayList<>()).add(new Rule(r.getString(2),r.getLong(3),r.getString(4),r.getLong(5),r.getString(6))),(Object)ids);
+        var result=new LinkedHashMap<Long,VoucherTemplate>();
+        db.query("select m.id,t.activity_id,t.name,m.voucher_kind,m.cash_flow from gl_posting_mappings m join gl_transactions t on t.id=m.transaction_id join gl_activities a on a.id=t.activity_id where m.id=any(?) and m.state='APPROVED' and t.active and a.active order by m.id",
+                (org.springframework.jdbc.core.RowCallbackHandler)r->result.put(r.getLong(1),new VoucherTemplate(r.getLong(1),r.getLong(2),r.getString(3),r.getString(4),r.getString(5),List.copyOf(rules.getOrDefault(r.getLong(1),List.of())))),(Object)ids);
+        if(result.size()!=ids.length)throw new IllegalArgumentException("gl.source.mappingChanged");
+        return Map.copyOf(result);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Rule> rules(long mapping) {
+        access.require("accounting.read");
+        return db.query("select r.component,r.debit_account_id,d.code||' '||d.name,r.credit_account_id,c.code||' '||c.name from gl_mapping_rules r join gl_accounts d on d.id=r.debit_account_id join gl_accounts c on c.id=r.credit_account_id where r.mapping_id=? order by r.component",
+                (r,n)->new Rule(r.getString(1),r.getLong(2),r.getString(3),r.getLong(4),r.getString(5)),mapping);
+    }
+
+    private List<PostingMappingForm.RuleForm> validatedRules(PostingMappingForm f) {
+        var rules = f.getRules();
+        // Retained automatic finance adapters still supply one TOTAL pair.
+        if (rules.isEmpty()) {
+            var rule = new PostingMappingForm.RuleForm();
+            rule.setDebitAccountId(f.getDebitAccountId()); rule.setCreditAccountId(f.getCreditAccountId());
+            rules = List.of(rule);
+        }
+        var components = new HashSet<String>();
+        for (int i=0;i<rules.size();i++) {
+            var rule=rules.get(i);
+            if (!Set.of("TOTAL","PRINCIPAL","INTEREST","FEES","TAX").contains(rule.getComponent()) || !components.add(rule.getComponent()))
+                throw new com.foresight.fcms.shared.validation.FieldValidationException("voucher.error.components","rules["+i+"].component");
+            try { validatePair(rule.getDebitAccountId(),rule.getCreditAccountId(),f.getVoucherKind(),f.getCashFlow()); }
+            catch (IllegalArgumentException e) { throw new com.foresight.fcms.shared.validation.FieldValidationException(e.getMessage(),"rules["+i+"].debitAccountId","rules["+i+"].creditAccountId"); }
+        }
+        if (rules.size()>5 || (components.contains("TOTAL") && rules.size()!=1) || (!f.getEvent().equals("MANUAL_JOURNAL") && (rules.size()!=1 || !components.contains("TOTAL"))))
+            throw new com.foresight.fcms.shared.validation.FieldValidationException("voucher.error.components","rules");
+        f.setDebitAccountId(rules.getFirst().getDebitAccountId()); f.setCreditAccountId(rules.getFirst().getCreditAccountId());
+        return rules;
+    }
+
     @Transactional
     public long create(@jakarta.validation.Valid PostingMappingForm f) {
         var actor = access.require("accounting.setup");
@@ -274,6 +293,7 @@ public class PostingMappingService {
                         Boolean.class,
                         f.getEvent(),
                         transaction))) throw new IllegalArgumentException("error.invalid");
+        var rules = validatedRules(f);
         String hash = fingerprint(f);
         db.queryForList(
                 "select pg_advisory_xact_lock(hashtextextended(?,0))",
@@ -308,6 +328,7 @@ public class PostingMappingService {
                         f.getRequestKey(),
                         hash,
                         transaction);
+        for (var rule : rules) db.update("insert into gl_mapping_rules(mapping_id,component,debit_account_id,credit_account_id) values (?,?,?,?)",id,rule.getComponent(),rule.getDebitAccountId(),rule.getCreditAccountId());
         db.update("update gl_transactions set version=version+1 where id=?", transaction);
         audit.record(
                 actor.id(), "accounting.mapping.create", "gl_posting_mappings", id, f.getEvent());
@@ -341,6 +362,7 @@ public class PostingMappingService {
                     default -> "CANCELLED";
                 };
         if (state.equals("APPROVED")) {
+            for (var rule : rules(id)) validatePair(rule.debitAccountId(),rule.creditAccountId(),mapping.voucherKind(),mapping.cashFlow());
             validatePair(
                     mapping.debitAccountId(),
                     mapping.creditAccountId(),
@@ -409,15 +431,18 @@ public class PostingMappingService {
     }
 
     static String fingerprint(PostingMappingForm f) {
+        if(f.getRules().isEmpty() && (f.getDebitAccountId()==null || f.getCreditAccountId()==null))
+            throw new com.foresight.fcms.shared.validation.FieldValidationException("accounting.error.mappingAccounts","rules");
         try {
             var bytes = new java.io.ByteArrayOutputStream();
             try (var out = new java.io.DataOutputStream(bytes)) {
                 out.writeUTF(f.getEvent());
-                out.writeLong(f.getDebitAccountId());
-                out.writeLong(f.getCreditAccountId());
+                out.writeLong(f.getRules().isEmpty()?f.getDebitAccountId():f.getRules().getFirst().getDebitAccountId());
+                out.writeLong(f.getRules().isEmpty()?f.getCreditAccountId():f.getRules().getFirst().getCreditAccountId());
                 out.writeUTF(f.getVoucherKind());
                 out.writeUTF(f.getCashFlow());
                 out.writeUTF(f.getPolicyReference().trim());
+                for (var rule : f.getRules()) { out.writeUTF(rule.getComponent());out.writeLong(rule.getDebitAccountId());out.writeLong(rule.getCreditAccountId()); }
             }
             return HexFormat.of()
                     .formatHex(

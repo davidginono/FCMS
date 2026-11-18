@@ -1,5 +1,8 @@
 package com.foresight.fcms.workforce.controller;
 
+import com.foresight.fcms.shared.controller.FormErrors;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.foresight.fcms.shared.controller.ResourceFeedback;
 import com.foresight.fcms.workforce.dto.WorkForm;
 import com.foresight.fcms.workforce.dto.WorkQuery;
 import com.foresight.fcms.workforce.model.WorkKind;
@@ -79,8 +82,8 @@ public class WorkController {
             @PathVariable String workspace,
             @Valid @ModelAttribute("form") WorkForm f,
             BindingResult b,
-            Model m) {
-        return save(workspace, null, f, b, m);
+            Model m, RedirectAttributes redirect) {
+        return save(workspace, null, f, b, m, redirect);
     }
 
     @PostMapping("/{id}")
@@ -89,13 +92,15 @@ public class WorkController {
             @PathVariable Long id,
             @Valid @ModelAttribute("form") WorkForm f,
             BindingResult b,
-            Model m) {
+            Model m, RedirectAttributes redirect) {
         var k = WorkKind.from(workspace);
         if (!b.hasErrors())
             try {
-                return "redirect:" + k.getRoute() + "/" + work.save(k, id, f) + "?saved";
+                long saved = work.save(k, id, f);
+                return ResourceFeedback.success(redirect, id == null ? k.getRoute() : k.getRoute() + "/" + saved,
+                        id != null ? "feedback.saved" : k == WorkKind.TASK ? "feedback.taskCreated" : k == WorkKind.LEAVE ? "feedback.leaveCreated" : "feedback.staffReportCreated", k.getRoute() + "/" + saved);
             } catch (IllegalArgumentException e) {
-                b.reject(
+                FormErrors.reject(b, e,
                         "work.requestConflict".equals(e.getMessage())
                                 ? "work.requestConflict"
                                 : "error.invalid");
@@ -115,11 +120,11 @@ public class WorkController {
             @RequestParam long version,
             @RequestParam(defaultValue = "") String comment,
             Model model,
-            jakarta.servlet.http.HttpServletResponse response) {
+            jakarta.servlet.http.HttpServletResponse response, RedirectAttributes redirect) {
         var kind = WorkKind.from(workspace);
         try {
             work.transition(kind, id, version, action, comment);
-            return "redirect:" + kind.getRoute() + "/" + id + "?saved";
+            return ResourceFeedback.success(redirect, kind.getRoute() + "/" + id, "feedback.saved", null);
         } catch (IllegalArgumentException | org.springframework.dao.DataAccessException error) {
             response.setStatus(409);
             model.addAttribute("actionError", true);

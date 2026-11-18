@@ -1,15 +1,12 @@
 package com.foresight.fcms.accounting.controller;
 
-import com.foresight.fcms.accounting.dto.*;
 import com.foresight.fcms.accounting.service.*;
 import com.foresight.fcms.shared.dto.RegisterQuery;
 
-import jakarta.validation.Valid;
 
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
@@ -17,42 +14,23 @@ import org.springframework.web.bind.annotation.*;
 public class JournalsController {
     private final JournalService journals;
     private final SourceBindingService bindings;
-    private final AccountingService accounts;
     private final JournalDocumentService documents;
     private final AccountingDocumentPdfService documentPdf;
     private final StatementService reports;
+    private final VoucherService vouchers;
 
     public JournalsController(
             JournalService journals,
             SourceBindingService bindings,
-            AccountingService accounts,
             JournalDocumentService documents,
             AccountingDocumentPdfService documentPdf,
-            StatementService reports) {
+            StatementService reports, VoucherService vouchers) {
         this.journals = journals;
         this.bindings = bindings;
-        this.accounts = accounts;
         this.documents = documents;
         this.documentPdf = documentPdf;
         this.reports = reports;
-    }
-
-    @InitBinder("form")
-    public void bind(org.springframework.web.bind.WebDataBinder binder) {
-        binder.setAutoGrowCollectionLimit(50);
-        binder.setAllowedFields(
-                "kind",
-                "reference",
-                "description",
-                "evidenceReference",
-                "date",
-                "cashFlow",
-                "requestKey",
-                "version",
-                "lines[*].accountId",
-                "lines[*].debit",
-                "lines[*].credit",
-                "lines[*].description");
+        this.vouchers = vouchers;
     }
 
     @ModelAttribute
@@ -71,19 +49,10 @@ public class JournalsController {
             Model m) {
         m.addAttribute("records", journals.list(q, kind));
         m.addAttribute("journalKind", kind);
-        return "accounting/journals";
-    }
-
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('accounting.write')")
-    @GetMapping("/new")
-    public String create(@RequestParam(defaultValue = "JOURNAL") String kind, Model m) {
-        if (!java.util.Set.of("JOURNAL", "RECEIPT", "PAYMENT", "OPENING").contains(kind))
-            throw new IllegalArgumentException();
-        var f = new JournalForm();
-        f.setKind(kind);
-        m.addAttribute("form", f);
-        options(f, null, m);
-        return "accounting/journal-form";
+        m.addAttribute("voucherKind",kind.isEmpty()?"JOURNAL":kind);
+        m.addAttribute("legacyRegister",true);
+        m.addAttribute("voucherRoute",VoucherService.route(kind));
+        return "accounting/vouchers/register";
     }
 
     @GetMapping("/{id}")
@@ -104,63 +73,16 @@ public class JournalsController {
                         id, org.springframework.context.i18n.LocaleContextHolder.getLocale());
         m.addAttribute("voucherDocument", document);
         m.addAttribute("journal", document.journal());
+        m.addAttribute("voucherHeader",vouchers.header(id).orElse(null));
+        m.addAttribute("voucherRows",vouchers.rows(id));
+        m.addAttribute("voucherKind",document.journal().kind());
+        m.addAttribute("voucherRoute",VoucherService.route(document.journal().kind()));
+        m.addAttribute("baseUrl","/accounting/vouchers/"+VoucherService.route(document.journal().kind()));
+        m.addAttribute("actionBase","/accounting/journals/"+id);
         m.addAttribute("sourceBinding", bindings.forJournal(id).orElse(null));
         m.addAttribute("sourceReviewAllowed", bindings.canReview(id));
         m.addAttribute("requestKey", java.util.UUID.randomUUID());
-        return "accounting/journal-detail";
-    }
-
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('accounting.write')")
-    @GetMapping("/{id}/edit")
-    public String edit(@PathVariable long id, Model m) {
-        var f = journals.form(id);
-        m.addAttribute("form", f);
-        options(f, id, m);
-        return "accounting/journal-form";
-    }
-
-    @PostMapping
-    public String create(@Valid @ModelAttribute("form") JournalForm f, BindingResult b, Model m) {
-        return save(null, f, b, m);
-    }
-
-    @PostMapping("/{id}")
-    public String update(
-            @PathVariable long id,
-            @Valid @ModelAttribute("form") JournalForm f,
-            BindingResult b,
-            Model m) {
-        return save(id, f, b, m);
-    }
-
-    private String save(Long id, JournalForm f, BindingResult b, Model m) {
-        if (!b.hasErrors())
-            try {
-                return "redirect:/accounting/journals/" + journals.save(id, f);
-            } catch (IllegalArgumentException e) {
-                b.reject(
-                        e.getMessage() != null && e.getMessage().startsWith("accounting.error.")
-                                ? e.getMessage()
-                                : "error.invalid");
-            } catch (org.springframework.dao.DataAccessException e) {
-                b.reject("error.conflict");
-            }
-        options(f, id, m);
-        return "accounting/journal-form";
-    }
-
-    private void options(JournalForm f, Long id, Model m) {
-        var choices = new java.util.LinkedHashMap<Long, AccountingService.Choice>();
-        accounts.choices("", 0, true).items().forEach(c -> choices.put(c.id(), c));
-        accounts.selected(
-                        f.getLines().stream()
-                                .map(JournalLineForm::getAccountId)
-                                .filter(java.util.Objects::nonNull)
-                                .distinct()
-                                .toList())
-                .forEach(c -> choices.put(c.id(), c));
-        m.addAttribute("accounts", choices.values());
-        m.addAttribute("formAction", "/accounting/journals" + (id == null ? "" : "/" + id));
+        return "accounting/vouchers/details";
     }
 
     @PostMapping("/{id}/actions/{action}")
@@ -195,6 +117,7 @@ public class JournalsController {
         }
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('accounting.report')")
     @GetMapping("/{id}/print.pdf")
     public ResponseEntity<byte[]> print(@PathVariable long id, java.util.Locale locale) {
         var document = documents.document(id, locale);

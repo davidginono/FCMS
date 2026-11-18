@@ -78,7 +78,15 @@ public class ClientCategoryForm {
 
     @NotNull private Long paymentStatusId;
 
-    @NotNull private Long financialYearId;
+    private Long financialYearId;
+
+    @jakarta.validation.constraints.Pattern(regexp = "ACTIVE|INACTIVE")
+    @NotBlank
+    private String operationalStatus = "ACTIVE";
+
+    public String getOperationalStatus() { return operationalStatus; }
+
+    public void setOperationalStatus(String value) { operationalStatus = value; }
 
     public static ClientCategoryForm from(ClientCategoryRowDto row) {
         ClientCategoryForm form = new ClientCategoryForm();
@@ -99,6 +107,7 @@ public class ClientCategoryForm {
         form.setHostingFee(row.hostingFee());
         form.setPaymentStatusId(row.paymentStatusId());
         form.setFinancialYearId(row.financialYearId());
+        if (row.operationalStatus() != null) form.setOperationalStatus(row.operationalStatus());
         return form;
     }
 

@@ -9,13 +9,14 @@
 <c:out value="${client.clientName()}" />
 </h1>
     </div>
-    <div class="app-actions">
+    <div class="app-actions"><c:if test="${permissions.contains('client.write')}"><a class="app-btn btn-neutral" href="<c:url value='${category.route}/${client.id()}/contract/edit'/>"><spring:message code="client.updateContract"/></a><a class="app-btn btn-neutral" href="<c:url value='${category.route}/${client.id()}/lifecycle'/>"><spring:message code="client.manageLifecycle"/></a></c:if>
+
         <a class="app-btn btn-neutral" href="<c:url value='${category.route}' />">
             <span class="app-icon" data-lucide="arrow-left" aria-hidden="true">
 </span>
             <span><spring:message code="common.back"/></span>
         </a>
-        <c:if test="${permissions.contains('client.write')}"><a class="app-btn btn-primary" href="<c:url value='${category.route}/${client.id()}/edit' />">
+        <c:if test="${permissions.contains('client.write')}"><a class="app-btn btn-neutral" href="<c:url value='${category.route}/${client.id()}/edit' />">
             <span class="app-icon" data-lucide="edit-3" aria-hidden="true">
 </span>
             <span><spring:message code="common.edit"/></span>
@@ -24,13 +25,7 @@
 </div>
 
 <c:if test="${not empty successMessage}">
-    <div class="app-alert app-alert-success">
-        <span class="app-icon" data-lucide="check-circle-2" aria-hidden="true">
-</span>
-        <span>
-<spring:message code="common.saved"/>
-</span>
-    </div>
+    <ui:flashbar type="success" messageKey="common.saved"/>
 </c:if>
 
 <section class="app-form-section">
@@ -64,14 +59,15 @@
 <c:out value="${appTime:display(client.expireDate())}" />
 </div>
 </div>
-        <div class="app-definition-item">
+<c:if test="${category.financialYearSupported}">        <div class="app-definition-item">
 <span class="fcms-label"><spring:message code="common.year"/></span>
 <div class="app-definition-value">
 <c:out value="${client.financialYear()}" />
 </div>
 </div>
+</c:if>
         <div class="app-definition-item">
-<span class="fcms-label"><spring:message code="common.status"/></span>
+<span class="fcms-label"><spring:message code="client.paymentStatus"/></span>
 <div class="app-definition-value">
 <spring:message code="status.${client.paymentStatus().toUpperCase()}" text="${client.paymentStatus()}"/>
 </div>
@@ -150,18 +146,8 @@
 </div>
 </div>
         </c:if>
-        <div class="app-definition-item">
-<span class="fcms-label"><spring:message code="client.revenueTotal"/></span>
-<div class="app-definition-value">
-<fmt:formatNumber value="${client.revenueTotal()}" minFractionDigits="2" maxFractionDigits="2" />
-</div>
-</div>
-        <div class="app-definition-item">
-<span class="fcms-label"><spring:message code="client.grossProfit"/></span>
-<div class="app-definition-value">
-<fmt:formatNumber value="${client.grossProfit()}" minFractionDigits="2" maxFractionDigits="2" />
-</div>
-</div>
+<div class="app-definition-item"><span class="fcms-label"><spring:message code="client.amountRemaining"/></span><div class="app-definition-value"><fmt:formatNumber value="${client.amountRemaining()}" minFractionDigits="2" maxFractionDigits="2"/></div></div>
+<c:if test="${category.operationalStatusSupported}"><div class="app-definition-item"><span class="fcms-label"><spring:message code="client.operationalStatus"/></span><div class="app-definition-value"><spring:message code="status.${client.operationalStatus()}"/></div></div></c:if>
     </div>
 </section>
 

@@ -62,6 +62,7 @@ class SalesWorkflowTests {
 
     @BeforeEach
     void admin() {
+        OperationalTestClaims.enable(db);
         actor("admin@fcms.local");
     }
 
@@ -212,6 +213,7 @@ class SalesWorkflowTests {
         actor(email);
         assertThrows(AccessDeniedException.class, () -> sales.find(SalesKind.INVOICE, id));
         db.update("insert into user_claims(user_id,claim) values (?,'sales.invoice.read')", user);
+        db.update("insert into user_claims(user_id,claim) values (?,'workspace.admin')", user);
         assertEquals(id, sales.find(SalesKind.INVOICE, id).id());
         assertThrows(
                 AccessDeniedException.class, () -> sales.save(SalesKind.INVOICE, null, form()));
@@ -463,7 +465,7 @@ class SalesWorkflowTests {
                 saved.headers()
                         .firstValue("location")
                         .orElseThrow()
-                        .endsWith("/sales/invoices?saved"));
+                        .contains("/sales/invoices?_notice="));
         assertEquals(before + 1, count("sales_documents"));
         long id =
                 db.queryForObject(

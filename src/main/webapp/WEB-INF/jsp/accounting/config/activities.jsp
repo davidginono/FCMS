@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ include file="/WEB-INF/jsp/shared/header.jspf" %>
 <%@ taglib prefix="ui" tagdir="/WEB-INF/tags" %>
+<link rel="stylesheet" href="<c:url value='/css/accounting-entry.css?v=20261118-split2'/>">
 <section class="erp-table-wrap" data-resource-table="${resourceKey}" data-config-register="activities" data-table-selection="single" data-table-page-size="${query.size}" data-table-page-size-options="10 25 50 100">
  <div class="app-table-titlebar"><h2><spring:message code="config.activities"/></h2><div class="app-table-toolbar">
   <button type="button" class="app-btn btn-neutral" data-table-command data-config-command="open" disabled><spring:message code="common.view"/></button>
@@ -15,5 +16,5 @@
  <span class="sr-only" role="status" data-config-selection-status></span>
 </section>
 <c:set var="configKind" value="activities"/><c:if test="${permissions.contains('accounting.setup')}"><%@ include file="/WEB-INF/jsp/accounting/config/create-modal.jspf" %></c:if>
-<script defer src="<c:url value='/js/transaction-config.js?v=20261103-config2'/>"></script>
+<script defer src="<c:url value='/js/transaction-config.js?v=20261118-vouchers3'/>"></script>
 <%@ include file="/WEB-INF/jsp/shared/footer.jspf" %>

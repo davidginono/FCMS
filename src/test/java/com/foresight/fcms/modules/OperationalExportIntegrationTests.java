@@ -77,6 +77,7 @@ class OperationalExportIntegrationTests {
 
     @BeforeAll
     void fixtures() throws Exception {
+        OperationalTestClaims.enable(db);
         for (String email : List.of("export-staff@test.invalid", "export-other@test.invalid"))
             db.update(
                     "insert into users(first_name,last_name,email,password,status_id,role_id)"
@@ -123,7 +124,7 @@ class OperationalExportIntegrationTests {
             form.setDescription("Synthetic export movement");
             form.setCategory("Office");
             form.setReference("SYNTHETIC-REF-" + kind);
-            if (kind == LedgerKind.BULK) form.setUnits(13);
+            if (kind == LedgerKind.BULK) {form.setUnits(13);form.setOperation("STOCK_PURCHASE");}
             entries.put(kind, ledger.post(kind, form));
         }
         SecurityContextHolder.clearContext();
@@ -194,48 +195,15 @@ class OperationalExportIntegrationTests {
     }
 
     @Test
-    void nativeExpenseSummaryDrillAndPdfStayScopedInBothLanguages() throws Exception {
+    void retiredExpenseSummaryDrillAndPdfAreGoneInBothLanguages() throws Exception {
         var staffWeb = browser("export-staff@test.invalid", "Verification123!");
-        for (String lang : List.of("en", "sw")) {
-            var response =
-                    staffWeb.send(
-                            request("/finance/expenses/categories?year=2026&lang=" + lang)
-                                    .GET()
-                                    .build(),
-                            HttpResponse.BodyHandlers.ofString());
-            assertEquals(200, response.statusCode());
-            assertTrue(response.body().contains("26.77"));
-            assertTrue(response.body().contains("name=\"year\""));
-            String text =
-                    pdf(staffWeb, "/finance/expenses/categories/print.pdf?year=2026&lang=" + lang);
-            assertTrue(text.contains("26.77"));
-            assertFalse(text.contains("999.99"));
-            var drill =
-                    staffWeb.send(
-                            request("/finance/expenses?year=2026&category=Travel&lang=" + lang)
-                                    .GET()
-                                    .build(),
-                            HttpResponse.BodyHandlers.ofString());
-            assertEquals(200, drill.statusCode());
-            assertTrue(drill.body().contains("OWN-EXPENSE-731"));
-            assertFalse(drill.body().contains("OTHER-EXPENSE-839"));
-            assertFalse(drill.body().contains("21.01"));
-            String drillPdf =
-                    pdf(
-                            staffWeb,
-                            "/finance/expenses/print.pdf?year=2026&category=Travel&lang=" + lang);
-            assertTrue(drillPdf.contains("12.34"));
-            assertFalse(drillPdf.contains("999.99"));
-            assertFalse(drillPdf.contains("21.01"));
-            assertFalse(
-                    pdf(
-                                    staffWeb,
-                                    "/finance/expenses/categories/print.pdf?year=2026&ownerId="
-                                            + other
-                                            + "&lang="
-                                            + lang)
-                            .contains("999.99"));
-        }
+        for (String lang : List.of("en", "sw"))
+            for (String path : List.of("/finance/expenses/categories", "/finance/expenses/categories/print.pdf",
+                    "/finance/expenses", "/finance/expenses/print.pdf")) {
+                var result = staffWeb.send(request(path + "?year=2026&lang=" + lang).GET().build(), HttpResponse.BodyHandlers.ofString());
+                assertEquals(410, result.statusCode(), path);
+                assertTrue(result.body().isEmpty());
+            }
     }
 
     @Test
@@ -345,12 +313,10 @@ class OperationalExportIntegrationTests {
                                 "/tasks/print.pdf?ownerId=" + staff + "&clientId=" + client,
                                 "/leaves/print.pdf?ownerId=" + staff,
                                 "/staff-reports/print.pdf?ownerId=" + staff,
-                                "/finance/expenses/print.pdf?search=absent",
-                                "/finance/cloud-backup/billing/print.pdf?year=2026&status=PAID",
                                 "/clients/saccos/paid/print.pdf?financialYearId=1",
                                 "/clients/saccos/unpaid/print.pdf?financialYearId=1"));
         for (var entry : entries.entrySet())
-            paths.add(
+            if (entry.getKey() != LedgerKind.INCOME) paths.add(
                     "/finance/"
                             + entry.getKey().route
                             + "/"
@@ -358,11 +324,6 @@ class OperationalExportIntegrationTests {
                             + "/print.pdf?test=1");
         for (String category : List.of("saccos", "amcos", "unions", "microfinance", "others")) {
             paths.add("/clients/" + category + "/print.pdf?financialYearId=1");
-            paths.add("/clients/" + category + "/revenues/print.pdf?financialYearId=1");
-            paths.add(
-                    "/clients/"
-                            + category
-                            + "/revenues/print.pdf?financialYearId=1&reportType=training_fee");
         }
         for (String path : paths)
             for (String lang : List.of("en", "sw")) {
@@ -446,9 +407,7 @@ class OperationalExportIntegrationTests {
         for (String path :
                 List.of(
                         "/clients/saccos/print.pdf",
-                        "/clients/amcos/print.pdf",
-                        "/finance/cloud-backup/billing/print.pdf",
-                        "/finance/income/" + entries.get(LedgerKind.INCOME) + "/print.pdf"))
+                        "/clients/amcos/print.pdf"))
             assertEquals(
                     403,
                     staffWeb.send(

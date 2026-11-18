@@ -4,9 +4,9 @@
 <h1 class="app-page-title">
 <c:out value="${record.reference()}" />
 </h1>
-<a class="app-btn btn-neutral" href="<c:url value='${baseUrl}/${record.id()}/print.pdf'/>"><spring:message code="common.pdf"/></a><button class="app-btn btn-neutral" type="button" data-print-page>
-<spring:message code="common.print" />
-</button>
+<button class="app-btn btn-neutral" type="button" data-print-page>
+<ui:reportExport format="print"/>
+</button><a class="app-btn btn-neutral" href="<c:url value='${baseUrl}/${record.id()}/print.pdf'/>"><ui:reportExport format="pdf"/></a>
 </div>
 <dl class="fcms-details">
 <div>
@@ -30,7 +30,7 @@
 <spring:message code="ledger.category" />
 </dt>
 <dd>
-<c:out value="${record.category()}" />
+<spring:message code="ledger.operation.${record.category()}" text="${record.category()}"/>
 </dd>
 </div>
 <div>
@@ -57,14 +57,14 @@
 <c:out value="${record.amount()}" />
 </dd>
 </div>
-<div>
+<c:if test="${kind.name()=='BULK'}"><div>
 <dt>
 <spring:message code="ledger.units" />
 </dt>
 <dd>
 <c:out value="${record.units()}" />
 </dd>
-</div>
+</div></c:if>
 <div>
 <dt>
 <spring:message code="ledger.balance" />
@@ -73,14 +73,14 @@
 <c:out value="${record.balance()}" />
 </dd>
 </div>
-<div>
+<c:if test="${kind.name()=='BULK'}"><div>
 <dt>
 <spring:message code="ledger.unitBalance" />
 </dt>
 <dd>
 <c:out value="${record.unitBalance()}" />
 </dd>
-</div>
+</div></c:if>
 <div>
 <dt>
 <spring:message code="ledger.recordedBy" />

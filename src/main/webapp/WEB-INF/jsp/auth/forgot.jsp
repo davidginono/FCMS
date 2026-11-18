@@ -9,7 +9,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FCMS</title>
 <link rel="stylesheet" href="<c:url value='/css/app.css'/>">
-<link rel="stylesheet" href="<c:url value='/css/workspaces.css'/>">
+<link rel="stylesheet" href="<c:url value='/css/workspaces.css?v=20261117-form-sections1'/>">
+<link rel="stylesheet" href="<c:url value='/css/notifications.css?v=20261117-cloudscape-notices1'/>">
 </head>
 <body>
 <main class="app-main fcms-form">
@@ -22,7 +23,7 @@
 <c:url var="saveUrl" value="${formAction}" />
 <form:form modelAttribute="form" method="post" action="${saveUrl}" cssClass="fcms-form" data-resource-form-page="true">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-<fieldset class="fcms-form-section">
+<section class="erp-resource-section"><div class="fcms-section-body">
 <div class="fcms-field">
 <label for="email">
 <spring:message code="common.email" />
@@ -30,7 +31,7 @@
 <form:input id="email" path="email" type="email" />
 <form:errors path="email" cssClass="fcms-error" />
 </div>
-</fieldset>
+</div></section>
 <form:errors path="" element="div" cssClass="fcms-alert" role="alert" />
 <div class="fcms-form-actions">
 <a class="app-btn btn-neutral" href="<c:url value='/login' />">

@@ -1,5 +1,6 @@
 package com.foresight.fcms.client.category.service;
 
+import com.foresight.fcms.shared.validation.FieldValidationException;
 import com.foresight.fcms.client.category.dto.ClientCategoryFilter;
 import com.foresight.fcms.client.category.dto.ClientCategoryForm;
 import com.foresight.fcms.client.category.dto.ClientCategoryRowDto;
@@ -34,6 +35,7 @@ public class ClientCategoryService {
     private final com.foresight.fcms.audit.service.AuditService audit;
     private final com.foresight.fcms.auth.service.AccessService access;
 
+    private final jakarta.validation.Validator validator;
     private final JdbcTemplate jdbcTemplate;
     private final ClientStatusRepository clientStatusRepository;
     private final FinancialYearRepository financialYearRepository;
@@ -47,7 +49,8 @@ public class ClientCategoryService {
             ClientStatusRepository clientStatusRepository,
             FinancialYearRepository financialYearRepository,
             SaccosStorageService storageService,
-            org.springframework.transaction.PlatformTransactionManager transactions) {
+            org.springframework.transaction.PlatformTransactionManager transactions, jakarta.validation.Validator validator) {
+        this.validator = validator;
         this.audit = audit;
         this.access = access;
         this.jdbcTemplate = jdbcTemplate;
@@ -61,7 +64,7 @@ public class ClientCategoryService {
     public ClientCategoryListResult findClients(
             ClientCategory category, ClientCategoryFilter filter, Pageable pageable) {
         access.require("client.read");
-        Long yearId = resolveFinancialYearId(filter.getFinancialYearId());
+        Long yearId = category.isFinancialYearSupported() ? resolveFinancialYearId(filter.getFinancialYearId()) : null;
         String search = searchPattern(filter.normalizedSearch());
         long totalRows = countRows(category, yearId, filter.getPaymentStatusId(), search);
         List<ClientCategoryRowDto> rows =
@@ -70,7 +73,7 @@ public class ClientCategoryService {
                         yearId,
                         filter.getPaymentStatusId(),
                         search,
-                        " order by " + order(filter) + " limit ? offset ?",
+                        " order by " + order(category, filter) + " limit ? offset ?",
                         List.of(pageable.getPageSize(), pageable.getOffset()));
         filter.setFinancialYearId(yearId);
         Page<ClientCategoryRowDto> page = new PageImpl<>(rows, pageable, totalRows);
@@ -82,13 +85,13 @@ public class ClientCategoryService {
     public List<ClientCategoryRowDto> exportClients(
             ClientCategory category, ClientCategoryFilter filter) {
         access.require("client.export");
-        Long yearId = resolveFinancialYearId(filter.getFinancialYearId());
+        Long yearId = category.isFinancialYearSupported() ? resolveFinancialYearId(filter.getFinancialYearId()) : null;
         return queryRows(
                 category,
                 yearId,
                 filter.getPaymentStatusId(),
                 searchPattern(filter.normalizedSearch()),
-                " order by " + order(filter) + " limit 1001",
+                " order by " + order(category, filter) + " limit 1001",
                 List.of());
     }
 
@@ -98,7 +101,7 @@ public class ClientCategoryService {
     public ClientCategoryListExport exportClientsWithTotals(
             ClientCategory category, ClientCategoryFilter filter) {
         access.require("client.export");
-        Long yearId = resolveFinancialYearId(filter.getFinancialYearId());
+        Long yearId = category.isFinancialYearSupported() ? resolveFinancialYearId(filter.getFinancialYearId()) : null;
         String search = searchPattern(filter.normalizedSearch());
         List<ClientCategoryRowDto> rows =
                 queryRows(
@@ -106,7 +109,7 @@ public class ClientCategoryService {
                         yearId,
                         filter.getPaymentStatusId(),
                         search,
-                        " order by " + order(filter) + " limit 1001",
+                        " order by " + order(category, filter) + " limit 1001",
                         List.of());
         return new ClientCategoryListExport(
                 rows,
@@ -121,7 +124,7 @@ public class ClientCategoryService {
     public ClientCategoryReportResult revenueReport(
             ClientCategory category, ClientCategoryFilter filter) {
         access.require("client.read");
-        Long yearId = resolveFinancialYearId(filter.getFinancialYearId());
+        Long yearId = category.isFinancialYearSupported() ? resolveFinancialYearId(filter.getFinancialYearId()) : null;
         String search = searchPattern(filter.normalizedSearch());
         ClientCategoryReportType type =
                 ClientCategoryReportType.from(filter.getReportType(), category);
@@ -131,7 +134,7 @@ public class ClientCategoryService {
                         yearId,
                         filter.getPaymentStatusId(),
                         search,
-                        " order by " + order(filter) + " limit 1001",
+                        " order by " + order(category, filter) + " limit 1001",
                         List.of());
         return new ClientCategoryReportResult(
                 category,
@@ -173,19 +176,26 @@ public class ClientCategoryService {
     }
 
     @Transactional(readOnly = true)
-    public ClientCategoryForm newForm() {
+    public ClientCategoryForm newForm(ClientCategory category) {
         access.require("client.read");
         ClientCategoryForm form = new ClientCategoryForm();
-        form.setFinancialYearId(resolveFinancialYearId(null));
+        if (category.isFinancialYearSupported()) form.setFinancialYearId(resolveFinancialYearId(null));
         clientStatusRepository
                 .findById(2L)
                 .ifPresent(status -> form.setPaymentStatusId(status.getId()));
         return form;
     }
 
+    /** Retained for callers creating a fiscal-year client. */
+    @Transactional(readOnly=true)
+    public ClientCategoryForm newForm() { return newForm(ClientCategory.AMCOS); }
+
     public Long createClient(
             ClientCategory category, ClientCategoryForm form, MultipartFile contractUpload) {
         access.require("client.write");
+        validate(category, form);
+        if (form.getExpireDate() != null && form.getExpireDate().isBefore(form.getEntryDate()))
+            throw new FieldValidationException("error.dates", "expireDate");
         String stored = storageService.storeContract(contractUpload);
         var registered = new java.util.concurrent.atomic.AtomicBoolean();
         try {
@@ -193,7 +203,7 @@ public class ClientCategoryService {
                 storageService.discardOnRollback(stored);
                 registered.set(true);
                 var actor = access.require("client.write");
-                List<ColumnValue> columns = columnValues(category, form, stored, true);
+                List<ColumnValue> columns = columnValues(category, form, stored, true, true);
                 String sql =
                         "insert into "
                                 + category.getTableName()
@@ -223,6 +233,9 @@ public class ClientCategoryService {
             ClientCategoryForm form,
             MultipartFile contractUpload) {
         access.require("client.write");
+        validate(category, form);
+        if (form.getExpireDate() != null && form.getExpireDate().isBefore(form.getEntryDate()))
+            throw new FieldValidationException("error.dates", "expireDate");
         String stored = storageService.storeContract(contractUpload);
         var registered = new java.util.concurrent.atomic.AtomicBoolean();
         try {
@@ -232,15 +245,15 @@ public class ClientCategoryService {
                 var actor = access.require("client.write");
                 var previous =
                         jdbcTemplate.query(
-                                "select contract_file from "
+                                "select contract_file" + (category.isOperationalStatusSupported() ? ",operational_status" : ",cast(null as varchar) as operational_status") + " from "
                                         + category.getTableName()
                                         + " where id=? and version=? and visible",
-                                (r, n) -> r.getString(1),
+                                (r, n) -> new PriorState(r.getString(1), r.getString(2)),
                                 id,
                                 form.getVersion());
                 if (previous.isEmpty())
                     throw new org.springframework.dao.OptimisticLockingFailureException("stale");
-                List<ColumnValue> columns = columnValues(category, form, stored, stored != null);
+                List<ColumnValue> columns = columnValues(category, form, stored, stored != null, false);
                 List<String> assignments = columns.stream().map(c -> c.name() + " = ?").toList();
                 String sql =
                         "update "
@@ -254,6 +267,8 @@ public class ClientCategoryService {
                 args.add(form.getVersion());
                 if (jdbcTemplate.update(sql, args.toArray()) != 1)
                     throw new org.springframework.dao.OptimisticLockingFailureException("stale");
+                if (category.isOperationalStatusSupported() && !java.util.Objects.equals(previous.getFirst().status(),form.getOperationalStatus()))
+                    audit.record(actor.id(),"client.status.update",category.getTableName(),id,"before="+previous.getFirst().status()+"; after="+form.getOperationalStatus());
                 audit.record(
                         actor.id(),
                         "client.update",
@@ -262,7 +277,7 @@ public class ClientCategoryService {
                         stored == null
                                 ? "Client state updated"
                                 : "Contract replaced; before="
-                                        + previous.getFirst()
+                                        + previous.getFirst().contract()
                                         + "; after="
                                         + stored);
             });
@@ -427,6 +442,7 @@ public class ClientCategoryService {
                     c.client_status_id,
                     cs.name as payment_status
                 """
+                + (category.isOperationalStatusSupported() ? ", c.operational_status" : ", cast(null as varchar) as operational_status")
                 + " from "
                 + category.getTableName()
                 + " c"
@@ -484,14 +500,19 @@ public class ClientCategoryService {
                 nullableLong(resultSet, "financial_year_id"),
                 resultSet.getString("financial_year"),
                 nullableLong(resultSet, "client_status_id"),
-                resultSet.getString("payment_status"));
+                resultSet.getString("payment_status"),
+                resultSet.getString("operational_status"));
     }
 
     private List<ColumnValue> columnValues(
             ClientCategory category,
             ClientCategoryForm form,
             String contractFile,
-            boolean includeContract) {
+            boolean includeContract, boolean creating) {
+        if (category.isFinancialYearSupported() && (creating || category.isFinancialYearEditable()) && form.getFinancialYearId() == null)
+            throw new FieldValidationException("NotNull", "financialYearId");
+        if (category.isFinancialYearSupported() && (creating || category.isFinancialYearEditable()) && !financialYearRepository.existsById(form.getFinancialYearId()))
+            throw new FieldValidationException("error.invalid", "financialYearId");
         List<ColumnValue> columns = new ArrayList<>();
         columns.add(new ColumnValue("client_name", form.getClientName()));
         columns.add(new ColumnValue("entry_date", form.getEntryDate()));
@@ -508,7 +529,8 @@ public class ClientCategoryService {
         if (category.isCommissionSupported()) {
             columns.add(new ColumnValue("commission", zeroIfNull(form.getCommission())));
         }
-        columns.add(new ColumnValue("programmer_cost", zeroIfNull(form.getProgrammerCost())));
+        if (!creating || category.isProgrammerCostOnCreate())
+            columns.add(new ColumnValue("programmer_cost", zeroIfNull(form.getProgrammerCost())));
         columns.add(new ColumnValue("system_install_fee", zeroIfNull(form.getSystemInstallFee())));
         columns.add(new ColumnValue("training_fee", zeroIfNull(form.getTrainingFee())));
         columns.add(new ColumnValue("android_fee", zeroIfNull(form.getAndroidFee())));
@@ -521,8 +543,24 @@ public class ClientCategoryService {
             columns.add(new ColumnValue("hosting_fee", zeroIfNull(form.getHostingFee())));
         }
         columns.add(new ColumnValue("client_status_id", form.getPaymentStatusId()));
-        columns.add(new ColumnValue("financial_year_id", form.getFinancialYearId()));
+        if (category.isFinancialYearSupported() && (creating || category.isFinancialYearEditable()))
+            columns.add(new ColumnValue("financial_year_id", form.getFinancialYearId()));
+        if (category.isOperationalStatusSupported())
+            columns.add(new ColumnValue("operational_status", form.getOperationalStatus()));
         return columns;
+    }
+
+    private record PriorState(String contract, String status) {}
+
+    private void validate(ClientCategory category, ClientCategoryForm form) {
+        var violations=validator.validate(form);
+        if(!violations.isEmpty()) throw new FieldValidationException("error.invalid", violations.iterator().next().getPropertyPath().toString());
+        if (form.getPaymentStatusId() == null || !clientStatusRepository.existsById(form.getPaymentStatusId()))
+            throw new FieldValidationException("error.invalid", "paymentStatusId");
+        if (category.isOperationalStatusSupported() &&
+                !java.util.Set.of("ACTIVE", "INACTIVE").contains(form.getOperationalStatus() == null ? "" : form.getOperationalStatus()))
+            throw new FieldValidationException("error.invalid", "operationalStatus");
+
     }
 
     private Long resolveFinancialYearId(Long requestedYearId) {
@@ -555,29 +593,29 @@ public class ClientCategoryService {
                 .orElse("All Payment Statuses");
     }
 
-    private String order(ClientCategoryFilter f) {
-        return java.util.Map.of(
-                                "name",
-                                "c.client_name",
-                                "region",
-                                "c.region",
-                                "entryDate",
-                                "c.entry_date",
-                                "expireDate",
-                                "c.expire_date",
-                                "annualFee",
-                                "c.annual_fee",
-                                "amount",
-                                "c.amount",
-                                "paymentStatus",
-                                "cs.name",
-                                "financialYear",
-                                "c.financial_year_id")
-                        .getOrDefault(f.getSort(), "c.client_name")
-                + " "
-                + f.getDirection()
-                + ", c.id "
-                + f.getDirection();
+    private String order(ClientCategory category, ClientCategoryFilter f) {
+        String property = switch (f.getSort() == null ? "name" : f.getSort()) {
+            case "region" -> "c.region";
+            case "entryDate" -> "c.entry_date";
+            case "expireDate" -> "c.expire_date";
+            case "contract" -> "c.contract_file";
+            case "annualFee" -> "c.annual_fee";
+            case "amount" -> "c.amount";
+            case "programmerCost" -> "c.programmer_cost";
+            case "systemInstallFee" -> "c.system_install_fee";
+            case "trainingFee" -> "c.training_fee";
+            case "androidFee" -> "c.android_fee";
+            case "systemReinstallFee" -> "c.system_reinstall_fee";
+            case "withholdingTax" -> category.isWithholdingTaxSupported() ? "c.withholding_tax" : "c.client_name";
+            case "commission" -> category.isCommissionSupported() ? "c.commission" : "c.client_name";
+            case "bulkSmsFee" -> category.isBulkSmsSupported() ? "c.bulk_sms_fee" : "c.client_name";
+            case "hostingFee" -> category.isHostingSupported() ? "c.hosting_fee" : "c.client_name";
+            case "operationalStatus" -> category.isOperationalStatusSupported() ? "c.operational_status" : "c.client_name";
+            case "paymentStatus" -> "cs.name";
+            case "financialYear" -> category.isFinancialYearSupported() ? "fy.fyear" : "c.client_name";
+            default -> "c.client_name";
+        };
+        return property + " " + f.getDirection() + ", c.id " + f.getDirection();
     }
 
     private String searchPattern(String search) {

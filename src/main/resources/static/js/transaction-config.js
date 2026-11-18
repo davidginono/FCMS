@@ -55,10 +55,8 @@
             const url=new URL(location.href);url.searchParams.delete('create');url.searchParams.delete('created');history.replaceState(history.state,'',url.href);
         };
         const requestClose=()=>{
-            if(modal.dataset.created!=='true') {
-                const event=new CustomEvent('fcms:before-close',{cancelable:true,detail:{close}});document.dispatchEvent(event);
-                if(event.defaultPrevented)return;
-            }
+            const event=new CustomEvent('fcms:before-close',{cancelable:true,detail:{close}});document.dispatchEvent(event);
+            if(event.defaultPrevented)return;
             close();
         };
         const open=()=>{
@@ -68,7 +66,6 @@
         };
         triggers.forEach(trigger=>trigger.addEventListener('click',event=>{
             if(event.button||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
-            if(modal.dataset.created==='true')return;
             event.preventDefault();
             const filter=document.querySelector('[data-config-register] .resource-table-filters [name="activityId"]');
             const choice=modal.querySelector('select[name="activityId"]');

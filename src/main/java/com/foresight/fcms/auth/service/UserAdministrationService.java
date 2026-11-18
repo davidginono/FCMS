@@ -1,7 +1,9 @@
 package com.foresight.fcms.auth.service;
 
+import com.foresight.fcms.shared.validation.FieldValidationException;
 import com.foresight.fcms.audit.service.AuditService;
 import com.foresight.fcms.auth.dto.*;
+import com.foresight.fcms.auth.service.UserPermissionService;
 import com.foresight.fcms.shared.dto.*;
 
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -20,18 +22,21 @@ public class UserAdministrationService {
     private final AccessService access;
     private final AuditService audit;
     private final PasswordEncoder encoder;
+    private final UserPermissionService permissions;
 
     public UserAdministrationService(
             SessionRevocationService sessions,
             JdbcTemplate db,
             AccessService access,
             AuditService audit,
-            PasswordEncoder encoder) {
+            PasswordEncoder encoder,
+            UserPermissionService permissions) {
         this.sessions = sessions;
         this.db = db;
         this.access = access;
         this.audit = audit;
         this.encoder = encoder;
+        this.permissions = permissions;
     }
 
     private static final String SELECT =
@@ -101,11 +106,8 @@ public class UserAdministrationService {
         f.setRoleId(u.roleId());
         f.setStatusId(u.statusId());
         f.setVersion(u.version());
-        f.setClaims(
-                db.queryForList(
-                        "select claim from user_claims where user_id=? order by claim",
-                        String.class,
-                        id));
+        f.setClaims(new ArrayList<>(permissions.find(id).selected().stream().sorted().toList()));
+        f.setPermissionsSubmitted(true);
         return f;
     }
 
@@ -115,8 +117,13 @@ public class UserAdministrationService {
         return Map.of(
                 "roles",
                 db.queryForList(
-                        "select role_id as id,role_name as name from roles order by role_id limit"
-                                + " 100"),
+                        "select r.role_id as id,r.role_name as name,"
+                                + " coalesce(string_agg(rc.claim,' ' order by rc.claim),'') as defaults"
+                                + " from roles r left join role_claims rc on rc.role_id=r.role_id"
+                                + " group by r.role_id,r.role_name order by case r.role_name"
+                                + " when 'Accounts Clerk' then 1 when 'Staff' then 2"
+                                + " when 'Administrator' then 3 when 'Director' then 4 else 5 end,"
+                                + " r.role_id limit 100"),
                 "statuses",
                 db.queryForList(
                         "select id,status_name as name from account_status order by id limit 100"),
@@ -134,17 +141,30 @@ public class UserAdministrationService {
                                 Long.class,
                                 f.getRoleId())
                         != 1
-                || db.queryForObject(
+                ) throw new FieldValidationException("error.invalid", "roleId");
+        if (db.queryForObject(
                                 "select count(*) from account_status where id=?",
                                 Long.class,
                                 f.getStatusId())
-                        != 1) throw new IllegalArgumentException("error.invalid");
+                        != 1) throw new FieldValidationException("error.invalid", "statusId");
         Set<String> wanted = new HashSet<>(f.getClaims());
         var known = new HashSet<>(db.queryForList("select name from claims", String.class));
-        if (!known.containsAll(wanted)) throw new IllegalArgumentException("error.invalid");
+        if (!known.containsAll(wanted)) throw new FieldValidationException("error.invalid", "claims");
+        var before = id == null
+                ? new UserPermissionService.Permissions(Set.of(), Set.of())
+                : permissions.find(id);
+        var grants = new HashSet<>(wanted);
+        var denied = new HashSet<String>();
+        if (f.isPermissionsSubmitted()) {
+            var defaults = new HashSet<>(db.queryForList(
+                    "select claim from role_claims where role_id=?", String.class, f.getRoleId()));
+            grants.removeAll(defaults);
+            denied.addAll(defaults);
+            denied.removeAll(wanted);
+        }
         if (id == null) {
             if (f.getPassword() == null || f.getPassword().length() < 12)
-                throw new IllegalArgumentException("error.password");
+                throw new FieldValidationException("error.password", "password");
             id =
                     db.queryForObject(
                             "insert into"
@@ -159,7 +179,7 @@ public class UserAdministrationService {
                             f.getStatusId());
         } else {
             if (id == a.id() && f.getStatusId() != 1L)
-                throw new IllegalArgumentException("error.selfDisable");
+                throw new FieldValidationException("error.selfDisable", "statusId");
             String previousEmail =
                     db.queryForObject("select email from users where id=?", String.class, id);
             sessions.revoke(previousEmail);
@@ -186,16 +206,41 @@ public class UserAdministrationService {
             }
         }
         db.update("delete from user_claims where user_id=?", id);
-        for (String claim : wanted)
+        for (String claim : grants)
             db.update("insert into user_claims(user_id,claim) values (?,?)", id, claim);
+        // Older open forms and internal grant-only callers must not silently reset exclusions.
+        if (f.isPermissionsSubmitted()) {
+            db.update("delete from user_claim_denials where user_id=?", id);
+            for (String claim : denied)
+                db.update("insert into user_claim_denials(user_id,claim) values (?,?)", id, claim);
+        }
         long managers =
                 db.queryForObject(
-                        "select count(*) from users u where u.status_id=1 and (exists(select 1 from"
-                            + " role_claims r where r.role_id=u.role_id and"
-                            + " r.claim='iam.user.manage') or exists(select 1 from user_claims c"
-                            + " where c.user_id=u.id and c.claim='iam.user.manage'))",
+                        "select count(*) from users u where u.status_id=1 and not exists("
+                            + " select 1 from (values ('workspace.admin'),('iam.user.read'),"
+                            + " ('iam.user.manage')) needed(claim) where"
+                            + " (not exists(select 1 from role_claims r where r.role_id=u.role_id"
+                            + " and r.claim=needed.claim) and not exists(select 1 from user_claims c"
+                            + " where c.user_id=u.id and c.claim=needed.claim)) or exists("
+                            + " select 1 from user_claim_denials d where d.user_id=u.id"
+                            + " and d.claim=needed.claim))",
                         Long.class);
         if (managers == 0) throw new IllegalArgumentException("error.lastAdmin");
+        var after = permissions.find(id);
+        var changedClaims = new TreeSet<>(before.assigned());
+        changedClaims.addAll(before.denied());
+        changedClaims.addAll(after.assigned());
+        changedClaims.addAll(after.denied());
+        var previousSelection = before.selected();
+        var currentSelection = after.selected();
+        for (String claim : changedClaims) {
+            boolean wasSelected = previousSelection.contains(claim), isSelected = currentSelection.contains(claim);
+            boolean wasDenied = before.denied().contains(claim), isDenied = after.denied().contains(claim);
+            if (wasSelected != isSelected || wasDenied != isDenied)
+                audit.record(a.id(), "iam.user.permission.change", "users", id,
+                        claim + ": selected=" + wasSelected + ", excluded=" + wasDenied
+                                + " -> selected=" + isSelected + ", excluded=" + isDenied);
+        }
         audit.record(
                 a.id(),
                 "iam.user.save",

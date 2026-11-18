@@ -1,20 +1,23 @@
 package com.foresight.fcms.auth.service;
 
+import com.foresight.fcms.auth.service.UserPermissionService;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.Set;
 
 @Service
 public class AccessService {
     private final JdbcTemplate db;
+    private final UserPermissionService permissions;
 
-    public AccessService(JdbcTemplate db) {
+    public AccessService(JdbcTemplate db, UserPermissionService permissions) {
         this.db = db;
+        this.permissions = permissions;
     }
 
     @Transactional(readOnly = true)
@@ -30,16 +33,7 @@ public class AccessService {
                         auth.getName());
         if (ids.isEmpty()) throw new AccessDeniedException("Access denied");
         long id = ids.getFirst();
-        Set<String> claims =
-                new HashSet<>(
-                        db.queryForList(
-                                "select rc.claim from users u join role_claims rc on"
-                                    + " rc.role_id=u.role_id where u.id=? union select claim from"
-                                    + " user_claims where user_id=?",
-                                String.class,
-                                id,
-                                id));
-        return new Actor(id, Set.copyOf(claims));
+        return new Actor(id, permissions.find(id).effective());
     }
 
     public Actor require(String claim) {
@@ -49,6 +43,10 @@ public class AccessService {
     }
 
     public record Actor(long id, Set<String> claims) {
+        public Actor {
+            claims = Set.copyOf(claims);
+        }
+
         public boolean has(String c) {
             return claims.contains(c);
         }

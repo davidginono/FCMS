@@ -1,6 +1,7 @@
 package com.foresight.fcms.accounting.dto;
 
 public class TransactionConfigForm extends PostingMappingForm {
+    public TransactionConfigForm() { setEvent("MANUAL_JOURNAL"); }
     @jakarta.validation.constraints.NotNull @jakarta.validation.constraints.Positive
     private Long activityId;
 
@@ -10,18 +11,6 @@ public class TransactionConfigForm extends PostingMappingForm {
 
     public void setActivityId(Long value) {
         activityId = value;
-    }
-
-    @jakarta.validation.constraints.NotBlank
-    @jakarta.validation.constraints.Pattern(regexp = "[A-Za-z0-9][A-Za-z0-9_.-]{0,39}")
-    private String code = "";
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String value) {
-        code = value;
     }
 
     @jakarta.validation.constraints.NotBlank

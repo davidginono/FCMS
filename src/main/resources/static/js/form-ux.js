@@ -4,8 +4,13 @@
     if (!form || !modal) return;
     document.body.appendChild(modal);
     const panel = modal.querySelector('[role="dialog"]');
-    let submitting = false, pending, previousFocus, previousOverflow, previousRootOverflow;
+    let submitting = false, creating = false, pending, previousFocus, previousOverflow, previousRootOverflow;
     const disabledOnSubmit = new Set();
+    const releaseSubmission = () => {
+        submitting = false; creating = false; form.removeAttribute('aria-busy');
+        disabledOnSubmit.forEach(button => button.disabled = false); disabledOnSubmit.clear();
+        form.querySelectorAll('[data-fcms-submitter]').forEach(command => command.remove());
+    };
     const values = () => JSON.stringify(Array.from(form.elements).filter(el => el.name && (el.type !== 'hidden' || form.hasAttribute('data-financial-form')) && el.type !== 'submit' && el.name !== 'action').map(el => [el.name, el.value, el.checked]));
     let initial = values();
     const currency = form.querySelector('[data-form-currency]');
@@ -42,25 +47,27 @@
         }
     });
     document.addEventListener('fcms:before-close', event => {
+        if (creating) { event.preventDefault(); return; }
         if (!submitting && dirty()) { event.preventDefault(); confirmDiscard(() => {
             form.reset();
             form.querySelectorAll('select').forEach(select => select.dispatchEvent(new Event('change', {bubbles:true})));
-            const rows = form.querySelectorAll('.library-rule');
-            rows.forEach((row, index) => { if (index > 0) row.remove(); });
-            form.querySelectorAll('.library-remove').forEach(button => button.disabled = true);
-            const add = form.querySelector('#library-add-rule'); if (add) add.disabled = false;
             initial = values(); restoredErrors = false; submitting = false; event.detail.close();
         }); }
     });
     document.addEventListener('click', event => {
         const link = event.target.closest('a[href]');
-        if (!link || event.defaultPrevented || event.ctrlKey || event.metaKey || event.shiftKey || submitting || !dirty() || link.hasAttribute('download') || link.target === '_blank' || link.getAttribute('href').startsWith('#')) return;
+        if (creating && link && link.target !== '_blank' && !link.hasAttribute('download')) { event.preventDefault(); return; }
+        if (!link || event.defaultPrevented || event.ctrlKey || event.metaKey || event.shiftKey || submitting || !dirty() || link.hasAttribute('download') || link.target === '_blank' || link.getAttribute('href').startsWith('#') || window.WorkspaceNavigation?.handles(link)) return;
         event.preventDefault(); confirmDiscard(() => location.assign(link.href));
+    });
+    document.addEventListener('workspace:before-navigate', event => {
+        if (creating) { event.preventDefault(); return; }
+        if (!submitting && dirty()) { event.preventDefault(); confirmDiscard(event.detail.resume); }
     });
     document.addEventListener('submit', event => {
         if (event.defaultPrevented) return;
         if (event.target === form) {
-            if (submitting) { event.preventDefault(); return; }
+            if (submitting || form.dataset.resourceUncertain === 'true' || form.dataset.resourceCommitted === 'true') { event.preventDefault(); return; }
             submitting = true; form.setAttribute('aria-busy', 'true');
             // Preserve the chosen native command before disabling submit controls.
             if (event.submitter?.name) {
@@ -72,25 +79,87 @@
             form.querySelectorAll('button[type="submit"],button:not([type])').forEach(button => {
                 if (!button.disabled) { disabledOnSubmit.add(button); button.disabled = true; }
             });
+            if (window.ResourceCreation?.handles(form,event.submitter)) {
+                event.preventDefault();
+                creating = true;
+                void window.ResourceCreation.submit(form,event.submitter,{
+                    recover: () => { releaseSubmission(); restoredErrors = true; },
+                    committed: () => {
+                        releaseSubmission(); submitting = true; form.dataset.resourceCommitted = 'true';
+                        form.querySelectorAll('button[type="submit"],button:not([type])').forEach(button => button.disabled = true);
+                    }
+                });
+            }
+        } else if (creating) { event.preventDefault();
         } else if (!submitting && dirty()) {
             event.preventDefault(); confirmDiscard(() => event.target.requestSubmit(event.submitter));
         }
     });
     // Security logout must never wait for a discard confirmation or beforeunload.
     document.addEventListener('session:logout', () => {
-        submitting = true;
+        submitting = true; creating = false;
         if (!modal.hidden) close();
     });
     form.addEventListener('fcms:form-saved', () => { submitting = true; });
-    window.addEventListener('beforeunload', event => { if (!submitting && dirty()) { event.preventDefault(); event.returnValue = ''; } });
+    window.addEventListener('beforeunload', event => { if (creating || (!submitting && dirty())) { event.preventDefault(); event.returnValue = ''; } });
     window.addEventListener('pageshow', () => {
-        submitting = false; form.removeAttribute('aria-busy');
-        disabledOnSubmit.forEach(button => button.disabled = false); disabledOnSubmit.clear();
-        form.querySelectorAll('[data-fcms-submitter]').forEach(command => command.remove());
+        releaseSubmission();
     });
-    form.querySelectorAll('.fcms-error').forEach((error,index)=>{if(!error.textContent.trim())return;const control=error.closest('.fcms-field')?.querySelector('input,select,textarea');if(!control)return;error.id='fcms-field-error-'+index;control.setAttribute('aria-invalid','true');const described=new Set((control.getAttribute('aria-describedby')||'').split(/\s+/).filter(Boolean));described.add(error.id);control.setAttribute('aria-describedby',[...described].join(' '));const trigger=control.closest('.neo-select')?.querySelector('button');if(trigger){trigger.setAttribute('aria-invalid','true');trigger.setAttribute('aria-describedby',[...described].join(' '));}const section=error.closest('details');if(section)section.open=true;});
-    if(errorSummary)errorSummary.tabIndex=-1;
-    const invalid=form.querySelector('[aria-invalid="true"]');
-    if(invalid){const trigger=invalid.closest('.neo-select')?.querySelector('button');(trigger||invalid).focus();}
-    else if(errors)errorSummary.focus();
+    const associations = new Map();
+    let errorSequence = 0;
+    function decorateErrors(focus = false) {
+        for (const [control, ids] of associations) {
+            const retained = (control.getAttribute('aria-describedby') || '').split(/\s+/).filter(id => id && !ids.has(id));
+            if (retained.length) control.setAttribute('aria-describedby', retained.join(' ')); else control.removeAttribute('aria-describedby');
+            control.removeAttribute('aria-invalid');
+        }
+        associations.clear();
+        let first;
+        for (const error of form.querySelectorAll('.fcms-error')) {
+            if (!error.textContent.trim() || error.hidden) continue;
+            error.id ||= 'fcms-field-error-' + (++errorSequence);
+            const scope = error.closest('.fcms-field,[data-error-scope]');
+            const controls = scope?.querySelectorAll('input:not([type="hidden"]),select,textarea') || [];
+            for (const control of controls) {
+                const trigger = control.closest('.neo-select')?.querySelector('button');
+                for (const target of [control, trigger].filter(Boolean)) {
+                    target.setAttribute('aria-invalid','true');
+                    const described = new Set((target.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
+                    described.add(error.id); target.setAttribute('aria-describedby',[...described].join(' '));
+                    if (!associations.has(target)) associations.set(target,new Set()); associations.get(target).add(error.id);
+                }
+                first ||= trigger || control;
+            }
+            if (!controls.length) { error.tabIndex = -1; first ||= error; }
+            for (let parent = error.parentElement; parent && parent !== form; parent = parent.parentElement) {
+                if (parent.matches('details')) parent.open = true;
+                if (parent.matches('[role="tabpanel"][hidden]')) {
+                    const tab = Array.from(document.querySelectorAll('[role="tab"]')).find(candidate => candidate.getAttribute('aria-controls') === parent.id);
+                    tab?.click();
+                }
+            }
+        }
+        const alert = Array.from(form.querySelectorAll('.fcms-alert')).find(element => !element.hidden && element.textContent.trim());
+        if (alert) alert.tabIndex = -1;
+        if (focus) (first || alert)?.focus();
+    }
+    function validate(control) {
+        if (!control.matches('input:not([type="hidden"]),select,textarea') || !control.willValidate) return;
+        const scope = control.closest('.fcms-field'); if (!scope) return;
+        let error = scope.querySelector('[data-client-error]');
+        if (control.validity.valid) { error?.remove(); decorateErrors(); return; }
+        if (!error) {
+            error = document.createElement('span'); error.className = 'fcms-error'; error.dataset.clientError = 'true';
+            const hint = scope.querySelector('.fcms-field-hint'); if (hint) hint.before(error); else scope.append(error);
+        }
+        error.textContent = control.validity.valueMissing ? document.body.dataset.formRequired : document.body.dataset.formInvalid;
+        decorateErrors();
+    }
+    form.addEventListener('focusout', event => validate(event.target));
+    form.addEventListener('input', event => { if (event.target.closest('.fcms-field')?.querySelector('[data-client-error]')) validate(event.target); });
+    form.addEventListener('change', event => { if (event.target.closest('.fcms-field')?.querySelector('[data-client-error]')) validate(event.target); });
+    form.addEventListener('invalid', event => { event.preventDefault(); validate(event.target); queueMicrotask(() => decorateErrors(true)); }, true);
+    form.addEventListener('fcms:form-errors', () => { restoredErrors = true; decorateErrors(true); });
+    form.addEventListener('reset', () => queueMicrotask(() => { form.querySelectorAll('[data-client-error]').forEach(error => error.remove()); decorateErrors(); }));
+    decorateErrors(true);
 })();

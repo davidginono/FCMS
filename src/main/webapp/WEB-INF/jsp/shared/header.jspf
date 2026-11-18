@@ -4,11 +4,12 @@
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ taglib prefix="appTime" uri="https://fcms.local/tags/time" %>
+<%@ taglib prefix="ui" tagdir="/WEB-INF/tags" %>
 <c:url var="appCssUrl" value="/css/app.css">
-    <c:param name="v" value="fcms-modules-20261103-accounting1" />
+    <c:param name="v" value="20261117-business-workspaces1" />
 </c:url>
 <c:url var="appJsUrl" value="/js/app.js">
-    <c:param name="v" value="fcms-modules-20261103-accounting1" />
+    <c:param name="v" value="20261117-create-feedback1" />
 </c:url>
 <spring:htmlEscape defaultHtmlEscape="true" />
 <!doctype html>
@@ -18,18 +19,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FCMS</title>
     <link rel="stylesheet" href="${appCssUrl}">
+    <script defer data-workspace-navigation src="<c:url value='/js/workspace-navigation.js?v=20261117-create-feedback1'/>"></script>
     <script defer src="${appJsUrl}"></script>
-<link rel="stylesheet" href="<c:url value='/css/resource-table.css?v=20261115-registers3' />">
-<link rel="stylesheet" href="<c:url value='/css/ui-loading.css?v=fcms-modules-20261103-accounting1' />">
+<link rel="stylesheet" href="<c:url value='/css/resource-table.css?v=20261118-ledger-canvas1' />">
+<link rel="stylesheet" href="<c:url value='/css/ui-loading.css?v=20261117-business-workspaces1' />">
 <link rel="stylesheet" href="<c:url value='/css/select-enhancer.css?v=fcms-modules-20261103-accounting1' />">
-<script defer src="<c:url value='/js/resource-table.js?v=20261115-registers3' />"></script>
-<script defer src="<c:url value='/js/ui-loading.js?v=fcms-modules-20261103-accounting1' />"></script>
-<script defer src="<c:url value='/js/select-enhancer.js?v=fcms-modules-20261103-accounting1' />"></script>
+<script defer src="<c:url value='/js/resource-table.js?v=20261118-ledger-canvas1' />"></script>
+<script defer src="<c:url value='/js/ui-loading.js?v=20261117-business-workspaces1' />"></script>
+<script defer src="<c:url value='/js/select-enhancer.js?v=20261118-split2' />"></script>
 <script defer src="<c:url value='/js/resource-split-view.js?v=fcms-modules-20261103-accounting1' />"></script>
-<link rel="stylesheet" href="<c:url value='/css/workspaces.css?v=20261115-dashboard1' />">
+<link rel="stylesheet" href="<c:url value='/css/workspaces.css?v=20261118-ledger-canvas1' />">
 <script defer src="<c:url value='/js/modal-workspace.js?v=20261103-modal2'/>"></script>
-<script defer src="<c:url value='/js/live-search.js?v=fcms-modules-20261103-accounting1' />"></script><script defer src="<c:url value='/js/choice-loader.js?v=20261115-assignment1' />"></script><link rel="stylesheet" href="<c:url value='/css/date-controls.css?v=20261103'/>"><script defer src="<c:url value='/js/date-controls.js?v=20261103'/>"></script></head>
-<body class="fcms-shell aws-console" data-date-choose="<spring:message code='date.choose'/>" data-date-invalid="<spring:message code='date.invalid'/>" data-nav-open="<spring:message code='nav.open'/>" data-nav-close="<spring:message code='nav.close'/>" data-select-retry="<spring:message code='common.refresh'/>" data-select-search="<spring:message code="select.search" />" data-select-load-more="<spring:message code="select.loadMore" />" data-select-no-matches="<spring:message code="select.noMatches" />" data-shell-select="<spring:message code="select.select" />" data-shell-loading="<spring:message code="common.loading" />" data-shell-no-options="<spring:message code="select.noOptions" />">
+<script defer src="<c:url value='/js/live-search.js?v=fcms-modules-20261103-accounting1' />"></script><script defer src="<c:url value='/js/choice-loader.js?v=20261118-vouchers3' />"></script><link rel="stylesheet" href="<c:url value='/css/date-controls.css?v=20261103'/>"><script defer src="<c:url value='/js/date-controls.js?v=20261103'/>"></script><link rel="stylesheet" href="<c:url value='/css/console-shell.css?v=20261118-ledger-canvas1'/>"><script defer src="<c:url value='/js/shell-navigation.js?v=20261118-service-navigation3'/>"></script><link rel="stylesheet" href="<c:url value='/css/notifications.css?v=20261117-cloudscape-notices1'/>">
+</head>
+<body class="fcms-shell aws-console" data-form-too-large="<spring:message code='form.fileTooLarge'/>" data-form-actor="${actorId}" data-form-session-url="<c:url value='/form-session'/>" data-form-login-url="<c:url value='/login'/>" data-form-expired="<spring:message code='form.sessionExpired'/>" data-form-changed="<spring:message code='form.sessionChanged'/>" data-form-forbidden="<spring:message code='form.forbidden'/>" data-form-unavailable="<spring:message code='form.unavailable'/>" data-form-uncertain="<spring:message code='form.uncertain'/>" data-form-check-list="<spring:message code='form.checkList'/>" data-form-sign-in="<spring:message code='auth.signIn'/>" data-form-required="<spring:message code='form.required'/>" data-form-invalid="<spring:message code='form.invalid'/>" data-navigation-loading="<spring:message code='common.loading'/>" data-navigation-error="<spring:message code='navigation.error'/>" data-navigation-retry="<spring:message code='common.refresh'/>" data-date-choose="<spring:message code='date.choose'/>" data-date-invalid="<spring:message code='date.invalid'/>" data-nav-open="<spring:message code='nav.open'/>" data-nav-close="<spring:message code='nav.close'/>" data-select-retry="<spring:message code='common.refresh'/>" data-select-search="<spring:message code="select.search" />" data-select-load-more="<spring:message code="select.loadMore" />" data-select-no-matches="<spring:message code="select.noMatches" />" data-shell-select="<spring:message code="select.select" />" data-shell-loading="<spring:message code="common.loading" />" data-shell-no-options="<spring:message code="select.noOptions" />">
 <%@ include file="/WEB-INF/jsp/reusableuicomponents/resource-table-labels.jspf" %>
 <a class="skip-link" href="#main-content"><spring:message code="common.skipContent"/></a>
 <%@ include file="/WEB-INF/jsp/reusableuicomponents/navigation/topbar.jspf" %>
@@ -39,6 +42,12 @@
 
     <div class="app-content">
         <main id="main-content" class="app-main" tabindex="-1">
-<c:if test="${not empty breadcrumbUrl}"><nav class="erp-page-path" aria-label="Breadcrumb"><a href="<c:url value='${breadcrumbUrl}'/>"><spring:message code="${breadcrumbLabel}"/></a><span aria-hidden="true">/</span><span aria-current="page"><spring:message code="${breadcrumbCurrent}"/></span></nav></c:if>
-
-<c:if test="${param.saved!=null and pageContext.response.status lt 400}"><div class="console-message" data-message-type="success" role="status"><span><spring:message code="common.saved"/></span><button type="button" class="app-modal-close" data-dismiss-notice aria-label="<spring:message code="common.close"/>">&times;</button></div></c:if>
+<%@ include file="/WEB-INF/jsp/reusableuicomponents/resource-notice.jspf" %>
+<c:if test="${not empty breadcrumbUrl}">
+<nav class="erp-page-path" aria-label="<spring:message code='common.breadcrumb'/>">
+    <ol class="erp-page-path__list">
+        <li><a href="<c:url value='${breadcrumbUrl}'/>"><spring:message code="${breadcrumbLabel}"/></a></li>
+        <li><span class="erp-page-path__separator" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false"><path d="M5 2L11 8L5 14"/></svg></span><span aria-current="page"><spring:message code="${breadcrumbCurrent}"/></span></li>
+    </ol>
+</nav>
+</c:if>

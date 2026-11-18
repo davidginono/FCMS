@@ -122,7 +122,7 @@
             if(state.loading) {
                 const loading=document.createElement('div');loading.className='neo-select-loading';loading.setAttribute('role','status');
                 loading.setAttribute('aria-label',document.body.dataset.shellLoading);
-                const spinner=document.createElement('span');spinner.className='app-loading-spinner';spinner.setAttribute('aria-hidden','true');loading.append(spinner);
+                const spinner=window.AppLoading.spinner('small');loading.append(spinner);
                 state.list.after(loading);
             }
             select.dispatchEvent(new CustomEvent('neo-select:render', { detail: { menu: state.menu } }));
@@ -447,7 +447,7 @@
 
         window.refreshEnhancedSelects = function (root) {
             initEnhancedSelects(root || document);
-            document.querySelectorAll('select[data-neo-enhanced="true"]').forEach(function (select) {
+            (root || document).querySelectorAll('select[data-neo-enhanced="true"]').forEach(function (select) {
                 renderEnhancedSelect(select);
             });
         };

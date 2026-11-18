@@ -1,5 +1,7 @@
 package com.foresight.fcms.client.saccos.controller;
 
+import com.foresight.fcms.shared.controller.FormErrors;
+import com.foresight.fcms.shared.controller.ResourceFeedback;
 import static com.foresight.fcms.shared.view.CsvText.quote;
 
 import com.foresight.fcms.client.saccos.dto.SaccosFilter;
@@ -48,9 +50,7 @@ public class SaccosController {
 
     @GetMapping("/saccos")
     public String saccos(@ModelAttribute("filter") SaccosFilter filter, Model model) {
-        if (filter.isRevenueView()) {
-            return renderSaccosRevenue(filter, model);
-        }
+        filter.setView("list");
         return renderSaccosList(filter, model);
     }
 
@@ -61,56 +61,18 @@ public class SaccosController {
                         PageRequest.of(
                                 filter.getPage(),
                                 filter.getSize(),
-                                Sort.by(
-                                                org.springframework.data.domain.Sort.Direction
-                                                        .fromString(filter.getDirection()),
-                                                java.util.Map.of(
-                                                                "name",
-                                                                "saccosName",
-                                                                "region",
-                                                                "region",
-                                                                "entryDate",
-                                                                "entryDate",
-                                                                "expireDate",
-                                                                "expireDate",
-                                                                "annualFee",
-                                                                "annualFee",
-                                                                "amount",
-                                                                "amount",
-                                                                "financialYear",
-                                                                "financialYear.fyear",
-                                                                "paymentStatus",
-                                                                "status.name")
-                                                        .getOrDefault(
-                                                                filter.getSort(), "saccosName"))
-                                        .and(Sort.by("id"))));
+                                saccosService.registerSort(filter)));
         populateOptions(model);
         model.addAttribute("clients", result.page().getContent());
         model.addAttribute("rows", result.page().getContent());
+        model.addAttribute("registerColumns", com.foresight.fcms.client.dto.ClientRegisterPresentation.saccosColumns());
+        model.addAttribute("registerRows", result.page().getContent().stream().map(com.foresight.fcms.client.dto.ClientRegisterPresentation::row).toList());
         model.addAttribute(
                 "category", java.util.Map.of("route", "/clients/saccos", "title", "SACCOS"));
         model.addAttribute("page", result.page());
         model.addAttribute("totals", result.totals());
         model.addAttribute("reportType", SaccosReportType.FULL);
         return "clients/saccos";
-    }
-
-    private String renderSaccosRevenue(SaccosFilter filter, Model model) {
-        var result =
-                saccosService.findSaccos(
-                        filter,
-                        PageRequest.of(
-                                filter.getPage(),
-                                filter.getSize(),
-                                Sort.by("saccosName").and(Sort.by("id"))));
-        populateOptions(model);
-        model.addAttribute("rows", result.page().getContent());
-        model.addAttribute("page", result.page());
-        model.addAttribute("totals", result.totals());
-        model.addAttribute(
-                "category", java.util.Map.of("route", "/clients/saccos", "title", "SACCOS"));
-        model.addAttribute("reportType", SaccosReportType.from(filter.getReportType()));
-        return "clients/saccos-revenue";
     }
 
     @GetMapping("/saccos/paid")
@@ -126,30 +88,6 @@ public class SaccosController {
             @ModelAttribute("filter") SaccosFilter filter, RedirectAttributes redirectAttributes) {
         addFilterRedirectAttributes(filter, redirectAttributes);
         redirectAttributes.addAttribute("paymentStatusId", 2L);
-        return "redirect:/clients/saccos";
-    }
-
-    @GetMapping("/saccos/revenues")
-    public String revenueReport(
-            @RequestParam(name = "financialYearId", required = false) Long financialYearId,
-            @RequestParam(name = "paymentStatusId", required = false) Long paymentStatusId,
-            @RequestParam(name = "reportType", required = false) String reportType,
-            @RequestParam(name = "search", required = false) String search,
-            RedirectAttributes redirectAttributes) {
-        if (financialYearId != null) {
-            redirectAttributes.addAttribute("financialYearId", financialYearId);
-        }
-        if (paymentStatusId != null) {
-            redirectAttributes.addAttribute("paymentStatusId", paymentStatusId);
-        }
-        if (reportType != null && !reportType.isBlank()) {
-            redirectAttributes.addAttribute(
-                    "reportType", SaccosReportType.from(reportType).getKey());
-        }
-        if (search != null && !search.isBlank()) {
-            redirectAttributes.addAttribute("search", search.trim());
-        }
-        redirectAttributes.addAttribute("view", "revenue");
         return "redirect:/clients/saccos";
     }
 
@@ -174,16 +112,13 @@ public class SaccosController {
         if (!bindingResult.hasErrors()) {
             try {
                 Long id = saccosService.createSaccos(form, contractUpload);
-                return "redirect:" + "/clients/saccos" + "/" + id + "?saved";
+                return ResourceFeedback.success(redirectAttributes, "/clients/saccos?financialYearId="+form.getFinancialYearId(), "feedback.clientCreated", "/clients/saccos" + "/" + id);
             } catch (IllegalArgumentException e) {
-                bindingResult.reject(
-                        java.util.Set.of(
-                                                "error.uploadBusy",
-                                                "error.uploadRejected",
-                                                "error.uploadUnavailable")
-                                        .contains(e.getMessage())
-                                ? e.getMessage()
-                                : "error.invalid");
+                if (java.util.Set.of("error.uploadBusy", "error.uploadRejected", "error.uploadUnavailable").contains(e.getMessage()))
+                    model.addAttribute("contractError", e.getMessage());
+                else FormErrors.reject(bindingResult, e, "error.invalid");
+            } catch (org.springframework.dao.DataAccessException e) {
+                FormErrors.conflict(bindingResult, e, java.util.Map.of("saccos" + "_client_status_fk", "paymentStatusId", "saccos" + "_financial_year_fk", "financialYearId"));
             }
         }
         populateOptions(model);
@@ -220,18 +155,15 @@ public class SaccosController {
         if (!bindingResult.hasErrors()) {
             try {
                 saccosService.updateSaccos(id, form, contractUpload);
-                return "redirect:" + "/clients/saccos" + "/" + id + "?saved";
+                return ResourceFeedback.success(redirectAttributes, "/clients/saccos" + "/" + id, "feedback.saved", null);
             } catch (org.springframework.dao.OptimisticLockingFailureException e) {
                 bindingResult.reject("error.stale");
             } catch (IllegalArgumentException e) {
-                bindingResult.reject(
-                        java.util.Set.of(
-                                                "error.uploadBusy",
-                                                "error.uploadRejected",
-                                                "error.uploadUnavailable")
-                                        .contains(e.getMessage())
-                                ? e.getMessage()
-                                : "error.invalid");
+                if (java.util.Set.of("error.uploadBusy", "error.uploadRejected", "error.uploadUnavailable").contains(e.getMessage()))
+                    model.addAttribute("contractError", e.getMessage());
+                else FormErrors.reject(bindingResult, e, "error.invalid");
+            } catch (org.springframework.dao.DataAccessException e) {
+                FormErrors.conflict(bindingResult, e, java.util.Map.of("saccos" + "_client_status_fk", "paymentStatusId", "saccos" + "_financial_year_fk", "financialYearId"));
             }
         }
         populateOptions(model);
@@ -242,7 +174,7 @@ public class SaccosController {
 
     @PostMapping("/saccos/{id}/delete")
     public String deleteSaccos(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        return "redirect:/clients/saccos/" + id + "/archive";
+        return "redirect:/clients/saccos/" + id + "/lifecycle";
     }
 
     @GetMapping("/saccos/{id}/contract")
@@ -356,100 +288,6 @@ public class SaccosController {
                 pdfService.paymentSummaryPdf(
                         "Unpaid SACCOS", export.rows(), export.totals(), false);
         return pdf("unpaid-saccos.pdf", pdf);
-    }
-
-    @GetMapping("/saccos/revenues/export.csv")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('client.export')")
-    public void exportRevenueCsv(
-            @RequestParam(name = "financialYearId", required = false) Long financialYearId,
-            @RequestParam(name = "paymentStatusId", required = false) Long paymentStatusId,
-            @RequestParam(name = "reportType", required = false) String reportType,
-            @RequestParam(name = "search", required = false) String search,
-            HttpServletResponse response)
-            throws IOException {
-        SaccosService.SaccosReportResult report =
-                saccosService.revenueReport(financialYearId, paymentStatusId, reportType, search);
-        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        response.setContentType("text/csv");
-        response.setHeader(
-                HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"saccos-report.csv\"");
-        try (PrintWriter writer = response.getWriter()) {
-            if (!report.reportType().isFull()) {
-                writer.println("No,Saccos Name," + quote(report.reportType().getLabel()));
-                int index = 1;
-                for (SaccosRowDto row : report.rows()) {
-                    writer.println(
-                            index++
-                                    + ","
-                                    + quote(row.saccosName())
-                                    + ","
-                                    + report.reportType().rowValue(row));
-                }
-                writer.println(
-                        ","
-                                + quote("Grand Total")
-                                + ","
-                                + report.reportType().totalValue(report.totals()));
-                return;
-            }
-            writer.println(
-                    "No,Saccos Name,Annual Fee Invoiced,Annual Fee Paid,W-H"
-                        + " TAX,Commission,Programmer Cost,System Install Fee,Training Fee,Android"
-                        + " Fee,Android Cost,System Reinstall Fee,Bulk SMS,Hosting Fee,Cloud Backup"
-                        + " Fee,Cloud Backup Cost,Revenue Total,Gross Profit");
-            int index = 1;
-            for (SaccosRowDto row : report.rows()) {
-                writer.println(
-                        index++
-                                + ","
-                                + quote(row.saccosName())
-                                + ","
-                                + row.annualFee()
-                                + ","
-                                + row.amount()
-                                + ","
-                                + row.withholdingTax()
-                                + ","
-                                + row.commission()
-                                + ","
-                                + row.programmerCost()
-                                + ","
-                                + row.systemInstallFee()
-                                + ","
-                                + row.trainingFee()
-                                + ","
-                                + row.androidFee()
-                                + ","
-                                + row.androidCost()
-                                + ","
-                                + row.systemReinstallFee()
-                                + ","
-                                + row.bulkSmsFee()
-                                + ","
-                                + row.hostingFee()
-                                + ","
-                                + row.cloudBackupFee()
-                                + ","
-                                + row.cloudBackupCost()
-                                + ","
-                                + row.revenueTotal()
-                                + ","
-                                + row.grossProfit());
-            }
-        }
-    }
-
-    @GetMapping("/saccos/revenues/print.pdf")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('client.export')")
-    public ResponseEntity<byte[]> printRevenuePdf(
-            @RequestParam(name = "financialYearId", required = false) Long financialYearId,
-            @RequestParam(name = "paymentStatusId", required = false) Long paymentStatusId,
-            @RequestParam(name = "reportType", required = false) String reportType,
-            @RequestParam(name = "search", required = false) String search) {
-        SaccosService.SaccosReportResult report =
-                saccosService.revenueReport(financialYearId, paymentStatusId, reportType, search);
-        byte[] pdf = pdfService.revenuePdf(report);
-        return pdf("saccos-report.pdf", pdf);
     }
 
     @PostMapping("/saccos/search")

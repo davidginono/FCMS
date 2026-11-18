@@ -25,15 +25,20 @@ public class ShellAdvice {
                 && !uri.endsWith(".pdf")
                 && !uri.endsWith(".csv")
                 && !uri.endsWith("/choices")
+                && !uri.endsWith("/next-code")
+                && !uri.endsWith("/form-session")
+                && !uri.equals("/accounting/accounts/children")
                 && !uri.endsWith("/photo")) {
             var actor = access.current();
             m.addAttribute("permissions", actor.claims());
             m.addAttribute("actorId", actor.id());
+            m.addAttribute("staffWorkspace", actor.has("workspace.staff"));
+            m.addAttribute("accountingWorkspace", actor.has("workspace.accounting"));
+            m.addAttribute("directorWorkspace", actor.has("workspace.director"));
+            m.addAttribute("administrationWorkspace", actor.has("workspace.admin"));
             var routes =
                     java.util.Map.ofEntries(
                             java.util.Map.entry("/accounting/accounts", "gl.accounts"),
-                            java.util.Map.entry("/accounting/books", "gl.books"),
-                            java.util.Map.entry("/accounting/periods", "gl.periods"),
                             java.util.Map.entry("/accounting/journals", "gl.journals"),
                             java.util.Map.entry("/accounting/sources", "gl.sources"),
                             java.util.Map.entry(
@@ -48,8 +53,6 @@ public class ShellAdvice {
                             java.util.Map.entry("/staff-reports", "nav.staffReports"),
                             java.util.Map.entry("/admin/users", "nav.users"),
                             java.util.Map.entry("/account", "nav.account"),
-                            java.util.Map.entry("/finance/expenses", "nav.expenses"),
-                            java.util.Map.entry("/finance/income", "nav.income"),
                             java.util.Map.entry("/finance/petty-cash", "nav.petty"),
                             java.util.Map.entry("/finance/cloud-backup", "nav.cloud"),
                             java.util.Map.entry("/finance/bulk-sms", "nav.bulk"),

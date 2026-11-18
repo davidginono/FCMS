@@ -6,32 +6,32 @@
 </h1>
 </div>
 <c:url var="saveUrl" value="${formAction}" />
-<form:form modelAttribute="form" method="post" action="${saveUrl}" cssClass="fcms-form" data-resource-form-page="true" enctype="multipart/form-data">
+<form:form modelAttribute="form" method="post" action="${saveUrl}" cssClass="fcms-form" data-resource-create="${formAction == category.route}" data-resource-form-page="true" enctype="multipart/form-data">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
 <form:hidden path="version"/>
-<fieldset class="fcms-form-section">
-<legend>
+<section class="erp-resource-section" aria-labelledby="clients-client-category-form-section-1">
+<h2 id="clients-client-category-form-section-1">
 <spring:message code="common.details" />
-</legend>
+</h2><div class="fcms-section-body">
 <div class="fcms-field">
 <label for="clientName">
 <spring:message code="common.name" />
 </label>
-<form:input id="clientName" path="clientName" type="text" />
+<form:input id="clientName" path="clientName" type="text" maxlength="255" required="required" />
 <form:errors path="clientName" cssClass="fcms-error" />
 </div>
 <div class="fcms-field">
 <label for="region">
 <spring:message code="client.region" />
 </label>
-<form:input id="region" path="region" type="text" />
+<form:input id="region" path="region" type="text" maxlength="255" required="required" />
 <form:errors path="region" cssClass="fcms-error" />
 </div>
 <div class="fcms-field">
 <label for="entryDate">
 <spring:message code="client.entryDate" />
 </label>
-<form:input id="entryDate" path="entryDate" type="date" />
+<form:input id="entryDate" path="entryDate" type="date" required="required" />
 <form:errors path="entryDate" cssClass="fcms-error" />
 </div>
 <div class="fcms-field">
@@ -41,6 +41,7 @@
 <form:input id="expireDate" path="expireDate" type="date" />
 <form:errors path="expireDate" cssClass="fcms-error" />
 </div>
+<c:if test="${category.financialYearSupported and (empty clientId or category.financialYearEditable)}">
 <div class="fcms-field">
 <label for="financialYearId">
 <spring:message code="report.year" />
@@ -54,9 +55,10 @@
 </form:select>
 <form:errors path="financialYearId" cssClass="fcms-error" />
 </div>
+</c:if>
 <div class="fcms-field">
 <label for="paymentStatusId">
-<spring:message code="common.status" />
+<spring:message code="client.paymentStatus" />
 </label>
 <form:select id="paymentStatusId" path="paymentStatusId">
 <c:forEach items="${paymentStatuses}" var="option">
@@ -67,17 +69,26 @@
 </form:select>
 <form:errors path="paymentStatusId" cssClass="fcms-error" />
 </div>
+<c:if test="${category.contractOnCreate and empty clientId}">
 <div class="fcms-field">
 <label for="contractUpload">
 <spring:message code="client.contract" />
 </label>
-<input type="file" id="contractUpload" name="contractUpload" accept="application/pdf,.pdf">
+<input type="file" id="contractUpload" name="contractUpload" accept="application/pdf,.pdf"><c:if test="${not empty contractError}"><span class="fcms-error"><spring:message code="${contractError}"/></span></c:if>
 </div>
-</fieldset>
-<fieldset class="fcms-form-section">
-<legend>
-<spring:message code="client.billing" />
-</legend>
+</c:if>
+<c:if test="${category.operationalStatusSupported}">
+<div class="fcms-field"><label for="operationalStatus"><spring:message code="client.operationalStatus"/></label>
+<form:select id="operationalStatus" path="operationalStatus">
+<form:option value="ACTIVE"><spring:message code="status.ACTIVE"/></form:option>
+<form:option value="INACTIVE"><spring:message code="status.INACTIVE"/></form:option>
+</form:select><form:errors path="operationalStatus" cssClass="fcms-error"/></div>
+</c:if>
+</div></section>
+<section class="erp-resource-section" aria-labelledby="clients-client-category-form-section-2">
+<h2 id="clients-client-category-form-section-2">
+<spring:message code="client.billing" /> (TZS)
+</h2><div class="fcms-section-body">
 <div class="fcms-field">
 <label for="annualFee">
 <spring:message code="client.annualFee" />
@@ -92,10 +103,10 @@
 <form:input id="amount" path="amount" type="number" step="0.01" min="0" />
 <form:errors path="amount" cssClass="fcms-error" />
 </div>
-</fieldset>
+</div></section>
 <details class="fcms-form-section">
 <summary>
-<spring:message code="client.fees" />
+<spring:message code="client.fees" /> (TZS)
 </summary>
 <c:if test="${category.withholdingTaxSupported}">
 <div class="fcms-field">
@@ -115,6 +126,7 @@
 <form:errors path="commission" cssClass="fcms-error" />
 </div>
 </c:if>
+<c:if test="${not empty clientId or category.programmerCostOnCreate}">
 <div class="fcms-field">
 <label for="programmerCost">
 <spring:message code="client.programmerCost" />
@@ -122,6 +134,7 @@
 <form:input id="programmerCost" path="programmerCost" type="number" step="0.01" min="0" />
 <form:errors path="programmerCost" cssClass="fcms-error" />
 </div>
+</c:if>
 <div class="fcms-field">
 <label for="systemInstallFee">
 <spring:message code="client.systemInstallFee" />
@@ -170,12 +183,12 @@
 </c:if>
 </details>
 <form:errors path="" element="div" cssClass="fcms-alert" role="alert" />
-<div class="fcms-form-actions">
+<form:errors path="version" element="div" cssClass="fcms-alert" role="alert"/><div class="fcms-form-actions">
 <a class="app-btn btn-neutral" href="<c:url value='${category.route}' />">
 <spring:message code="common.cancel" />
 </a>
 <button class="app-btn btn-launch" type="submit">
-<spring:message code="common.save" />
+<spring:message code="${formAction == category.route ? 'common.create' : 'common.save'}" />
 </button>
 </div>
 </form:form>

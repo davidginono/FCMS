@@ -309,15 +309,6 @@
     font-weight: 700;
   }
 
-  .app-sidebar-heading::before {
-    content: "";
-    position: absolute;
-    top: 9px;
-    left: 8px;
-    border-top: 4px solid #16191f;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-  }
 
   .app-sidebar-link {
     display: flex;
@@ -788,31 +779,6 @@
     padding-top: 5px;
   }
 
-  .app-alert {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 12px;
-    border: 1px solid #d5dbdb;
-    border-radius: 2px;
-    background: #ffffff;
-    padding: 10px 12px;
-    color: #16191f;
-    font-size: 12px;
-  }
-
-  .app-alert-success {
-    border-color: #7dbe8a;
-    background: #f2f8f3;
-    color: #037f0c;
-  }
-
-  .app-alert-error {
-    border-color: #f2a29b;
-    background: #fff7f7;
-    color: #d13212;
-  }
-
   .app-badge {
     display: inline-flex;
     align-items: center;
@@ -1199,106 +1165,7 @@
       align-items: flex-start;
     }
 
-    body.sidebar-collapsed .app-sidebar {
-      width: 72px;
-      overflow: visible;
-    }
 
-    body.sidebar-collapsed .app-sidebar-experience {
-      min-height: 56px;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 8px 6px;
-    }
-
-    body.sidebar-collapsed .app-sidebar-toggle-dot {
-      margin-top: 0;
-      width: 22px;
-      height: 20px;
-      border-color: #aab7b8;
-      border-radius: 4px;
-      background: #ffffff;
-    }
-
-    body.sidebar-collapsed .app-sidebar-collapse-button {
-      width: 28px;
-      height: 28px;
-    }
-
-    body.sidebar-collapsed .app-sidebar-nav {
-      overflow: visible;
-      padding: 10px 0;
-    }
-
-    body.sidebar-collapsed .app-sidebar-section {
-      padding: 4px 0;
-    }
-
-    body.sidebar-collapsed .app-sidebar-experience-copy,
-    body.sidebar-collapsed .app-sidebar-heading,
-    body.sidebar-collapsed .app-sidebar-label,
-    body.sidebar-collapsed .app-sidebar-new {
-      display: none;
-    }
-
-    body.sidebar-collapsed .app-sidebar-link {
-      justify-content: center;
-      min-height: 40px;
-      margin: 1px 8px;
-      border-left: 0;
-      border-radius: 4px;
-      padding: 0;
-    }
-
-    body.sidebar-collapsed .app-sidebar-link:hover,
-    body.sidebar-collapsed .app-sidebar-link:focus {
-      background: #eaeded;
-      outline: 0;
-    }
-
-    body.sidebar-collapsed .app-sidebar-link.is-active {
-      border-left: 0;
-      background: #e7f1ff;
-      color: #0972d3;
-      padding-left: 0;
-    }
-
-    body.sidebar-collapsed .app-sidebar-link.is-active .app-sidebar-link-icon {
-      color: #0972d3;
-    }
-
-    body.sidebar-collapsed .app-sidebar-link-icon {
-      width: 18px;
-      height: 18px;
-    }
-
-    body.sidebar-collapsed .app-sidebar-section-flyout {
-      position: absolute;
-      top: 4px;
-      left: calc(100% + 8px);
-      z-index: 80;
-      min-width: 190px;
-      border: 1px solid #d5dbdb;
-      border-radius: 2px;
-      background: #ffffff;
-      box-shadow: 0 2px 6px rgba(0, 28, 36, 0.18);
-    }
-
-    body.sidebar-collapsed .app-sidebar-section-flyout::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: -9px;
-      width: 9px;
-    }
-
-    body.sidebar-collapsed .app-sidebar-section.is-flyout-open > .app-sidebar-section-flyout,
-    body.sidebar-collapsed .app-sidebar-section:hover > .app-sidebar-section-flyout,
-    body.sidebar-collapsed .app-sidebar-section:focus-within > .app-sidebar-section-flyout {
-      display: block;
-    }
   }
 
   @media (min-width: 1280px) {

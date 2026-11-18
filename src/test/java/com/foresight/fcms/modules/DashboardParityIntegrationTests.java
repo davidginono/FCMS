@@ -109,6 +109,7 @@ class DashboardParityIntegrationTests {
         f.setAmount(n(amount));
         f.setUnits(units);
         f.setUnitDirection(direction);
+        if(kind==LedgerKind.BULK)f.setOperation(direction.equals("IN")?"STOCK_PURCHASE":"CLIENT_SALE");
         return ledger.post(kind, f);
     }
 
@@ -125,15 +126,16 @@ class DashboardParityIntegrationTests {
 
     @BeforeAll
     void fixtures() throws Exception {
+        OperationalTestClaims.enable(db);
         previous =
                 db.queryForObject("select id from financial_year where fyear='2025'", Long.class);
         db.update("insert into roles(role_id,role_name) values (98,'Synthetic custom claims')");
         owner = user("dashboard-owner", 2);
         other = user("dashboard-other", 2);
         user("dashboard-reviewer", 1);
-        user("dashboard-finance", 98, "dashboard.read", "finance.read");
-        user("dashboard-report", 98, "dashboard.read", "report.read");
-        user("dashboard-client", 98, "dashboard.read", "client.read");
+        user("dashboard-finance", 98, "workspace.admin", "dashboard.read", "finance.read");
+        user("dashboard-report", 98, "workspace.admin", "dashboard.read", "report.read");
+        user("dashboard-client", 98, "workspace.admin", "dashboard.read", "client.read");
         user("dashboard-denied", 98, "client.read");
         user("dashboard-task", 98, "dashboard.read", "task.read");
         for (String table :
@@ -219,17 +221,19 @@ class DashboardParityIntegrationTests {
         var view = dashboard.overview(null);
         assertEquals(1, view.selected().id());
         assertEquals("2026", view.selected().label());
-        assertEquals(5, view.portfolios().size());
-        for (var p : view.portfolios()) {
-            assertEquals(3, p.clients());
-            assertEquals(1, p.paid());
+        assertEquals(1, view.portfolios().size());
+        for (var category : List.of("saccos","amcos","unions","microfinance","others")) {
+            var p=dashboard.overview(null,category).portfolios().getFirst();
+            boolean allDates=category.equals("others");
+            assertEquals(allDates?4:3, p.clients());
+            assertEquals(allDates?2:1, p.paid());
             assertEquals(1, p.unpaid());
             assertEquals(1, p.pending());
-            assertEquals(0, n("300.25").compareTo(p.annualFee()));
-            assertEquals(0, n("150.13").compareTo(p.received()));
+            assertEquals(0, n(allDates?"310.25":"300.25").compareTo(p.annualFee()));
+            assertEquals(0, n(allDates?"170.13":"150.13").compareTo(p.received()));
             assertEquals(
                     0,
-                    n(p.category().equals("saccos") ? "140.11" : "150.12")
+                    n(p.category().equals("saccos") ? "140.11" : allDates?"140.12":"150.12")
                             .compareTo(p.annualDifference()));
             assertEquals(0, n("75.03").compareTo(p.fees().getFirst().amount()));
             assertEquals(
@@ -240,44 +244,42 @@ class DashboardParityIntegrationTests {
         assertEquals(1, s.cloudPaid());
         assertEquals(2, s.cloudUnpaid());
         assertEquals(n("12.34"), s.cloudFee());
-        assertTrue(view.cloudBilling());
+        assertFalse(view.cloudBilling());
     }
 
     @Test
     void selectedYearRetainsOverpaymentsAndSignedReversalsAndCanonicalFinancialSummary() {
         actor("admin@fcms.local");
         var latest = dashboard.overview(1L);
-        assertEquals(n("70.07"), money(latest, "income").value());
-        assertEquals(n("150.23"), money(latest, "bulk").value());
+        assertNull(money(latest, "income").value(),"Legacy income is excluded until accounting books are ready");
+        assertEquals(n("-150.23"), money(latest, "bulk").value());
         assertEquals(n("699.99"), money(latest, "petty").value());
-        assertEquals(n("100.10"), money(latest, "expenses").value());
-        assertEquals(finance.statement(2026).netProfit(), money(latest, "net").value());
+        assertNull(money(latest, "expenses").value(),"Legacy expense requests are excluded from posted accounting");
+        assertTrue(latest.money().stream().noneMatch(m->m.key().equals("net")));
         assertEquals(
-                "/finance/income?from=2026-01-01&to=2026-12-31", money(latest, "income").href());
+                "/accounting/statements/income-statement?from=2026-01-01&to=2026-12-31", money(latest, "income").href());
         assertEquals("/finance/petty-cash", money(latest, "petty").href());
         var old = dashboard.overview(previous);
         assertEquals("2025", old.selected().label());
         assertEquals(1, old.portfolios().getFirst().clients());
         assertEquals(n("-11.00"), old.portfolios().getFirst().annualDifference());
-        assertEquals(n("-10.00"), old.portfolios().get(1).annualDifference());
-        assertEquals(n("999.99"), money(old, "income").value());
+        assertEquals(n("-10.00"), dashboard.overview(previous,"amcos").portfolios().getFirst().annualDifference());
+        assertNull(money(old, "income").value());
         assertEquals(n("699.99"), money(old, "petty").value());
-        assertEquals(n("900.09"), money(old, "expenses").value());
+        assertNull(money(old, "expenses").value());
     }
 
     @Test
     void staffScopesExpensesAndWorkWithoutFinanceWidgetsOrBrokenCloudLinks() {
         actor("dashboard-owner@test.invalid");
         var view = dashboard.overview(null);
-        assertEquals(n("40.04"), money(view, "expenses").value());
-        assertEquals(
-                Set.of("expenses"),
-                view.money().stream()
-                        .map(DashboardService.Money::key)
-                        .collect(java.util.stream.Collectors.toSet()));
-        assertTrue(view.work().stream().allMatch(m -> m.value() == 1));
+        assertTrue(view.money().isEmpty());
+        assertTrue(view.portfolios().isEmpty());
+        assertTrue(view.years().isEmpty());
+        assertEquals(2, view.work().size());
+        assertTrue(view.work().stream().noneMatch(m->m.label().equals("workspace.my.expense")));
+        assertTrue(view.work().stream().filter(m -> !m.label().equals("workspace.my.expense")).allMatch(m -> m.value() == 1));
         assertFalse(view.cloudBilling());
-        assertEquals(5, view.portfolios().size());
     }
 
     @Test
@@ -287,18 +289,18 @@ class DashboardParityIntegrationTests {
         assertTrue(financeOnly.portfolios().isEmpty());
         assertTrue(financeOnly.work().isEmpty());
         assertFalse(financeOnly.cloudBilling());
-        assertEquals(3, financeOnly.money().size());
+        assertEquals(2, financeOnly.money().size());
         actor("dashboard-report@test.invalid");
         var report = dashboard.overview(null);
         assertTrue(report.portfolios().isEmpty());
         assertEquals(
-                List.of("net"), report.money().stream().map(DashboardService.Money::key).toList());
+                List.of(), report.money().stream().map(DashboardService.Money::key).toList());
         actor("dashboard-client@test.invalid");
-        assertEquals(5, dashboard.overview(null).portfolios().size());
+        assertEquals(1, dashboard.overview(null).portfolios().size());
         assertTrue(dashboard.overview(null).money().isEmpty());
         actor("dashboard-task@test.invalid");
         var task = dashboard.overview(null);
-        assertEquals(1, task.work().size());
+        assertTrue(task.work().isEmpty());
         assertTrue(task.portfolios().isEmpty());
         assertTrue(task.money().isEmpty());
         actor("dashboard-denied@test.invalid");
@@ -319,7 +321,7 @@ class DashboardParityIntegrationTests {
             assertNull(view.selected().calendarYear());
             assertFalse(view.cloudBilling());
             assertTrue(view.portfolios().stream().allMatch(p -> p.clients() == 0));
-            for (String key : List.of("income", "bulk", "net")) {
+            for (String key : List.of("income", "bulk", "expenses")) {
                 assertNull(money(view, key).value());
                 assertNull(money(view, key).href());
             }
@@ -373,23 +375,24 @@ class DashboardParityIntegrationTests {
     void nativeLocalizedPagesCarryTheYearToEveryClientFeeCloudAndFinanceDrill() throws Exception {
         var web = browser("admin@fcms.local");
         for (String lang : List.of("en", "sw")) {
-            var response = get(web, "/dashboard?financialYearId=" + previous + "&lang=" + lang);
+            var response = get(web, "/accounting/dashboard?financialYearId=" + previous + "&lang=" + lang);
             assertEquals(200, response.statusCode());
             String html = response.body();
             assertTrue(html.contains("dashboard-year-form"));
             assertTrue(html.contains("financialYearId=" + previous));
-            assertTrue(html.contains("reportType=training_fee"));
-            assertTrue(html.contains("/finance/cloud-backup/billing?year=2025"));
+            assertTrue(html.contains("data-dashboard-fee=\"training_fee\""));
+            assertFalse(html.contains("/finance/cloud-backup/billing"));
             assertTrue(html.contains("from=2025-01-01"));
-            assertTrue(html.contains("/finance/expenses?year=2025"));
+            assertFalse(html.contains("/finance/expenses?year=2025"));
             assertTrue(html.contains(lang.equals("sw") ? "Tofauti" : "Annual difference"));
         }
         var staff = browser("dashboard-owner@test.invalid");
-        String html = get(staff, "/dashboard").body();
-        assertTrue(html.contains("40.04"));
+        String html = get(staff, "/staff/dashboard").body();
+        assertTrue(html.contains("workspace.my.leave"));
+        assertFalse(html.contains("dashboard-year-form"));
         assertFalse(html.contains("data-dashboard-cloud"));
         assertFalse(html.contains("data-dashboard-money=\"petty\""));
-        assertEquals(400, get(web, "/dashboard?financialYearId=" + Long.MAX_VALUE).statusCode());
-        assertEquals(403, get(browser("dashboard-denied@test.invalid"), "/dashboard").statusCode());
+        assertEquals(400, get(web, "/accounting/dashboard?financialYearId=" + Long.MAX_VALUE).statusCode());
+        assertEquals(403, get(browser("dashboard-denied@test.invalid"), "/accounting/dashboard").statusCode());
     }
 }

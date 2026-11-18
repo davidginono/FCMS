@@ -1,108 +1,36 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ include file="/WEB-INF/jsp/shared/header.jspf" %>
-<section class="erp-table-wrap" data-resource-table="${resourceKey}" data-table-selection="single" data-table-wrap data-table-page-size="${query.size}" data-table-page-size-options="10 25 50 100">
-<div class="app-table-titlebar">
-<h2>
-<spring:message code="${kind.title}" />
-</h2>
-<c:url var="pdfUrl" value="${baseUrl}/print.pdf">
-<c:param name="ownerId" value="${query.ownerId}"/>
-<c:param name="clientId" value="${query.clientId}"/>
-<c:param name="search" value="${query.search}"/>
-<c:param name="status" value="${query.status}"/>
-<c:param name="from" value="${query.from}"/>
-<c:param name="to" value="${query.to}"/>
-<c:param name="sort" value="${query.sort}"/>
-<c:param name="direction" value="${query.direction}"/>
-</c:url>
-<a class="app-btn btn-neutral" data-table-export="pdf" href="<c:out value='${pdfUrl}'/>">
-<spring:message code="common.pdf" />
-</a>
+<c:set var="bulk" value="${kind.name()=='BULK'}"/>
+
+<section class="erp-table-wrap ledger-register" data-resource-table="${resourceKey}" data-table-selection="single" data-table-sync-query="true" data-table-wrap data-table-page-size="${query.size}" data-table-page-size-options="10 25 50 100">
+<div class="app-table-titlebar"><h2><spring:message code="${bulk?'ledger.bulkProfit':kind.title}"/></h2><div class="app-table-toolbar">
+<c:url var="pdfUrl" value="${baseUrl}/print.pdf"><c:param name="search" value="${query.search}"/><c:param name="from" value="${query.from}"/><c:param name="to" value="${query.to}"/><c:param name="year" value="${query.year}"/><c:param name="category" value="${query.category}"/><c:param name="sort" value="${query.sort}"/><c:param name="direction" value="${query.direction}"/></c:url>
+<a class="app-btn btn-neutral" data-table-export="pdf" href="<c:out value='${pdfUrl}'/>"><ui:reportExport format="pdf"/></a>
 <a class="app-btn btn-neutral" href="<c:url value='${baseUrl}/reconciliation'/>"><spring:message code="ledger.reconciliation"/></a>
-<c:if test="${permissions.contains('finance.write')}">
-<a class="app-btn btn-launch" href="<c:url value='${baseUrl}/new'/>">
-<spring:message code="common.create" />
-</a>
-</c:if>
-</div>
-<%@ include file="/WEB-INF/jsp/reusableuicomponents/register-filters.jspf" %>
-<div class="erp-table-scroll">
-<table class="erp-table">
-<thead>
-<tr>
-<th data-table-sort-key="date" data-table-sort-asc="date" data-table-sort-desc="date">
-<spring:message code="common.date" />
-</th>
-<th data-table-sort-key="reference" data-table-sort-asc="reference" data-table-sort-desc="reference">
-<spring:message code="common.reference" />
-</th>
-<th data-table-sort-key="category" data-table-sort-asc="category" data-table-sort-desc="category">
-<spring:message code="ledger.category" />
-</th>
-<th data-table-sort-key="description" data-table-sort-asc="description" data-table-sort-desc="description">
-<spring:message code="common.description" />
-</th>
-<th data-table-sort-key="amount" data-table-sort-asc="amount" data-table-sort-desc="amount">
-<spring:message code="common.amount" />
-</th>
-<th data-table-sort-key="units" data-table-sort-asc="units" data-table-sort-desc="units">
-<spring:message code="ledger.units" />
-</th>
-<th data-table-sort-key="balance" data-table-sort-asc="balance" data-table-sort-desc="balance">
-<spring:message code="ledger.balance" />
-</th>
-<th data-table-sort-key="actor" data-table-sort-asc="actor" data-table-sort-desc="actor">
-<spring:message code="ledger.recordedBy" />
-</th>
-<th data-table-actions-header>
-<spring:message code="common.actions" />
-</th>
-</tr>
-</thead>
-<tbody>
-<c:forEach items="${records.rows()}" var="row">
-<tr>
-<td data-table-date>
-<c:out value="${appTime:display(row.date())}" />
-</td>
-<td>
-<a class="resource-table-id-link" href="<c:url value='${baseUrl}/${row.id()}'/>"><c:out value="${row.reference()}"/></a>
-</td>
-<td>
-<c:out value="${row.category()}" />
-</td>
-<td>
-<c:out value="${row.description()}" />
-</td>
-<td data-table-number>
-<c:out value="${row.amount()}" />
-</td>
-<td data-table-number>
-<c:out value="${row.units()}" />
-</td>
-<td data-table-number>
-<c:out value="${row.balance()}" />
-</td>
-<td>
-<c:out value="${row.actor()}" />
-</td>
-<td>
-<a class="app-btn btn-neutral" href="<c:url value='${baseUrl}/${row.id()}'/>">
-<spring:message code="common.view" />
-</a>
-</td>
-</tr>
-</c:forEach>
-<c:if test="${empty records.rows()}">
-<tr>
-<td colspan="9">
-<spring:message code="common.noRecords" />
-</td>
-</tr>
-</c:if>
-</tbody>
-</table>
-</div>
-<%@ include file="/WEB-INF/jsp/reusableuicomponents/register-pager.jspf" %>
-</section>
+<c:if test="${permissions.contains('finance.write')}"><c:choose><c:when test="${bulk or kind.name()=='PETTY'}"><c:forEach items="${bulk?['STOCK_PURCHASE','CLIENT_SALE']:['DEPOSIT','WITHDRAWAL']}" var="operation"><c:url var="createUrl" value="${baseUrl}/new"><c:param name="operation" value="${operation}"/></c:url><a class="app-btn ${operation=='CLIENT_SALE' or operation=='DEPOSIT'?'btn-launch':'btn-neutral'}" href="<c:out value='${createUrl}'/>"><spring:message code="ledger.operation.${operation}"/></a></c:forEach></c:when><c:otherwise><a class="app-btn btn-launch" href="<c:url value='${baseUrl}/new'/>"><spring:message code="common.create"/></a></c:otherwise></c:choose></c:if>
+</div></div>
+<form method="get" action="<c:url value='${baseUrl}'/>"><input type="hidden" name="size" value="${query.size}"><input type="hidden" name="sort" value="<c:out value='${query.sort}'/>"><input type="hidden" name="direction" value="${query.direction}">
+<label><spring:message code="common.search"/><input type="search" name="search" value="<c:out value='${query.search}'/>" maxlength="100"></label>
+<c:if test="${bulk}"><label><spring:message code="common.year"/><select name="year"><option value=""><spring:message code="ledger.allYears"/></option><c:forEach items="${ledgerYears}" var="year"><option value="${year}" ${query.year==year.toString()?'selected':''}>${year}</option></c:forEach></select></label>
+<label><spring:message code="ledger.category"/><select name="category"><option value=""><spring:message code="common.all"/></option><c:forTokens items="STOCK_PURCHASE,CLIENT_SALE" delims="," var="operation"><option value="${operation}" ${query.category==operation?'selected':''}><spring:message code="ledger.operation.${operation}"/></option></c:forTokens></select></label></c:if>
+<label><spring:message code="common.from"/><input type="date" name="from" value="${query.from}"></label><label><spring:message code="common.to"/><input type="date" name="to" value="${query.to}"></label>
+<button class="app-btn btn-neutral"><spring:message code="common.apply"/></button><a class="app-btn btn-neutral" href="<c:url value='${baseUrl}'/>"><spring:message code="common.clear"/></a></form>
+<dl class="resource-table-totals" data-table-context-for="${resourceKey}">
+<c:choose><c:when test="${bulk}"><div><dt><spring:message code="legacyReport.currentUnits"/></dt><dd><fmt:formatNumber value="${balance.units()}" maxFractionDigits="0"/></dd></div>
+<div><dt><spring:message code="legacyReport.in"/> (TZS)</dt><dd><fmt:formatNumber value="${ledgerTotals.amountIn()}" minFractionDigits="2" maxFractionDigits="2"/></dd></div>
+<div><dt><spring:message code="legacyReport.out"/> (TZS)</dt><dd><fmt:formatNumber value="${ledgerTotals.amountOut()}" minFractionDigits="2" maxFractionDigits="2"/></dd></div>
+<div><dt><spring:message code="legacyReport.bulkProfit"/> (TZS)</dt><dd><fmt:formatNumber value="${ledgerTotals.profit()}" minFractionDigits="2" maxFractionDigits="2"/></dd></div>
+</c:when><c:otherwise><div><dt><spring:message code="ledger.balance"/> (TZS)</dt><dd><fmt:formatNumber value="${balance.amount()}" minFractionDigits="2" maxFractionDigits="2"/></dd></div></c:otherwise></c:choose>
+</dl>
+<div class="erp-table-scroll"><table class="erp-table"><thead><tr>
+<th data-table-sort-key="actor"><spring:message code="ledger.recordedBy"/></th><th data-table-sort-key="date"><spring:message code="common.date"/></th><th data-table-sort-key="reference" data-table-identifier><spring:message code="common.reference"/></th><th data-table-sort-key="category"><spring:message code="ledger.category"/></th><th data-table-sort-key="description"><spring:message code="common.description"/></th>
+<th data-table-sort-key="amountIn"><spring:message code="legacyReport.in"/> (TZS)</th><th data-table-sort-key="amountOut"><spring:message code="legacyReport.out"/> (TZS)</th>
+<c:choose><c:when test="${bulk}"><th data-table-sort-key="unitsIn"><spring:message code="legacyReport.unitsIn"/></th><th data-table-sort-key="unitsOut"><spring:message code="legacyReport.unitsOut"/></th><th data-table-sort-key="unitsBefore"><spring:message code="legacyReport.unitsBefore"/></th><th data-table-sort-key="unitsAfter"><spring:message code="legacyReport.unitsAfter"/></th></c:when><c:otherwise><th data-table-sort-key="balance"><spring:message code="ledger.balance"/> (TZS)</th></c:otherwise></c:choose>
+<th data-table-actions-header><spring:message code="common.actions"/></th></tr></thead><tbody>
+<c:forEach items="${records.rows()}" var="row"><tr><td><c:out value="${row.actor()}"/></td><td data-table-date><c:out value="${appTime:date(row.date())}"/></td><td><a class="resource-table-id-link" href="<c:url value='${baseUrl}/${row.id()}'/>"><c:out value="${row.reference()}"/></a></td><td><spring:message code="ledger.operation.${row.category()}" text="${row.category()}"/></td><td><c:out value="${row.description()}"/></td>
+<td data-table-number><fmt:formatNumber value="${row.amountIn()}" minFractionDigits="2" maxFractionDigits="2"/></td><td data-table-number><fmt:formatNumber value="${row.amountOut()}" minFractionDigits="2" maxFractionDigits="2"/></td>
+<c:choose><c:when test="${bulk}"><td data-table-number><fmt:formatNumber value="${row.unitsIn()}" maxFractionDigits="0"/></td><td data-table-number><fmt:formatNumber value="${row.unitsOut()}" maxFractionDigits="0"/></td><td data-table-number><fmt:formatNumber value="${row.unitsBefore()}" maxFractionDigits="0"/></td><td data-table-number><fmt:formatNumber value="${row.unitBalance()}" maxFractionDigits="0"/></td></c:when><c:otherwise><td data-table-number><fmt:formatNumber value="${row.balance()}" minFractionDigits="2" maxFractionDigits="2"/></td></c:otherwise></c:choose>
+<td><a class="app-btn btn-neutral" href="<c:url value='${baseUrl}/${row.id()}'/>"><spring:message code="common.view"/></a></td></tr></c:forEach>
+<c:if test="${empty records.rows()}"><tr data-table-empty><td colspan="${bulk?12:9}"><spring:message code="common.noRecords"/></td></tr></c:if>
+</tbody></table></div><%@ include file="/WEB-INF/jsp/reusableuicomponents/register-pager.jspf" %></section>
 <%@ include file="/WEB-INF/jsp/shared/footer.jspf" %>

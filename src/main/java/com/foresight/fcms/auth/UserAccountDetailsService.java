@@ -1,18 +1,20 @@
 package com.foresight.fcms.auth;
 
+import com.foresight.fcms.auth.service.UserPermissionService;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-
 @Service
 public class UserAccountDetailsService implements UserDetailsService, UserDetailsPasswordService {
     private final JdbcTemplate db;
+    private final UserPermissionService permissions;
 
-    public UserAccountDetailsService(JdbcTemplate db) {
+    public UserAccountDetailsService(JdbcTemplate db, UserPermissionService permissions) {
         this.db = db;
+        this.permissions = permissions;
     }
 
     @Override
@@ -31,16 +33,9 @@ public class UserAccountDetailsService implements UserDetailsService, UserDetail
                         email);
         if (rows.isEmpty()) throw new UsernameNotFoundException("User not found");
         var a = rows.getFirst();
-        var claims =
-                db.queryForList(
-                        "select rc.claim from users u join role_claims rc on rc.role_id=u.role_id"
-                            + " where u.id=? union select claim from user_claims where user_id=?",
-                        String.class,
-                        a.id(),
-                        a.id());
         return User.withUsername(a.email())
                 .password(a.password())
-                .authorities(claims.toArray(String[]::new))
+                .authorities(permissions.find(a.id()).effective().toArray(String[]::new))
                 .disabled(!a.active())
                 .build();
     }

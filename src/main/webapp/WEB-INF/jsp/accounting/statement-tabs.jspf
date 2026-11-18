@@ -1,0 +1,8 @@
+<%@ page pageEncoding="UTF-8" %>
+<nav class="fs-tabs" aria-label="<spring:message code='gl.statements'/>">
+<c:forTokens items="balance-sheet,income-statement,cash-flow,changes-in-equity,notes,trial" delims="," var="kind">
+<c:choose><c:when test="${kind=='trial'}"><c:set var="reportTabPath" value="/accounting/trial-balance"/><c:set var="reportTabLabel" value="gl.trialBalance"/></c:when><c:otherwise><c:set var="reportTabPath" value="/accounting/statements/${kind}"/><c:set var="reportTabLabel" value="gl.statement.${kind}"/></c:otherwise></c:choose>
+<c:url var="tabUrl" value="${reportTabPath}"><c:param name="from" value="${query.from}"/><c:param name="to" value="${query.to}"/></c:url>
+<a href="<c:out value='${tabUrl}'/>" ${kind==reportType?'aria-current="page"':''}><spring:message code="${reportTabLabel}"/></a>
+</c:forTokens>
+</nav>

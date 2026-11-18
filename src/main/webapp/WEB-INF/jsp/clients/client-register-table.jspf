@@ -1,0 +1,57 @@
+<div class="erp-table-scroll">
+<table class="erp-table">
+<thead><tr>
+<c:forEach items="${registerColumns}" var="column">
+<c:url var="sortUrl" value="${category.route}">
+<c:param name="financialYearId" value="${filter.financialYearId}"/><c:param name="paymentStatusId" value="${filter.paymentStatusId}"/>
+<c:param name="search" value="${filter.search}"/><c:param name="size" value="${filter.size}"/>
+<c:param name="sort" value="${column.key()}"/><c:param name="direction" value="${filter.sort==column.key() and filter.direction=='asc'?'desc':'asc'}"/>
+</c:url>
+<th data-table-sort-key="${column.key()}" aria-sort="${filter.sort==column.key()?(filter.direction=='asc'?'ascending':'descending'):'none'}">
+<a data-table-sort href="<c:out value='${sortUrl}'/>"><spring:message code="${column.label()}"/></a>
+</th>
+</c:forEach>
+<th data-table-actions-header><spring:message code="common.actions"/></th>
+</tr></thead>
+<tbody>
+<c:forEach items="${registerRows}" var="record">
+<tr>
+<c:forEach items="${registerColumns}" var="column">
+<td<c:if test="${column.kind()=='money'}"> data-table-number</c:if><c:if test="${column.kind()=='date'}"> data-table-date</c:if>>
+<c:set var="cellValue" value="${record.values().get(column.key())}"/>
+<c:choose>
+<c:when test="${column.key()=='name'}"><a class="resource-table-id-link" href="<c:url value='${category.route}/${record.id()}'/>"><c:out value="${record.name()}"/></a></c:when>
+<c:when test="${column.kind()=='money'}"><span data-table-number><fmt:formatNumber value="${cellValue}" minFractionDigits="2" maxFractionDigits="2"/></span></c:when>
+<c:when test="${column.kind()=='date'}"><c:out value="${appTime:display(cellValue)}"/></c:when>
+<c:when test="${column.kind()=='status'}"><c:if test="${not empty cellValue}"><spring:message code="status.${fn:toUpperCase(cellValue)}" text="${cellValue}" htmlEscape="true"/></c:if></c:when>
+<c:when test="${column.kind()=='contract'}"><spring:message code="${record.contract()?'common.available':'common.notAvailable'}"/></c:when>
+<c:otherwise><c:out value="${cellValue}"/></c:otherwise>
+</c:choose>
+</td>
+</c:forEach>
+<td>
+<a class="app-btn btn-neutral" href="<c:url value='${category.route}/${record.id()}'/>"><spring:message code="common.view"/></a>
+<c:if test="${permissions.contains('client.write')}">
+<a class="app-btn btn-neutral" href="<c:url value='${category.route}/${record.id()}/edit'/>"><spring:message code="common.edit"/></a>
+<a class="app-btn btn-neutral" href="<c:url value='${category.route}/${record.id()}/contract/edit'/>"><spring:message code="client.updateContract"/></a>
+<a class="app-btn btn-neutral" href="<c:url value='${category.route}/${record.id()}/lifecycle'/>"><spring:message code="client.manageLifecycle"/></a>
+</c:if>
+<c:if test="${record.contract()}"><a class="app-btn btn-neutral" href="<c:url value='${category.route}/${record.id()}/contract'/>"><spring:message code="client.contract"/></a></c:if>
+</td>
+</tr>
+</c:forEach>
+<c:if test="${empty registerRows}"><tr><td colspan="${fn:length(registerColumns)+1}"><span class="resource-table-empty-message"><spring:message code="common.noRecords"/></span></td></tr></c:if>
+</tbody></table>
+</div>
+<div data-table-pagination data-page="${filter.page}" data-table-for="${resourceKey}">
+<c:forEach begin="0" end="1" var="side">
+<c:if test="${(side==0 and page.hasPrevious()) or (side==1 and page.hasNext())}">
+<c:url var="clientPageUrl" value="${category.route}">
+<c:param name="financialYearId" value="${filter.financialYearId}"/><c:param name="paymentStatusId" value="${filter.paymentStatusId}"/>
+<c:param name="search" value="${filter.search}"/><c:param name="sort" value="${filter.sort}"/><c:param name="direction" value="${filter.direction}"/>
+<c:param name="size" value="${filter.size}"/><c:param name="page" value="${filter.page+(side==0?-1:1)}"/>
+</c:url>
+<a data-page-direction="${side==0?'previous':'next'}" href="<c:out value='${clientPageUrl}'/>"><spring:message code="${side==0?'common.previous':'common.next'}"/></a>
+</c:if>
+</c:forEach>
+</div>

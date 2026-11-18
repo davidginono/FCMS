@@ -1,5 +1,7 @@
 package com.foresight.fcms.client.category.controller;
 
+import com.foresight.fcms.shared.controller.FormErrors;
+import com.foresight.fcms.shared.controller.ResourceFeedback;
 import static com.foresight.fcms.shared.view.CsvText.quote;
 
 import com.foresight.fcms.client.category.dto.ClientCategoryFilter;
@@ -59,20 +61,7 @@ public class ClientCategoryController {
             Model model) {
         ClientCategory category = ClientCategory.fromSlug(categorySlug);
         populateBaseModel(model, category);
-        if (filter.isRevenueView()) {
-            var result =
-                    clientCategoryService.findClients(
-                            category,
-                            filter,
-                            PageRequest.of(
-                                    filter.getPage(), filter.getSize(), Sort.by("clientName")));
-            model.addAttribute("rows", result.page().getContent());
-            model.addAttribute("page", result.page());
-            model.addAttribute("totals", result.totals());
-            model.addAttribute(
-                    "reportType", ClientCategoryReportType.from(filter.getReportType(), category));
-            return "clients/category-revenue";
-        }
+        filter.setView("list");
 
         var result =
                 clientCategoryService.findClients(
@@ -83,6 +72,8 @@ public class ClientCategoryController {
                                 filter.getSize(),
                                 Sort.by("clientName").ascending()));
         model.addAttribute("rows", result.page().getContent());
+        model.addAttribute("registerColumns", com.foresight.fcms.client.dto.ClientRegisterPresentation.columns(category));
+        model.addAttribute("registerRows", result.page().getContent().stream().map(com.foresight.fcms.client.dto.ClientRegisterPresentation::row).toList());
         model.addAttribute("page", result.page());
         model.addAttribute("totals", result.totals());
         model.addAttribute("reportType", ClientCategoryReportType.FULL);
@@ -94,7 +85,7 @@ public class ClientCategoryController {
         ClientCategory category = ClientCategory.fromSlug(categorySlug);
         populateBaseModel(model, category);
         if (!model.containsAttribute("form")) {
-            model.addAttribute("form", clientCategoryService.newForm());
+            model.addAttribute("form", clientCategoryService.newForm(category));
         }
         model.addAttribute("formAction", category.getRoute());
         model.addAttribute("formTitle", category.getCreateLabel());
@@ -113,16 +104,14 @@ public class ClientCategoryController {
         if (!bindingResult.hasErrors()) {
             try {
                 Long id = clientCategoryService.createClient(category, form, contractUpload);
-                return "redirect:" + category.getRoute() + "/" + id + "?saved";
+                String destination=category.getRoute()+(category.isFinancialYearSupported()?"?financialYearId="+form.getFinancialYearId():"");
+                return ResourceFeedback.success(redirectAttributes, destination, "feedback.clientCreated", category.getRoute() + "/" + id);
             } catch (IllegalArgumentException e) {
-                bindingResult.reject(
-                        java.util.Set.of(
-                                                "error.uploadBusy",
-                                                "error.uploadRejected",
-                                                "error.uploadUnavailable")
-                                        .contains(e.getMessage())
-                                ? e.getMessage()
-                                : "error.invalid");
+                if (java.util.Set.of("error.uploadBusy", "error.uploadRejected", "error.uploadUnavailable").contains(e.getMessage()))
+                    model.addAttribute("contractError", e.getMessage());
+                else FormErrors.reject(bindingResult, e, "error.invalid");
+            } catch (org.springframework.dao.DataAccessException e) {
+                FormErrors.conflict(bindingResult, e, java.util.Map.of(category.getTableName() + "_client_status_fk", "paymentStatusId", category.getTableName() + "_financial_year_fk", "financialYearId"));
             }
         }
         populateBaseModel(model, category);
@@ -166,18 +155,15 @@ public class ClientCategoryController {
         if (!bindingResult.hasErrors()) {
             try {
                 clientCategoryService.updateClient(category, id, form, contractUpload);
-                return "redirect:" + category.getRoute() + "/" + id + "?saved";
+                return ResourceFeedback.success(redirectAttributes, category.getRoute() + "/" + id, "feedback.saved", null);
             } catch (org.springframework.dao.OptimisticLockingFailureException e) {
                 bindingResult.reject("error.stale");
             } catch (IllegalArgumentException e) {
-                bindingResult.reject(
-                        java.util.Set.of(
-                                                "error.uploadBusy",
-                                                "error.uploadRejected",
-                                                "error.uploadUnavailable")
-                                        .contains(e.getMessage())
-                                ? e.getMessage()
-                                : "error.invalid");
+                if (java.util.Set.of("error.uploadBusy", "error.uploadRejected", "error.uploadUnavailable").contains(e.getMessage()))
+                    model.addAttribute("contractError", e.getMessage());
+                else FormErrors.reject(bindingResult, e, "error.invalid");
+            } catch (org.springframework.dao.DataAccessException e) {
+                FormErrors.conflict(bindingResult, e, java.util.Map.of(category.getTableName() + "_client_status_fk", "paymentStatusId", category.getTableName() + "_financial_year_fk", "financialYearId"));
             }
         }
         populateBaseModel(model, category);
@@ -192,7 +178,7 @@ public class ClientCategoryController {
             @PathVariable Long id,
             RedirectAttributes redirectAttributes) {
         ClientCategory category = ClientCategory.fromSlug(categorySlug);
-        return "redirect:" + category.getRoute() + "/" + id + "/archive";
+        return "redirect:" + category.getRoute() + "/" + id + "/lifecycle";
     }
 
     @GetMapping(CATEGORY_PATH + "/{id}/contract")
@@ -244,63 +230,6 @@ public class ClientCategoryController {
                         export.selectedFinancialYearLabel()));
     }
 
-    @GetMapping(CATEGORY_PATH + "/revenues/export.csv")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('client.export')")
-    public void exportRevenueCsv(
-            @PathVariable String categorySlug,
-            @ModelAttribute("filter") ClientCategoryFilter filter,
-            HttpServletResponse response)
-            throws IOException {
-        ClientCategory category = ClientCategory.fromSlug(categorySlug);
-        var report = clientCategoryService.revenueReport(category, filter);
-        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        response.setContentType("text/csv");
-        response.setHeader(
-                HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=\"" + category.getSlug() + "-report.csv\"");
-        try (PrintWriter writer = response.getWriter()) {
-            if (!report.reportType().isFull()) {
-                writer.println(
-                        "No,"
-                                + quote(category.getNameLabel())
-                                + ","
-                                + quote(report.reportType().getLabel()));
-                int index = 1;
-                for (ClientCategoryRowDto row : report.rows()) {
-                    writer.println(
-                            index++
-                                    + ","
-                                    + quote(row.clientName())
-                                    + ","
-                                    + report.reportType().rowValue(row));
-                }
-                writer.println(
-                        ","
-                                + quote("Grand Total")
-                                + ","
-                                + report.reportType().totalValue(report.totals()));
-                return;
-            }
-            writer.println(String.join(",", revenueHeaders(category)));
-            int index = 1;
-            for (ClientCategoryRowDto row : report.rows()) {
-                List<String> values = new ArrayList<>(revenueValues(category, row));
-                values.addFirst(String.valueOf(index++));
-                writer.println(String.join(",", values));
-            }
-        }
-    }
-
-    @GetMapping(CATEGORY_PATH + "/revenues/print.pdf")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('client.export')")
-    public ResponseEntity<byte[]> printRevenuePdf(
-            @PathVariable String categorySlug,
-            @ModelAttribute("filter") ClientCategoryFilter filter) {
-        ClientCategory category = ClientCategory.fromSlug(categorySlug);
-        var report = clientCategoryService.revenueReport(category, filter);
-        return pdf(category.getSlug() + "-report.pdf", pdfService.revenuePdf(report));
-    }
-
     private void populateBaseModel(Model model, ClientCategory category) {
         model.addAttribute("category", category);
         model.addAttribute("financialYears", clientCategoryService.financialYears());
@@ -316,6 +245,7 @@ public class ClientCategoryController {
                                 "Entry Date",
                                 "Expire Date",
                                 "Region",
+                                "Contract",
                                 "Annual Fee",
                                 "Amount Paid"));
         if (category.isWithholdingTaxSupported()) {
@@ -337,7 +267,9 @@ public class ClientCategoryController {
         if (category.isHostingSupported()) {
             headers.add("Hosting Fee");
         }
-        headers.addAll(List.of("Financial Year", "Payment Status"));
+        if (category.isFinancialYearSupported()) headers.add("Financial Year");
+        headers.add("Payment Status");
+        if (category.isOperationalStatusSupported()) headers.add("Client Status");
         return headers;
     }
 
@@ -349,6 +281,7 @@ public class ClientCategoryController {
                                 String.valueOf(row.entryDate()),
                                 String.valueOf(row.expireDate()),
                                 quote(row.region()),
+                                row.hasContractFile() ? "YES" : "NO",
                                 String.valueOf(row.annualFee()),
                                 String.valueOf(row.amount())));
         if (category.isWithholdingTaxSupported()) {
@@ -370,69 +303,9 @@ public class ClientCategoryController {
         if (category.isHostingSupported()) {
             values.add(String.valueOf(row.hostingFee()));
         }
-        values.addAll(List.of(quote(row.financialYear()), quote(row.paymentStatus())));
-        return values;
-    }
-
-    private List<String> revenueHeaders(ClientCategory category) {
-        List<String> headers =
-                new ArrayList<>(
-                        List.of(
-                                "No",
-                                quote(category.getNameLabel()),
-                                "Annual Fee Invoiced",
-                                "Annual Fee Paid"));
-        if (category.isWithholdingTaxSupported()) {
-            headers.add("W-H TAX");
-        }
-        if (category.isCommissionSupported()) {
-            headers.add("Commission");
-        }
-        headers.addAll(
-                List.of(
-                        "Programmer Cost",
-                        "System Install Fee",
-                        "Training Fee",
-                        "Android Fee",
-                        "System Reinstall Fee"));
-        if (category.isBulkSmsSupported()) {
-            headers.add("Bulk SMS");
-        }
-        if (category.isHostingSupported()) {
-            headers.add("Hosting Fee");
-        }
-        headers.addAll(List.of("Revenue Total", "Gross Profit"));
-        return headers;
-    }
-
-    private List<String> revenueValues(ClientCategory category, ClientCategoryRowDto row) {
-        List<String> values =
-                new ArrayList<>(
-                        List.of(
-                                quote(row.clientName()),
-                                String.valueOf(row.annualFee()),
-                                String.valueOf(row.amount())));
-        if (category.isWithholdingTaxSupported()) {
-            values.add(String.valueOf(row.withholdingTax()));
-        }
-        if (category.isCommissionSupported()) {
-            values.add(String.valueOf(row.commission()));
-        }
-        values.addAll(
-                List.of(
-                        String.valueOf(row.programmerCost()),
-                        String.valueOf(row.systemInstallFee()),
-                        String.valueOf(row.trainingFee()),
-                        String.valueOf(row.androidFee()),
-                        String.valueOf(row.systemReinstallFee())));
-        if (category.isBulkSmsSupported()) {
-            values.add(String.valueOf(row.bulkSmsFee()));
-        }
-        if (category.isHostingSupported()) {
-            values.add(String.valueOf(row.hostingFee()));
-        }
-        values.addAll(
-                List.of(String.valueOf(row.revenueTotal()), String.valueOf(row.grossProfit())));
+        if (category.isFinancialYearSupported()) values.add(quote(row.financialYear()));
+        values.add(quote(row.paymentStatus()));
+        if (category.isOperationalStatusSupported()) values.add(quote(row.operationalStatus()));
         return values;
     }
 

@@ -5,6 +5,7 @@ import static com.foresight.fcms.shared.time.ApplicationCalendar.today;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.foresight.fcms.auth.dto.UserForm;
+import com.foresight.fcms.accounting.dto.CoaQuery;
 import com.foresight.fcms.auth.service.*;
 import com.foresight.fcms.finance.expense.dto.ExpenseForm;
 import com.foresight.fcms.finance.expense.service.ExpenseService;
@@ -38,9 +39,12 @@ import java.util.concurrent.*;
         matches = "jdbc:postgresql://127.0.0.1:5432/fcms_codex_verify_.*")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PostgresModuleTests {
+    static final String SCHEMA="modules_"+UUID.randomUUID().toString().replace("-","");
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry p) {
-        p.add("spring.datasource.url", () -> System.getenv("FCMS_TEST_DB_URL"));
+        p.add("spring.datasource.url", () -> System.getenv("FCMS_TEST_DB_URL")+"?currentSchema="+SCHEMA);
+        p.add("spring.flyway.schemas",()->SCHEMA);
+        p.add("spring.flyway.default-schema",()->SCHEMA);
         p.add("fcms.storage.avatar-dir", () -> ".verification/avatars");
         p.add("fcms.storage.contract-dir", () -> ".verification/contracts-tested");
         p.add("fcms.backup.interval", () -> "3600000");
@@ -62,6 +66,7 @@ class PostgresModuleTests {
 
     @BeforeAll
     void fixtures() {
+        OperationalTestClaims.enable(db);
         staff = "staff-" + suffix + "@test.invalid";
         other = "other-" + suffix + "@test.invalid";
         reviewer = "review-" + suffix + "@test.invalid";
@@ -102,9 +107,12 @@ class PostgresModuleTests {
         assertTrue(access.current().has("task.write"));
         assertThrows(AccessDeniedException.class, () -> access.require("iam.user.manage"));
         db.update("insert into user_claims(user_id,claim) values (?,'client.write')", staffId);
+        assertFalse(access.current().has("client.write"));
+        db.update("insert into user_claims(user_id,claim) values (?,'workspace.admin')", staffId);
         assertTrue(access.current().has("client.write"));
         db.update("delete from user_claims where user_id=? and claim='client.write'", staffId);
         assertFalse(access.current().has("client.write"));
+        db.update("delete from user_claims where user_id=? and claim='workspace.admin'", staffId);
     }
 
     @Test
@@ -163,6 +171,8 @@ class PostgresModuleTests {
                 "insert into user_claims(user_id,claim) values (?,'task.manage'),(?,'task.manage')",
                 managerId,
                 strangerId);
+        db.update("insert into user_claims(user_id,claim) values (?,'workspace.admin'),(?,'workspace.admin')",
+                managerId, strangerId);
         actor(manager);
         assertFalse(access.current().has("task.read.all"));
         long before = work.count(WorkKind.TASK);
@@ -397,7 +407,7 @@ class PostgresModuleTests {
                     legacy.headers()
                             .firstValue("Location")
                             .orElseThrow()
-                            .endsWith("/" + id + "/archive"));
+                            .endsWith("/" + id + "/lifecycle"));
             assertTrue(clientArchive.find(slug, id).visible());
             actor(staff);
             assertThrows(AccessDeniedException.class, () -> clientArchive.find(slug, id));
@@ -429,21 +439,13 @@ class PostgresModuleTests {
                 java.util.regex.Pattern.compile("name=\"_csrf\"[^>]*value=\"([^\"]+)\"")
                         .matcher(form.body());
         assertTrue(csrf.find());
-        var links =
-                java.util.regex.Pattern.compile(
-                                "<a[^>]*href=\"([^\"]+)\"[^>]*>(English|Kiswahili)</a>")
-                        .matcher(form.body());
-        int count = 0;
-        while (links.find()) {
-            count++;
-            assertTrue(links.group(1).contains("year=2025"));
-            assertTrue(links.group(1).contains("category=Travel%26Training"));
-            assertTrue(links.group(1).contains("dateBasis=CREATED"));
-            assertTrue(links.group(1).contains("from=2026-01-01"));
-            assertTrue(links.group(1).contains("to=2026-11-03"));
-            assertFalse(links.group(1).contains("PrivateValue"));
-        }
-        assertEquals(2, count);
+        String language = languageForm(form.body());
+        assertTrue(language.contains("name=\"year\" value=\"2025\""));
+        assertTrue(language.contains("name=\"category\" value=\"Travel&amp;Training\""));
+        assertTrue(language.contains("name=\"dateBasis\" value=\"CREATED\""));
+        assertTrue(language.contains("name=\"from\" value=\"2026-01-01\""));
+        assertTrue(language.contains("name=\"to\" value=\"2026-11-03\""));
+        assertFalse(language.contains("PrivateValue"));
         String input =
                 "_csrf="
                         + java.net.URLEncoder.encode(
@@ -459,19 +461,11 @@ class PostgresModuleTests {
                         java.net.http.HttpResponse.BodyHandlers.ofString());
         assertEquals(200, invalid.statusCode());
         assertTrue(invalid.body().contains("</html>"));
-        links =
-                java.util.regex.Pattern.compile(
-                                "<a[^>]*href=\"([^\"]+)\"[^>]*>(English|Kiswahili)</a>")
-                        .matcher(invalid.body());
-        count = 0;
-        while (links.find()) {
-            count++;
-            assertFalse(links.group(1).contains("Password"));
-            assertFalse(links.group(1).contains("NeverCopy"));
-            assertFalse(links.group(1).contains("_csrf"));
-            assertFalse(links.group(1).contains("requestKey"));
-        }
-        assertEquals(2, count);
+        language = languageForm(invalid.body());
+        assertFalse(language.contains("Password"));
+        assertFalse(language.contains("NeverCopy"));
+        assertFalse(language.contains("_csrf"));
+        assertFalse(language.contains("requestKey"));
     }
 
     @Test
@@ -614,8 +608,8 @@ class PostgresModuleTests {
                                 .GET()
                                 .build(),
                         java.net.http.HttpResponse.BodyHandlers.ofString());
-        assertEquals(200, response.statusCode());
-        assertTrue(response.body().contains("PAY-" + suffix));
+        assertEquals(410, response.statusCode());
+        assertTrue(response.body().isEmpty());
         actor(other);
         assertThrows(
                 IllegalArgumentException.class, () -> expenses.history(id, new RegisterQuery()));
@@ -700,7 +694,7 @@ class PostgresModuleTests {
         var admin = browser("admin@fcms.local", "ChangeMe123!");
         for (String route :
                 java.util.List.of(
-                        "/dashboard",
+                        "/accounting/dashboard",
                         "/admin/users",
                         "/admin/users/new",
                         "/account",
@@ -718,17 +712,16 @@ class PostgresModuleTests {
                         "/leaves/new",
                         "/staff-reports",
                         "/staff-reports/new",
-                        "/finance/expenses",
-                        "/finance/expenses/new",
-                        "/finance/income",
-                        "/finance/income/new",
-                        "/finance/income/reconciliation",
+                        "/accounting/journals?kind=PAYMENT",
+                        "/accounting/vouchers/payment/new",
+                        "/accounting/journals?kind=RECEIPT",
+                        "/accounting/vouchers/receipt/new",
+                        "/finance/petty-cash/reconciliation",
                         "/finance/petty-cash",
                         "/finance/cloud-backup",
-                        "/finance/cloud-backup/billing",
                         "/finance/bulk-sms",
-                        "/finance/bulk-sms/new",
-                        "/finance/petty-cash/new",
+                        "/finance/bulk-sms/new?operation=STOCK_PURCHASE",
+                        "/finance/petty-cash/new?operation=DEPOSIT",
                         "/finance/cloud-backup/new",
                         "/clients/unions/new",
                         "/clients/microfinance/new",
@@ -736,13 +729,9 @@ class PostgresModuleTests {
                         "/clients/saccos?view=revenue",
                         "/clients/amcos?view=revenue",
                         "/account",
-                        "/reports",
-                        "/reports/print?year=2026&lang=sw",
                         "/backups",
                         "/accounting/accounts",
-                        "/accounting/journals",
-                        "/accounting/books",
-                        "/accounting/periods")) {
+                        "/accounting/journals")) {
             var response =
                     admin.send(
                             java.net.http.HttpRequest.newBuilder(
@@ -754,16 +743,7 @@ class PostgresModuleTests {
             assertEquals(200, response.statusCode(), route);
             assertFalse(response.body().contains("Migration pending"), route);
             assertFalse(response.body().contains("app-page-description"), route);
-            if (route.startsWith("/reports")) {
-                assertTrue(
-                        response.body()
-                                .contains(
-                                        route.contains("/print")
-                                                ? "fs-print-document"
-                                                : "fs-paper fs-statement"),
-                        route);
-                assertTrue(response.body().contains("financial-statement"), route);
-            }
+
         }
         var sw =
                 admin.send(
@@ -786,29 +766,14 @@ class PostgresModuleTests {
                                 .GET()
                                 .build(),
                         java.net.http.HttpResponse.BodyHandlers.ofByteArray());
-        assertEquals(200, pdf.statusCode());
-        assertEquals("application/pdf", pdf.headers().firstValue("Content-Type").orElseThrow());
+        assertEquals(410, pdf.statusCode());
+        assertEquals(0, pdf.body().length);
         assertTrue(pdf.headers().firstValue("Cache-Control").orElseThrow().contains("no-store"));
-        assertTrue(
-                pdf.headers()
-                        .firstValue("Content-Disposition")
-                        .orElseThrow()
-                        .contains("statement-2026.pdf"));
-        var statementPdf = new com.lowagie.text.pdf.PdfReader(pdf.body());
-        try {
-            assertEquals(2, statementPdf.getNumberOfPages());
-            assertTrue(
-                    new com.lowagie.text.pdf.parser.PdfTextExtractor(statementPdf)
-                            .getTextFromPage(1)
-                            .contains("TAARIFA YA MAPATO"));
-        } finally {
-            statementPdf.close();
-        }
         var noCsrf =
                 admin.send(
                         java.net.http.HttpRequest.newBuilder(
                                         java.net.URI.create(
-                                                "http://127.0.0.1:" + port + "/finance/income"))
+                                                "http://127.0.0.1:" + port + "/accounting/journals?kind=RECEIPT"))
                                 .header("Content-Type", "application/x-www-form-urlencoded")
                                 .POST(java.net.http.HttpRequest.BodyPublishers.ofString("amount=1"))
                                 .build(),
@@ -820,8 +785,6 @@ class PostgresModuleTests {
                         "/admin/users",
                         "/finance/petty-cash",
                         "/backups",
-                        "/reports/print?year=2026",
-                        "/reports/statement.pdf?year=2026",
                         "/accounting/trial-balance",
                         "/accounting/trial-balance/print",
                         "/accounting/trial-balance/print.pdf",
@@ -841,7 +804,7 @@ class PostgresModuleTests {
     }
 
     @Test
-    void groupReportsAreVisibleOnlyToParticipantsAndReviewers() {
+    void staffGroupReportsAreVisibleOnlyToTheirOwnerAndAuthorizedReviewers() {
         actor(staff);
         var f = new WorkForm();
         f.setSubject("Group report");
@@ -852,10 +815,12 @@ class PostgresModuleTests {
         f.setOutcome("COMPLETED");
         long id = work.save(WorkKind.REPORT, null, f);
         actor(other);
-        assertEquals(id, work.find(WorkKind.REPORT, id).id());
+        assertThrows(IllegalArgumentException.class, () -> work.find(WorkKind.REPORT, id));
         assertThrows(
-                org.springframework.security.access.AccessDeniedException.class,
+                IllegalArgumentException.class,
                 () -> work.save(WorkKind.REPORT, id, f));
+        actor(reviewer);
+        assertEquals(id, work.find(WorkKind.REPORT, id).id());
     }
 
     @Test
@@ -1136,7 +1101,7 @@ class PostgresModuleTests {
         f.setRoleId(2L);
         f.setStatusId(1L);
         f.setPassword("NewAccountPassword123!");
-        f.setClaims(java.util.List.of("client.export"));
+        f.setClaims(java.util.List.of("workspace.admin", "client.export"));
         long id = users.save(null, f);
         assertFalse(
                 db.queryForObject("select password from users where id=?", String.class, id)
@@ -1307,11 +1272,8 @@ class PostgresModuleTests {
                                 .build(),
                         java.net.http.HttpResponse.BodyHandlers.ofString());
         assertEquals(302, created.statusCode());
-        var location =
-                java.util.regex.Pattern.compile("created=([0-9]+)")
-                        .matcher(created.headers().firstValue("location").orElseThrow());
-        assertTrue(location.find());
-        long transaction = Long.parseLong(location.group(1));
+        String resource = CreationFeedback.follow(maker, created);
+        long transaction = Long.parseLong(resource.substring(resource.lastIndexOf('/') + 1));
         long template =
                 db.queryForObject(
                         "select id from gl_posting_mappings where transaction_id=?",
@@ -1395,12 +1357,7 @@ class PostgresModuleTests {
                                     .GET()
                                     .build(),
                             java.net.http.HttpResponse.BodyHandlers.ofString());
-            assertEquals(302, legacy.statusCode());
-            assertTrue(
-                    legacy.headers()
-                            .firstValue("location")
-                            .orElseThrow()
-                            .endsWith("/transactions/" + transaction + "?review=" + template));
+            assertEquals(404, legacy.statusCode());
             var oldCommand =
                     maker.send(
                             java.net.http.HttpRequest.newBuilder(
@@ -1410,7 +1367,7 @@ class PostgresModuleTests {
                                     .POST(java.net.http.HttpRequest.BodyPublishers.ofString(input))
                                     .build(),
                             java.net.http.HttpResponse.BodyHandlers.ofString());
-            assertEquals(410, oldCommand.statusCode());
+            assertEquals(404, oldCommand.statusCode());
             assertEquals(
                     1,
                     db.queryForObject(
@@ -1655,12 +1612,14 @@ class PostgresModuleTests {
                         java.net.http.HttpResponse.BodyHandlers.ofString());
         assertEquals(403, csrfDenied.statusCode());
         actor(staff);
-        assertThrows(AccessDeniedException.class, () -> mappings.list(new RegisterQuery()));
+        assertThrows(AccessDeniedException.class, () -> mappings.current("PETTY_IN"));
         assertThrows(
                 AccessDeniedException.class,
                 () -> mappings.create(postingMapping(cash, income, "Forbidden")));
         db.update("insert into user_claims(user_id,claim) values (?,'accounting.read')", staffId);
         try {
+            assertThrows(AccessDeniedException.class, () -> mappings.find(first));
+            db.update("insert into user_claims(user_id,claim) values (?,'workspace.admin')", staffId);
             assertEquals(first, mappings.find(first).id());
             assertThrows(
                     AccessDeniedException.class,
@@ -1679,7 +1638,7 @@ class PostgresModuleTests {
             assertEquals(403, denied.statusCode());
         } finally {
             db.update(
-                    "delete from user_claims where user_id=? and claim='accounting.read'", staffId);
+                    "delete from user_claims where user_id=? and claim in ('accounting.read','workspace.admin')", staffId);
         }
     }
 
@@ -1759,10 +1718,10 @@ class PostgresModuleTests {
                                     .build(),
                             java.net.http.HttpResponse.BodyHandlers.ofString());
             assertEquals(200, register.statusCode());
-            assertTrue(register.body().contains("</html>"), "The full grouped register renders");
-            assertTrue(register.body().contains("data-grouped-heading=\"LIABILITY\""));
-            assertTrue(register.body().contains("data-group-total="));
-            assertTrue(register.body().contains("data-grouped-select-all"));
+            assertTrue(register.body().contains("</html>"), "The full parent-account register renders");
+            assertTrue(register.body().contains("data-coa-tree"));
+            assertTrue(register.body().contains("data-expandable=\"true\""));
+            assertTrue(register.body().contains("data-table-selection=\"single\""));
             assertTrue(register.body().contains(language.equals("sw") ? "Madeni" : "Liabilities"));
             assertFalse(register.body().contains("data-table-actions-header"));
         }
@@ -1814,120 +1773,68 @@ class PostgresModuleTests {
     }
 
     @Test
-    void groupedAccountsCountEveryMatchAndLoadBoundedStableBatches() throws Exception {
+    void coaTreeCountsEveryMatchAndLoadsBoundedStableBatches() throws Exception {
         actor("admin@fcms.local");
         glAccount("331099", "Batch setup", "EQUITY", false);
         for (int n = 100; n < 125; n++)
             glAccount("331" + n, "Grouped verification " + n, "EQUITY", false);
-        var q = new RegisterQuery();
+        var q = new CoaQuery();
         q.setSearch("Grouped verification");
         q.setSize(10);
-        q.setSort("code");
-        q.setDirection("asc");
-        var initial = accounting.groupedAccounts(q, null, null, 0);
+        var initial = accounting.chart(q, null);
         assertEquals(25, initial.total());
-        assertEquals(1, initial.groups().size());
-        var group = initial.groups().getFirst();
-        assertEquals("EQUITY", group.classification());
-        assertEquals(25, group.total());
-        assertEquals(10, group.accounts().rows().size());
-        assertTrue(group.accounts().hasNext());
-        var middle =
-                accounting.groupedAccounts(q, null, "EQUITY", 1).groups().getFirst().accounts();
-        var last = accounting.groupedAccounts(q, null, "EQUITY", 2).groups().getFirst().accounts();
+        assertEquals(10, initial.records().rows().size());
+        assertTrue(initial.records().hasNext());
+        assertTrue(initial.records().rows().stream().allMatch(r -> r.kind().equals("POSTING") && !r.expandable()));
+        q.setPage(1);
+        var middle = accounting.chart(q, null).records();
+        q.setPage(2);
+        var last = accounting.chart(q, null).records();
         assertEquals(10, middle.rows().size());
         assertEquals(5, last.rows().size());
         assertFalse(last.hasNext());
-        var combined = new ArrayList<com.foresight.fcms.accounting.dto.AccountingViews.Account>();
-        combined.addAll(group.accounts().rows());
-        combined.addAll(middle.rows());
-        combined.addAll(last.rows());
-        assertEquals(25, combined.stream().map(r -> r.id()).distinct().count());
-        assertEquals(
-                combined.stream().map(r -> r.code()).sorted().toList(),
-                combined.stream().map(r -> r.code()).toList());
-        q.setDirection("desc");
-        assertEquals(
-                combined.getLast().id(),
-                accounting
-                        .groupedAccounts(q, null, null, 0)
-                        .groups()
-                        .getFirst()
-                        .accounts()
-                        .rows()
-                        .getFirst()
-                        .id());
-        var first = combined.getFirst();
+        var combined = new ArrayList<com.foresight.fcms.accounting.dto.AccountingViews.CoaRow>();
+        combined.addAll(initial.records().rows());combined.addAll(middle.rows());combined.addAll(last.rows());
+        assertEquals(25, combined.stream().map(r -> r.account().id()).distinct().count());
+        assertEquals(combined.stream().map(r -> r.account().code()).sorted().toList(),
+                combined.stream().map(r -> r.account().code()).toList());
+        q.setPage(0);q.setDirection("desc");
+        assertEquals(combined.getLast().account().id(), accounting.chart(q, null).records().rows().getFirst().account().id());
+        var first = combined.getFirst().account();
         accounting.accountState(first.id(), first.version(), false);
         try {
-            q.setStatus("ACTIVE");
-            assertEquals(24, accounting.groupedAccounts(q, null, null, 0).total());
-            q.setStatus("INACTIVE");
-            assertEquals(1, accounting.groupedAccounts(q, null, null, 0).total());
-            q.setStatus("");
-            q.setSearch("%");
-            assertEquals(0, accounting.groupedAccounts(q, null, null, 0).total());
+            q.setStatus("ACTIVE");assertEquals(24, accounting.chart(q, null).total());
+            q.setStatus("INACTIVE");assertEquals(1, accounting.chart(q, null).total());
+            q.setStatus("");q.setSearch("%");assertEquals(0, accounting.chart(q, null).total());
             q.setSearch("Grouped verification");
-            assertEquals(25, accounting.groupedAccounts(q, first.parentId(), null, 0).total());
-            assertEquals(0, accounting.groupedAccounts(q, first.id(), null, 0).total());
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> accounting.groupedAccounts(q, null, "ASSET OR TRUE", 0));
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> accounting.groupedAccounts(q, null, "ASSET", -1));
-            for (String sort :
-                    List.of(
-                            "code",
-                            "name",
-                            "parent",
-                            "normal",
-                            "status",
-                            "classification",
-                            "invalid")) {
-                q.setSort(sort);
-                assertEquals(
-                        10,
-                        accounting
-                                .groupedAccounts(q, null, null, 0)
-                                .groups()
-                                .getFirst()
-                                .accounts()
-                                .rows()
-                                .size());
+            assertEquals(25, accounting.chart(q, first.parentId()).total());
+            assertThrows(IllegalArgumentException.class, () -> accounting.chart(q, first.id()));
+            q.setClassification("ASSET OR TRUE");
+            assertThrows(IllegalArgumentException.class, () -> accounting.chart(q, null));
+            q.setClassification("");
+            for (String sort : List.of("code", "name", "parent", "normal", "status", "classification", "kind")) {
+                q.setSort(sort);assertEquals(10, accounting.chart(q, null).records().rows().size());
             }
+            q.setSort("invalid");assertThrows(IllegalArgumentException.class, () -> accounting.chart(q, null));q.setSort("code");
             var web = browser("admin@fcms.local", "ChangeMe123!");
             for (String lang : List.of("en", "sw")) {
-                var page =
-                        web.send(
-                                java.net.http.HttpRequest.newBuilder(
-                                                java.net.URI.create(
-                                                        "http://127.0.0.1:"
-                                                                + port
-                                                                + "/accounting/accounts?search=Grouped%20verification&size=10&group=EQUITY&groupPage=1&lang="
-                                                                + lang))
-                                        .GET()
-                                        .build(),
-                                java.net.http.HttpResponse.BodyHandlers.ofString());
-                assertEquals(200, page.statusCode());
-                assertTrue(page.body().contains("data-group-total=\"25\""));
-                assertTrue(page.body().contains("groupPage=2"));
-                assertTrue(page.body().contains("groupPage=0"));
-                assertTrue(page.body().contains(lang.equals("sw") ? "Pakia zaidi" : "Load more"));
-                assertFalse(page.body().contains("data-grouped-heading=\"ASSET\""));
+                var response = web.send(java.net.http.HttpRequest.newBuilder(java.net.URI.create("http://127.0.0.1:"
+                        + port + "/accounting/accounts?search=Grouped%20verification&size=10&page=1&kind=POSTING&classification=EQUITY&lang=" + lang))
+                        .GET().build(), java.net.http.HttpResponse.BodyHandlers.ofString());
+                assertEquals(200, response.statusCode());
+                assertTrue(response.body().contains("data-page=\"1\""));
+                assertTrue(response.body().contains("page=2"));assertTrue(response.body().contains("page=0"));
+                assertTrue(response.body().contains("classification=EQUITY"));assertTrue(response.body().contains("kind=POSTING"));
+                assertTrue(response.body().contains("data-expandable=\"false\""));
             }
-            actor(staff);
-            assertThrows(
-                    AccessDeniedException.class,
-                    () -> accounting.groupedAccounts(q, null, null, 0));
+            actor(staff);assertThrows(AccessDeniedException.class, () -> accounting.chart(q, null));
         } finally {
-            actor("admin@fcms.local");
-            accounting.accountState(first.id(), accounting.account(first.id()).version(), true);
+            actor("admin@fcms.local");accounting.accountState(first.id(), accounting.account(first.id()).version(), true);
         }
     }
 
     @Test
-    void doubleEntryAccountingCompletesReviewPostingStatementsAndControlledClosing()
+    void doubleEntryAccountingRetainsReviewPostingStatementsAndHistoricalPeriodGuards()
             throws Exception {
         actor(reviewer);
         var opening = today().withDayOfYear(1);
@@ -1940,37 +1847,12 @@ class PostgresModuleTests {
             openingSource = ledger.post(LedgerKind.INCOME, legacySource);
             assertThrows(
                     IllegalArgumentException.class, () -> statements.statements(opening, today));
-            var setup = new com.foresight.fcms.accounting.dto.BookForm();
-            setup.setOpeningDate(opening);
-            setup.setPolicyReference("Synthetic accounting verification");
-            setup.setOpeningMode(System.getenv().getOrDefault("FCMS_TEST_OPENING_MODE", "ZERO"));
-            accounting.configure(setup);
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> accounting.approveBooks(0, "Self approval"));
-            actor("admin@fcms.local");
-            verifyCutoverSerializesPendingOperationalWrites(opening);
+            AccountingHistoryFixtures.books(db, opening,
+                    System.getenv().getOrDefault("FCMS_TEST_OPENING_MODE", "ZERO"), reviewer, "admin@fcms.local");
         }
         actor(reviewer);
-        var periods = new RegisterQuery();
-        periods.setSearch("GL verification");
-        var existing = accounting.periods(periods).rows();
-        long period;
-        if (existing.isEmpty()) {
-            var form = new com.foresight.fcms.accounting.dto.PeriodForm();
-            form.setName("GL verification");
-            form.setStartsOn(opening);
-            form.setEndsOn(today.withMonth(12).withDayOfMonth(31));
-            period = accounting.createPeriod(form);
-        } else {
-            period = existing.getFirst().id();
-            if (existing.getFirst().state().equals("CLOSED"))
-                accounting.periodState(
-                        period,
-                        existing.getFirst().version(),
-                        false,
-                        "Repeat isolated verification");
-        }
+        long period = AccountingHistoryFixtures.period(db, "GL verification", opening,
+                today.withMonth(12).withDayOfMonth(31), reviewer);
         long cash = glAccount("111001", "Cash", "ASSET", true);
         long equity = glAccount("311001", "Owner capital", "EQUITY", false);
         long income = glAccount("511001", "Service revenue", "INCOME", false);
@@ -2000,12 +1882,12 @@ class PostgresModuleTests {
         var receipt = glVoucher("RECEIPT", cash, income, "100.35", "OPERATING");
         var invalid = glVoucher("JOURNAL", cash, income, "1.00", "OPERATING");
         invalid.getLines().get(1).setCredit(new BigDecimal("0.99"));
-        assertThrows(IllegalArgumentException.class, () -> journals.save(null, invalid));
+        assertThrows(IllegalArgumentException.class, () -> journals.createDraft(invalid));
         long receiptId = glPost(receipt);
         actor(reviewer);
-        assertEquals(receiptId, journals.save(null, receipt));
+        assertEquals(receiptId, journals.createDraft(receipt));
         receipt.setDescription("Changed retry payload");
-        assertThrows(IllegalArgumentException.class, () -> journals.save(null, receipt));
+        assertThrows(IllegalArgumentException.class, () -> journals.createDraft(receipt));
         glPost(glVoucher("PAYMENT", expense, cash, "20.10", "OPERATING"));
         glPost(glVoucher("JOURNAL", cash, equity, "1000.00", "FINANCING"));
         actor(reviewer);
@@ -2078,7 +1960,7 @@ class PostgresModuleTests {
                             () -> {
                                 actor(reviewer);
                                 try {
-                                    return journals.save(null, duplicate);
+                                    return journals.createDraft(duplicate);
                                 } finally {
                                     SecurityContextHolder.clearContext();
                                 }
@@ -2088,7 +1970,7 @@ class PostgresModuleTests {
                             () -> {
                                 actor(reviewer);
                                 try {
-                                    return journals.save(null, duplicate);
+                                    return journals.createDraft(duplicate);
                                 } finally {
                                     SecurityContextHolder.clearContext();
                                 }
@@ -2100,10 +1982,9 @@ class PostgresModuleTests {
         }
         actor(reviewer);
         ledger.post(LedgerKind.INCOME, money("0.12", "Unposted closing evidence " + suffix));
-        long v = accounting.periods(periods).rows().getFirst().version();
         assertThrows(
-                IllegalArgumentException.class,
-                () -> accounting.periodState(period, v, true, "Unposted sources prevent closing"));
+                org.springframework.dao.DataAccessException.class,
+                () -> AccountingHistoryFixtures.periodState(db, period, true, reviewer));
         var web = browser(reviewer, "Verification123!");
         for (String route :
                 List.of(
@@ -2111,14 +1992,9 @@ class PostgresModuleTests {
                         "/accounting/accounts/new",
                         "/accounting/accounts/" + cash,
                         "/accounting/accounts/" + cash + "/edit",
-                        "/accounting/books",
-                        "/accounting/books/edit",
-                        "/accounting/periods",
-                        "/accounting/periods/new",
-                        "/accounting/periods/" + period,
                         "/accounting/journals",
-                        "/accounting/journals/new?kind=RECEIPT",
-                        "/accounting/journals/new?kind=PAYMENT",
+                        "/accounting/vouchers/receipt/new",
+                        "/accounting/vouchers/payment/new",
                         "/accounting/journals/" + draft + "/edit",
                         "/accounting/journals/" + receiptId,
                         "/accounting/statements/income-statement",
@@ -2229,7 +2105,7 @@ class PostgresModuleTests {
                                         + opening
                                         + "&amp;to="
                                         + today));
-        assertTrue(scopedJournal.body().contains("ledgerAccount=" + cash + "&amp;lang=sw"));
+        assertTrue(languageForm(scopedJournal.body()).contains("name=\"ledgerAccount\" value=\"" + cash + "\""));
         var forgedJournal =
                 web.send(
                         java.net.http.HttpRequest.newBuilder(
@@ -2274,12 +2150,9 @@ class PostgresModuleTests {
                 ledger.post(LedgerKind.INCOME, money("1.23", "Period eligibility probe " + suffix));
         assertEquals("READY", sources.find("LEDGER_INCOME", closedProbe).coverage());
         assertFalse(statements.statements(opening, today).sourceCoverage().complete());
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        accounting.periodState(
-                                period, v, true, "Source probe prevents premature closure"));
-        assertEquals("OPEN", accounting.period(period).state());
+        assertThrows(org.springframework.dao.DataAccessException.class,
+                () -> AccountingHistoryFixtures.periodState(db, period, true, reviewer));
+        assertEquals("OPEN", db.queryForObject("select state from gl_periods where id=?", String.class, period));
         assertEquals(
                 0,
                 db.queryForObject(
@@ -2293,10 +2166,9 @@ class PostgresModuleTests {
         assertThrows(
                 org.springframework.dao.DataAccessException.class,
                 () ->
-                        accounting.periodState(
-                                period, v, true, "Unresolved manual draft still prevents closing"));
+                        AccountingHistoryFixtures.periodState(db, period, true, reviewer));
         journals.transition(draft, 0, "cancel", "Cancel synthetic duplicate draft");
-        accounting.periodState(period, v, true, "Verified trial balance and source reconciliation");
+        AccountingHistoryFixtures.periodState(db, period, true, reviewer);
         assertTrue(
                 db.queryForObject(
                         "select closed from finance_gl_period_guards where period_id=?",
@@ -2304,7 +2176,7 @@ class PostgresModuleTests {
                         period));
         assertThrows(
                 IllegalArgumentException.class,
-                () -> journals.save(null, glVoucher("JOURNAL", cash, equity, "1.00", "FINANCING")));
+                () -> journals.createDraft(glVoucher("JOURNAL", cash, equity, "1.00", "FINANCING")));
         assertThrows(
                 org.springframework.dao.DataIntegrityViolationException.class,
                 () -> ledger.post(LedgerKind.INCOME, money("1.00", "Closed period source")));
@@ -2318,10 +2190,8 @@ class PostgresModuleTests {
                                 UUID.randomUUID(),
                                 "Closed period reversal"));
         actor(reviewer);
-        var closed = accounting.period(period);
-        accounting.periodState(
-                period, closed.version(), false, "Controlled reopening after closure verification");
-        assertEquals("OPEN", accounting.period(period).state());
+        AccountingHistoryFixtures.periodState(db, period, false, reviewer);
+        assertEquals("OPEN", db.queryForObject("select state from gl_periods where id=?", String.class, period));
         assertFalse(
                 db.queryForObject(
                         "select closed from finance_gl_period_guards where period_id=?",
@@ -2515,14 +2385,9 @@ class PostgresModuleTests {
                                     java.net.http.HttpResponse.BodyHandlers.ofString());
                     assertEquals(200, entryPage.statusCode());
                     assertTrue(entryPage.body().contains("/accounting/journals/"));
-                    var languageLink =
-                            java.util.regex.Pattern.compile(
-                                            "<a[^>]*href=\"([^\"]+)\"[^>]*>Kiswahili</a>")
-                                    .matcher(entryPage.body());
-                    assertTrue(languageLink.find());
-                    assertTrue(languageLink.group(1).contains("from=" + from));
-                    assertTrue(languageLink.group(1).contains("to=" + to));
-                    assertTrue(languageLink.group(1).contains("lang=sw"));
+                    String language = languageForm(entryPage.body());
+                    assertTrue(language.contains("name=\"from\" value=\"" + from + "\""));
+                    assertTrue(language.contains("name=\"to\" value=\"" + to + "\""));
                 }
             }
             var printable =
@@ -2813,107 +2678,6 @@ class PostgresModuleTests {
 
     @Autowired org.springframework.transaction.PlatformTransactionManager transactions;
 
-    void verifyCutoverSerializesPendingOperationalWrites(java.time.LocalDate opening)
-            throws Exception {
-        var pool = Executors.newFixedThreadPool(2);
-        var held = new CountDownLatch(1);
-        var release = new CountDownLatch(1);
-        var reviewStarted = new CountDownLatch(1);
-        var writerPid = new java.util.concurrent.atomic.AtomicInteger();
-        var checkerPid = new java.util.concurrent.atomic.AtomicInteger();
-        var transaction =
-                new org.springframework.transaction.support.TransactionTemplate(transactions);
-        var writer =
-                pool.submit(
-                        () -> {
-                            actor(reviewer);
-                            try {
-                                return transaction.execute(
-                                        status -> {
-                                            writerPid.set(
-                                                    db.queryForObject(
-                                                            "select pg_backend_pid()",
-                                                            Integer.class));
-                                            var f =
-                                                    money(
-                                                            "1.20",
-                                                            "Concurrent pre-cutover evidence "
-                                                                    + suffix);
-                                            f.setDate(opening.minusDays(1));
-                                            long id = ledger.post(LedgerKind.INCOME, f);
-                                            held.countDown();
-                                            try {
-                                                if (!release.await(20, TimeUnit.SECONDS))
-                                                    throw new IllegalStateException(
-                                                            "Cutover test writer was not released");
-                                            } catch (InterruptedException e) {
-                                                Thread.currentThread().interrupt();
-                                                throw new IllegalStateException(e);
-                                            }
-                                            return id;
-                                        });
-                            } finally {
-                                SecurityContextHolder.clearContext();
-                            }
-                        });
-        try {
-            assertTrue(held.await(10, TimeUnit.SECONDS));
-            var approval =
-                    pool.submit(
-                            () -> {
-                                actor("admin@fcms.local");
-                                try {
-                                    return transaction.execute(
-                                            status -> {
-                                                checkerPid.set(
-                                                        db.queryForObject(
-                                                                "select pg_backend_pid()",
-                                                                Integer.class));
-                                                reviewStarted.countDown();
-                                                accounting.approveBooks(
-                                                        accounting.books().orElseThrow().version(),
-                                                        "Reviewed synthetic policy and opening"
-                                                                + " evidence");
-                                                return true;
-                                            });
-                                } finally {
-                                    SecurityContextHolder.clearContext();
-                                }
-                            });
-            assertTrue(reviewStarted.await(10, TimeUnit.SECONDS));
-            boolean blocked = false;
-            for (int attempt = 0; attempt < 100 && !blocked; attempt++) {
-                blocked =
-                        Boolean.TRUE.equals(
-                                db.queryForObject(
-                                        "select ?=any(pg_blocking_pids(?))",
-                                        Boolean.class,
-                                        writerPid.get(),
-                                        checkerPid.get()));
-                if (!blocked) Thread.sleep(50);
-            }
-            assertTrue(blocked, "Cutover approval waits for the in-flight operational transaction");
-            release.countDown();
-            long source = writer.get(15, TimeUnit.SECONDS);
-            assertTrue(approval.get(15, TimeUnit.SECONDS));
-            assertEquals(
-                    opening,
-                    db.queryForObject(
-                            "select starts_on from finance_gl_cutover", java.time.LocalDate.class));
-            assertEquals(
-                    0,
-                    db.queryForObject(
-                            "select count(*) from finance_gl_sources s cross join gl_books b where"
-                                    + " s.source_kind='LEDGER_INCOME' and s.source_id=? and"
-                                    + " s.recorded_at>b.approved_at",
-                            Integer.class,
-                            source));
-        } finally {
-            release.countDown();
-            pool.shutdownNow();
-        }
-    }
-
     void verifyOperationalSourcePosting(
             Long openingSource,
             java.time.LocalDate opening,
@@ -2988,13 +2752,6 @@ class PostgresModuleTests {
                 sourceVoucher.lines().stream()
                         .allMatch(line -> line.description().equals(actualSource.description())));
         assertEquals(0, new BigDecimal("7.15").compareTo(journals.find(abandoned).total()));
-        assertThrows(IllegalArgumentException.class, () -> journals.form(abandoned));
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        journals.save(
-                                abandoned,
-                                glVoucher("RECEIPT", bank, revenue, "7.15", "OPERATING")));
         assertThrows(
                 org.springframework.dao.DataIntegrityViolationException.class,
                 () ->
@@ -3024,7 +2781,7 @@ class PostgresModuleTests {
                 () -> sources.prepare("LEDGER_INCOME", sourceId, f));
         f.setEvidenceReference("Source evidence " + suffix);
         var wrongAmount = glVoucher("RECEIPT", bank, revenue, "7.16", "OPERATING");
-        long wrongVoucher = journals.save(null, wrongAmount);
+        long wrongVoucher = journals.createDraft(wrongAmount);
         assertThrows(
                 org.springframework.dao.DataIntegrityViolationException.class,
                 () ->
@@ -3555,7 +3312,7 @@ class PostgresModuleTests {
 
     long glPost(com.foresight.fcms.accounting.dto.JournalForm f) {
         actor(reviewer);
-        long id = journals.save(null, f);
+        long id = journals.createDraft(f);
         journals.transition(id, 0, "submit", "");
         assertThrows(
                 IllegalArgumentException.class,
@@ -3573,4 +3330,14 @@ class PostgresModuleTests {
         f.setAmount(new BigDecimal(amount));
         return f;
     }
+    private String languageForm(String html) {
+        var form = java.util.regex.Pattern.compile("<form[^>]*data-shell-language[^>]*>(.*?)</form>", java.util.regex.Pattern.DOTALL).matcher(html);
+        assertTrue(form.find());
+        String body = form.group(1);
+        assertTrue(body.contains("id=\"lang\" name=\"lang\""));
+        assertTrue(body.contains("value=\"en\""));
+        assertTrue(body.contains("value=\"sw\""));
+        return body;
+    }
+
 }

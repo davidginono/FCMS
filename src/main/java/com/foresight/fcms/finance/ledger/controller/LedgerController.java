@@ -1,10 +1,13 @@
 package com.foresight.fcms.finance.ledger.controller;
 
+import com.foresight.fcms.shared.controller.FormErrors;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.foresight.fcms.shared.controller.ResourceFeedback;
 import com.foresight.fcms.client.service.ClientDirectoryService;
 import com.foresight.fcms.finance.ledger.dto.LedgerForm;
+import com.foresight.fcms.finance.ledger.dto.LedgerQuery;
 import com.foresight.fcms.finance.ledger.model.LedgerKind;
 import com.foresight.fcms.finance.ledger.service.LedgerService;
-import com.foresight.fcms.shared.dto.RegisterQuery;
 
 import jakarta.validation.Valid;
 
@@ -14,7 +17,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
-@RequestMapping("/finance/{ledger:income|petty-cash|cloud-backup|bulk-sms}")
+@RequestMapping("/finance/{ledger:petty-cash|cloud-backup|bulk-sms}")
 public class LedgerController {
     private final LedgerService ledger;
     private final ClientDirectoryService clients;
@@ -34,10 +37,25 @@ public class LedgerController {
 
     @GetMapping
     public String list(
-            @PathVariable String ledger, @ModelAttribute("query") RegisterQuery q, Model m) {
+            @PathVariable String ledger,
+            @ModelAttribute("query") LedgerQuery q,
+            Model m,
+            jakarta.servlet.http.HttpServletRequest request) {
         var k = LedgerKind.from(ledger);
-        m.addAttribute("records", this.ledger.list(k, q));
-        m.addAttribute("balance", this.ledger.balance(k));
+        if (k == LedgerKind.BULK
+                && request.getParameter("year") == null
+                && q.getFrom() == null
+                && q.getTo() == null)
+            q.setYear(
+                    String.valueOf(
+                            com.foresight.fcms.shared.time.ApplicationCalendar.today().getYear()));
+        if (request.getParameter("sort") == null) q.setSort("date");
+        var workspace = this.ledger.workspace(k, q);
+        m.addAttribute("records", workspace.records());
+        m.addAttribute("balance", workspace.balance());
+        m.addAttribute("ledgerTotals", workspace.totals());
+        m.addAttribute("ledgerYears", workspace.years());
+        m.addAttribute("ledgerFilters", true);
         return "ledger/index";
     }
 
@@ -48,8 +66,20 @@ public class LedgerController {
     }
 
     @GetMapping("/new")
-    public String create(@PathVariable String ledger, Model m) {
-        m.addAttribute("form", new LedgerForm());
+    public String create(
+            @PathVariable String ledger,
+            @RequestParam(defaultValue = "") String operation,
+            Model m) {
+        var kind = LedgerKind.from(ledger);
+        if (kind == LedgerKind.BULK
+                        && !java.util.Set.of("STOCK_PURCHASE", "CLIENT_SALE").contains(operation)
+                || kind == LedgerKind.PETTY
+                        && !java.util.Set.of("DEPOSIT", "WITHDRAWAL").contains(operation))
+            return "redirect:" + kind.getRoute();
+        var form = new LedgerForm();
+        form.setOperation(operation);
+        if (kind == LedgerKind.BULK) form.setCategory(operation);
+        m.addAttribute("form", form);
         m.addAttribute("clients", clients.saccos("", null));
         m.addAttribute("formAction", LedgerKind.from(ledger).getRoute());
         return "ledger/form";
@@ -60,13 +90,17 @@ public class LedgerController {
             @PathVariable String ledger,
             @Valid @ModelAttribute("form") LedgerForm f,
             BindingResult b,
-            Model m) {
+            Model m, RedirectAttributes redirect) {
         var k = LedgerKind.from(ledger);
         if (!b.hasErrors())
             try {
-                return "redirect:" + k.getRoute() + "/" + this.ledger.post(k, f);
+                long saved = this.ledger.post(k, f);
+                return ResourceFeedback.success(redirect, k.getRoute(), "feedback.entryRecorded", k.getRoute() + "/" + saved);
             } catch (IllegalArgumentException e) {
-                b.reject("error.invalid");
+                if ("error.insufficient".equals(e.getMessage())) b.rejectValue(k == LedgerKind.BULK ? "units" : "amount", "error.insufficient");
+                else FormErrors.reject(b, e, "error.invalid");
+            } catch (org.springframework.dao.DataAccessException e) {
+                b.reject("error.conflict");
             }
         m.addAttribute("clients", clients.saccos("", f.getClientId()));
         m.addAttribute("formAction", k.getRoute());

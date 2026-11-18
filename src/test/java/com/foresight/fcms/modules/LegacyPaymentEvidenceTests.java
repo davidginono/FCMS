@@ -155,17 +155,14 @@ class LegacyPaymentEvidenceTests {
 
     @BeforeAll
     void setup() {
+        OperationalTestClaims.enable(db);
         makerId = user(maker, 1);
         user(reverser, 1);
         payerId = user(payer, 1);
         checkerId = user(checker, 1);
         staffId = user(staff, 2);
         actor(maker);
-        var f = new PeriodForm();
-        f.setName("Current verification year");
-        f.setStartsOn(TODAY.withDayOfYear(1));
-        f.setEndsOn(TODAY.withDayOfYear(1).plusYears(1).minusDays(1));
-        period = accounting.createPeriod(f);
+        period = AccountingHistoryFixtures.period(db, "Current verification year", TODAY.withDayOfYear(1), TODAY.withDayOfYear(1).plusYears(1).minusDays(1), maker);
         long bank = glAccount("141001", "Legacy bank", "ASSET", true),
                 cost = glAccount("451001", "Legacy cost", "EXPENSE", false);
         var m = new PostingMappingForm();
@@ -259,7 +256,7 @@ class LegacyPaymentEvidenceTests {
                         Integer.class));
         double createdBefore = metrics.counter("fcms.expense.evidence", "action", "create").count();
         var first = form(1, TODAY);
-        long proof = createThroughHttp(first);
+        long proof = createHistoricalEvidence(first);
         actor(maker);
         assertEquals(proof, evidence.create(expense(1), first));
         assertEquals(
@@ -287,7 +284,7 @@ class LegacyPaymentEvidenceTests {
                                     + " review',reviewed_at=clock_timestamp(),version=version+1"
                                     + " where id=?",
                                 proof));
-        approveThroughHttp(proof);
+        approveHistoricalEvidence(proof);
         actor(checker);
         evidence.review(expense(1), proof, approve(0));
         assertEquals(TODAY, finance.find("EXPENSE", expense(1)).date());
@@ -452,8 +449,8 @@ class LegacyPaymentEvidenceTests {
         postSource("EXPENSE", expense(6), mapping);
         actor(checker);
         assertTrue(coverage.through(TODAY).complete());
-        accounting.periodState(period, 0, true, "All legacy sources reconciled");
-        assertEquals("CLOSED", accounting.period(period).state());
+        AccountingHistoryFixtures.periodState(db, period, true, checker);
+        assertEquals("CLOSED", db.queryForObject("select state from gl_periods where id=?", String.class, period));
         var sorted = new RegisterQuery();
         sorted.setSort("expenseStatus");
         sorted.setDirection("asc");
@@ -529,75 +526,25 @@ class LegacyPaymentEvidenceTests {
                 java.net.http.HttpResponse.BodyHandlers.ofString());
     }
 
-    long createThroughHttp(PaymentEvidenceForm f) throws Exception {
+    long createHistoricalEvidence(PaymentEvidenceForm f) throws Exception {
+        // Exercise retained source-accounting history; its former browser form is retired.
         var web = browser(maker, "Verification123!");
-        String route = "/finance/expenses/" + expense(1) + "/evidence";
-        var page = get(web, route + "/new?lang=sw");
-        assertEquals(200, page.statusCode());
-        assertTrue(page.body().contains("Wasilisha ushahidi"));
-        assertTrue(page.body().contains("/evidence/payers"));
-        String input =
-                "_csrf="
-                        + encoded(token(page.body()))
-                        + "&paidOn="
-                        + f.getPaidOn()
-                        + "&payerId="
-                        + f.getPayerId()
-                        + "&paymentReference="
-                        + encoded(f.getPaymentReference())
-                        + "&documentReference="
-                        + encoded(f.getDocumentReference())
-                        + "&openingPolicyReference=&requestKey="
-                        + f.getRequestKey();
-        var invalid = post(web, route, input + "&explanation=");
-        assertEquals(200, invalid.statusCode());
-        assertTrue(invalid.body().contains(f.getDocumentReference()));
-        assertTrue(invalid.body().contains("</html>"));
-        var created =
-                post(
-                        web,
-                        route,
-                        input
-                                + "&explanation="
-                                + encoded(f.getExplanation())
-                                + "&amount=999999&state=APPROVED&checkerId="
-                                + checkerId);
-        assertEquals(302, created.statusCode());
-        String location = created.headers().firstValue("Location").orElseThrow();
-        long id = Long.parseLong(location.substring(location.lastIndexOf('/') + 1));
+        assertEquals(410, get(web, "/finance/expenses/" + expense(1) + "/evidence/new").statusCode());
         actor(maker);
+        long id = evidence.create(expense(1), f);
         assertEquals("PENDING", evidence.find(expense(1), id).state());
-        assertEquals(
-                0,
-                new java.math.BigDecimal("12.34").compareTo(evidence.payment(expense(1)).amount()));
+        assertEquals(0, new java.math.BigDecimal("12.34").compareTo(evidence.payment(expense(1)).amount()));
         return id;
     }
 
-    void approveThroughHttp(long proof) throws Exception {
-        var web = browser(checker, "Verification123!");
-        String route = "/finance/expenses/" + expense(1) + "/evidence/" + proof;
-        var page = get(web, route + "?lang=en");
-        assertEquals(200, page.statusCode());
-        String csrf = encoded(token(page.body()));
-        var approved =
-                post(
-                        web,
-                        route + "/review",
-                        "_csrf="
-                                + csrf
-                                + "&version=0&action=approve&comment="
-                                + encoded(approve(0).comment()));
-        assertEquals(302, approved.statusCode());
-        var stale =
-                post(
-                        web,
-                        route + "/review",
-                        "_csrf=" + csrf + "&version=0&action=reject&comment=%3Cimg+src%3Dx%3E");
-        assertEquals(200, stale.statusCode());
-        assertTrue(stale.body().contains("Attempted review"));
-        assertTrue(stale.body().contains("&lt;img src=x&gt;"));
-        assertFalse(stale.body().contains("<img src=x>"));
-        assertTrue(stale.body().contains(approve(0).comment()));
+    void approveHistoricalEvidence(long proof) throws Exception {
+        actor(checker);
+        evidence.review(expense(1), proof, approve(0));
+        assertEquals("APPROVED", evidence.find(expense(1), proof).state());
+        evidence.review(expense(1), proof, approve(0));
+        assertEquals("APPROVED", evidence.find(expense(1), proof).state());
+        assertThrows(org.springframework.dao.OptimisticLockingFailureException.class,
+                () -> evidence.review(expense(1), proof, new PaymentEvidenceReview(0, "reject", "Changed stale review")));
     }
 
     void verifyPeriodLock(long proof) throws Exception {
@@ -681,18 +628,18 @@ class LegacyPaymentEvidenceTests {
                                         .GET()
                                         .build(),
                                 java.net.http.HttpResponse.BodyHandlers.ofString());
-                assertEquals(200, response.statusCode(), route);
-                assertTrue(response.body().contains("</html>"));
-                assertTrue(
-                        response.body()
-                                .contains(
-                                        language.equals("sw")
-                                                ? "Ushahidi wa malipo"
-                                                : "Payment evidence"));
+                if (route.startsWith("/finance/expenses")) {
+                    assertEquals(410, response.statusCode(), route);
+                    assertTrue(response.body().isEmpty());
+                } else {
+                    assertEquals(200, response.statusCode(), route);
+                    assertTrue(response.body().contains("</html>"));
+                    assertFalse(response.body().contains("/finance/expenses/"));
+                }
             }
         var denied = browser(staff, "Verification123!");
         assertEquals(
-                403,
+                410,
                 denied.send(
                                 java.net.http.HttpRequest.newBuilder(
                                                 java.net.URI.create(

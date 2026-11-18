@@ -40,7 +40,7 @@
 <c:forEach items="${records.rows()}" var="row">
 <tr>
 <td>
-<a class="resource-table-id-link" href="<c:url value='/admin/users/${row.id()}'/>"><c:out value="${row.name()}"/></a>
+<c:choose><c:when test="${permissions.contains('iam.user.manage')}"><a class="resource-table-id-link" href="<c:url value='/admin/users/${row.id()}/edit'/>"><c:out value="${row.name()}"/></a></c:when><c:otherwise><c:out value="${row.name()}"/></c:otherwise></c:choose>
 </td>
 <td>
 <c:out value="${row.email()}" />
@@ -52,9 +52,9 @@
 <spring:message code="status.${row.status()}" text="${row.status()}"/>
 </td>
 <td>
-<a class="app-btn btn-neutral" href="<c:url value='/admin/users/${row.id()}' />">
-<spring:message code="common.view" />
-</a>
+<c:if test="${permissions.contains('iam.user.manage')}"><a class="app-btn btn-neutral" href="<c:url value='/admin/users/${row.id()}/edit' />">
+<spring:message code="common.edit" />
+</a></c:if>
 </td>
 </tr>
 </c:forEach>

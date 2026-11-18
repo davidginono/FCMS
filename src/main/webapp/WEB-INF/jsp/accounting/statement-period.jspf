@@ -1,0 +1,8 @@
+<%@ page pageEncoding="UTF-8" %>
+<c:choose><c:when test="${reportType=='trial'}"><c:set var="reportFilterPath" value="/accounting/trial-balance"/></c:when><c:otherwise><c:set var="reportFilterPath" value="/accounting/statements/${reportType}"/></c:otherwise></c:choose>
+<form class="fs-report-controls" data-fs-filter method="get" action="<c:url value='${reportFilterPath}'/>">
+<c:if test="${reportType=='trial'}"><input type="hidden" name="search" value="<c:out value='${query.search}'/>"><input type="hidden" name="sort" value="<c:out value='${query.sort}'/>"><input type="hidden" name="direction" value="${query.direction}"><input type="hidden" name="size" value="${query.size}"></c:if>
+<label><spring:message code="common.from"/><input class="fcms-control" type="date" name="from" value="${query.from}" <c:if test="${reportType=='trial'}">min="${book.openingDate()}" max="${today}"</c:if> required></label>
+<label><spring:message code="common.to"/><input class="fcms-control" type="date" name="to" value="${query.to}" <c:if test="${reportType=='trial'}">min="${book.openingDate()}" max="${today}"</c:if> required></label>
+<button type="submit" class="app-btn btn-neutral"><spring:message code="common.apply"/></button>
+</form>

@@ -16,10 +16,11 @@ import java.util.Locale;
 public class JournalDocumentService {
     private final JdbcTemplate db;
     private final JournalService journals;
+    private final VoucherService vouchers;
 
-    public JournalDocumentService(JdbcTemplate db, JournalService journals) {
+    public JournalDocumentService(JdbcTemplate db, JournalService journals,VoucherService vouchers) {
         this.db = db;
-        this.journals = journals;
+        this.journals = journals;this.vouchers=vouchers;
     }
 
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
@@ -67,13 +68,16 @@ public class JournalDocumentService {
                         .map(line -> line.accountCode() + " - " + line.accountName())
                         .distinct()
                         .toList();
+        var header=vouchers.header(id).orElse(null);
+        var transactions=header==null?List.<VoucherService.Row>of():vouchers.rows(id);
+        if(header!=null)receiptItems=transactions.stream().map(r->new ReceiptItem(r.description(),r.amount())).toList();
         return new VoucherDocument(
                 journal,
                 total,
                 AmountInWords.amountInWords(total, locale),
                 at,
                 receiptItems,
-                moneyAccounts);
+                moneyAccounts,header,transactions);
     }
 
     public record ReceiptItem(String particulars, BigDecimal amount) {}
@@ -84,5 +88,9 @@ public class JournalDocumentService {
             String words,
             Instant postedAt,
             List<ReceiptItem> receiptItems,
-            List<String> moneyAccounts) {}
+            List<String> moneyAccounts,VoucherService.Header header,List<VoucherService.Row> transactions) {
+        public VoucherDocument(Journal journal,BigDecimal amount,String words,Instant postedAt,List<ReceiptItem> receiptItems,List<String> moneyAccounts) {
+            this(journal,amount,words,postedAt,receiptItems,moneyAccounts,null,List.of());
+        }
+    }
 }

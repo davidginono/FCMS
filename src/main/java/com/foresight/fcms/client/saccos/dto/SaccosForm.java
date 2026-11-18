@@ -22,7 +22,7 @@ public class SaccosForm {
         version = v;
     }
 
-    @NotBlank private String saccosName;
+    @NotBlank @jakarta.validation.constraints.Size(max=255) private String saccosName;
 
     @NotNull
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -31,7 +31,7 @@ public class SaccosForm {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate expireDate;
 
-    @NotBlank private String region;
+    @NotBlank @jakarta.validation.constraints.Size(max=255) private String region;
 
     @jakarta.validation.constraints.Digits(integer = 12, fraction = 2)
     @DecimalMin("0.00")
@@ -98,10 +98,14 @@ public class SaccosForm {
 
     @NotNull private Long paymentStatusId;
 
-    @NotNull private Long financialYearId;
+    private Long financialYearId;
 
+    @jakarta.validation.constraints.Pattern(regexp = "ACTIVE|INACTIVE")
+    @NotBlank
     private String operationalStatus = "ACTIVE";
 
+    @jakarta.validation.constraints.Pattern(regexp = "YES|NO")
+    @NotBlank
     private String invoiceStatus = "NO";
 
     public static SaccosForm from(Saccos saccos) {

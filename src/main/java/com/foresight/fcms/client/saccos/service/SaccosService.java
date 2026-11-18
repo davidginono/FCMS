@@ -1,5 +1,6 @@
 package com.foresight.fcms.client.saccos.service;
 
+import com.foresight.fcms.shared.validation.FieldValidationException;
 import com.foresight.fcms.client.saccos.dto.SaccosFilter;
 import com.foresight.fcms.client.saccos.dto.SaccosForm;
 import com.foresight.fcms.client.saccos.dto.SaccosRowDto;
@@ -75,26 +76,19 @@ public class SaccosService {
         return new SaccosListResult(page, totals, yearId);
     }
 
-    private Sort exportSort(SaccosFilter filter) {
-        String property =
-                java.util.Map.of(
-                                "name",
-                                "saccosName",
-                                "region",
-                                "region",
-                                "entryDate",
-                                "entryDate",
-                                "expireDate",
-                                "expireDate",
-                                "annualFee",
-                                "annualFee",
-                                "amount",
-                                "amount",
-                                "financialYear",
-                                "financialYear.fyear",
-                                "paymentStatus",
-                                "status.name")
-                        .getOrDefault(filter.getSort(), "saccosName");
+    public Sort registerSort(SaccosFilter filter) {
+        String property = switch (filter.getSort() == null ? "name" : filter.getSort()) {
+            case "name" -> "saccosName";
+            case "financialYear" -> "financialYear.fyear";
+            case "paymentStatus" -> "status.name";
+            case "contract" -> "contractFile";
+            case "region", "entryDate", "expireDate", "annualFee", "amount", "datePaid",
+                    "withholdingTax", "commission", "programmerCost", "systemInstallFee",
+                    "trainingFee", "androidFee", "androidCost", "systemReinstallFee",
+                    "bulkSmsFee", "hostingFee", "essFee", "cloudBackupFee", "cloudBackupCost",
+                    "operationalStatus", "invoiceStatus" -> filter.getSort();
+            default -> "saccosName";
+        };
         return Sort.by(Sort.Direction.fromString(filter.getDirection()), property)
                 .and(Sort.by("id"));
     }
@@ -115,7 +109,7 @@ public class SaccosService {
                                 yearId,
                                 filter.getPaymentStatusId(),
                                 searchPattern(filter.normalizedSearch()),
-                                PageRequest.of(0, 1001, exportSort(filter)))
+                                PageRequest.of(0, 1001, registerSort(filter)))
                         .stream()
                         .map(SaccosRowDto::from)
                         .toList();
@@ -136,7 +130,7 @@ public class SaccosService {
                                 yearId,
                                 filter.getPaymentStatusId(),
                                 search,
-                                PageRequest.of(0, 1001, exportSort(filter)))
+                                PageRequest.of(0, 1001, registerSort(filter)))
                         .stream()
                         .map(SaccosRowDto::from)
                         .toList();
@@ -179,6 +173,9 @@ public class SaccosService {
 
     public Long createSaccos(SaccosForm form, MultipartFile contractFile) {
         access.require("client.write");
+        validate(form);
+        if (form.getExpireDate() != null && form.getExpireDate().isBefore(form.getEntryDate()))
+            throw new FieldValidationException("error.dates", "expireDate");
         String stored = storageService.storeContract(contractFile);
         var registered = new java.util.concurrent.atomic.AtomicBoolean();
         try {
@@ -287,6 +284,7 @@ public class SaccosService {
 
     public void updateSaccos(Long id, SaccosForm form, MultipartFile contractFile) {
         access.require("client.write");
+        validate(form);
         String stored = storageService.storeContract(contractFile);
         var registered = new java.util.concurrent.atomic.AtomicBoolean();
         try {
@@ -298,7 +296,11 @@ public class SaccosService {
                 if (saccos.getVersion() != form.getVersion())
                     throw new org.springframework.dao.OptimisticLockingFailureException("stale");
                 String previous = saccos.getContractFile();
+                String previousStatus = saccos.getOperationalStatus();
+                form.setFinancialYearId(saccos.getFinancialYear() == null ? null : saccos.getFinancialYear().getId());
                 applyForm(saccos, form, stored);
+                if(!java.util.Objects.equals(previousStatus,form.getOperationalStatus()))
+                    audit.record(actor.id(),"client.status.update","saccos",id,"before="+previousStatus+"; after="+form.getOperationalStatus());
                 audit.record(
                         actor.id(),
                         "client.update",
@@ -413,17 +415,25 @@ public class SaccosService {
                 .orElse("All Payment Statuses");
     }
 
+    private void validate(SaccosForm form) {
+        var violations=validator.validate(form);
+        if(!violations.isEmpty()) throw new FieldValidationException("error.invalid", violations.iterator().next().getPropertyPath().toString());
+    }
+
     private void applyForm(Saccos saccos, SaccosForm form, String storedContract) {
+        if (form.getExpireDate() != null && form.getExpireDate().isBefore(form.getEntryDate()))
+            throw new FieldValidationException("error.dates", "expireDate");
         ClientStatus status =
                 clientStatusRepository
                         .findById(form.getPaymentStatusId())
                         .orElseThrow(
-                                () -> new IllegalArgumentException("Payment status was not found"));
-        FinancialYear financialYear =
+                                () -> new FieldValidationException("error.invalid", "paymentStatusId"));
+        if (saccos.getId() == null && form.getFinancialYearId() == null) throw new FieldValidationException("NotNull", "financialYearId");
+        FinancialYear financialYear = saccos.getId() != null ? saccos.getFinancialYear() :
                 financialYearRepository
                         .findById(form.getFinancialYearId())
                         .orElseThrow(
-                                () -> new IllegalArgumentException("Financial year was not found"));
+                                () -> new FieldValidationException("error.invalid", "financialYearId"));
         saccos.apply(form, status, financialYear, storedContract);
     }
 

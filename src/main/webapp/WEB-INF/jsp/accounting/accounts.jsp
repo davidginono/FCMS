@@ -1,68 +1,39 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ include file="/WEB-INF/jsp/shared/header.jspf" %>
-<link rel="stylesheet" href="<c:url value='/css/grouped-resource-table.css?v=20261103-grouped2'/>">
-<section class="erp-table-wrap" data-resource-table="${resourceKey}" data-grouped-resources data-table-page-size="${query.size}" data-table-page-size-options="10 25 50 100" data-table-sync-query="true"
- data-select-label="<spring:message code='gl.group.select'/>" data-selection-label="<spring:message code='gl.group.selected'/>"
- data-expand-label="<spring:message code='gl.group.expand'/>" data-collapse-label="<spring:message code='gl.group.collapse'/>"
- data-load-error="<spring:message code='table.loadError'/>">
- <div class="app-table-titlebar">
-  <h2><spring:message code="gl.accounts"/> <span class="app-table-count" data-grouped-counter>(${grouped.total()})</span></h2>
-  <div class="app-table-toolbar">
-   <button type="button" class="app-btn btn-neutral" data-table-command data-grouped-open disabled><spring:message code="common.view"/></button>
-   <c:if test="${permissions.contains('accounting.setup')}"><a class="app-btn btn-launch" href="<c:url value='/accounting/accounts/new?parentId=${parentId}'/>"><spring:message code="common.create"/></a></c:if>
+<link rel="stylesheet" href="<c:url value='/css/grouped-resource-table.css?v=20261116-coa-tree2'/>">
+<nav data-table-context-for="gl-accounts" ${empty groupPath?'hidden':''} class="erp-page-path" aria-label="<spring:message code='common.breadcrumb'/>"><a href="<c:url value='/accounting/accounts'/>"><spring:message code="gl.accounts"/></a><c:forEach items="${groupPath}" var="ancestor" varStatus="pathStatus"><span aria-hidden="true"> / </span><c:choose><c:when test="${pathStatus.last}"><span aria-current="page"><c:out value="${ancestor.code()}"/></span></c:when><c:otherwise><a href="<c:url value='/accounting/accounts?parentId=${ancestor.id()}'/>"><c:out value="${ancestor.code()}"/></a></c:otherwise></c:choose></c:forEach></nav>
+<div class="accounting-workspace accounting-resource-workspace">
+<section id="coa-register" class="erp-table-wrap" data-resource-table="${resourceKey}" data-coa-tree data-table-selection="single" data-resource-split data-table-page-size="${query.size}" data-table-page-size-options="10 25 50 100" data-table-sync-query="true"
+ data-children-url="<c:url value='/accounting/accounts/children'/>" data-base-url="<c:url value='/accounting/accounts'/>"
+ data-expand="<spring:message code='gl.group.expand'/>" data-collapse="<spring:message code='gl.group.collapse'/>"
+ data-load-error="<spring:message code='table.loadError'/>" data-loading="<spring:message code='gl.coa.loading'/>" data-empty="<spring:message code='gl.coa.emptyChildren'/>" data-retry="<spring:message code='gl.coa.retry'/>">
+ <div class="app-table-titlebar coa-titlebar">
+  <h2><spring:message code="gl.accounts"/> <span class="app-table-count">(${chartTotal})</span></h2>
+  <div class="app-table-toolbar accounting-actions">
+   <button type="button" class="app-btn btn-neutral" data-table-command data-coa-command="view" disabled><spring:message code="common.view"/></button>
+   <button type="button" class="app-btn btn-neutral" data-table-command data-coa-command="children" disabled><spring:message code="gl.childAccounts"/></button>
+   <c:if test="${permissions.contains('accounting.setup')}">
+    <button type="button" class="app-btn btn-neutral" data-table-command data-coa-command="edit" disabled><spring:message code="common.edit"/></button>
+    <form method="post" data-table-command data-coa-state><input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"><input type="hidden" name="version"><input type="hidden" name="active"><button class="app-btn btn-neutral" type="submit" disabled data-coa-command="state" data-activate="<spring:message code='common.activate'/>" data-deactivate="<spring:message code='common.deactivate'/>"><spring:message code="common.deactivate"/></button></form>
+   </c:if>
+   <c:if test="${permissions.contains('accounting.report')}"><button type="button" class="app-btn btn-neutral" data-table-command data-coa-command="ledger" disabled><spring:message code="gl.generalLedger"/></button></c:if>
+   <c:if test="${permissions.contains('accounting.setup')}"><button type="button" class="app-btn btn-launch" data-coa-create disabled data-group-label="<spring:message code='gl.coa.addGroup'/>" data-posting-label="<spring:message code='gl.coa.newPosting'/>"><spring:message code="gl.coa.addGroup"/></button><noscript><a class="app-btn btn-launch" href="<c:url value='/accounting/accounts/new?parentId=${parentId}'/>"><spring:message code="common.create"/></a></noscript></c:if>
   </div>
  </div>
- <%@ include file="/WEB-INF/jsp/reusableuicomponents/register-filters.jspf" %>
- <span class="sr-only" role="status" aria-live="polite" data-grouped-status></span>
- <div class="erp-table-scroll">
-  <table class="erp-table">
-   <thead><tr>
-    <th scope="col" class="resource-table-selection"><input type="checkbox" data-grouped-select-all aria-label="<spring:message code='gl.group.selectAll'/>" ${empty grouped.groups()?'disabled':''}></th>
-    <th scope="col" data-table-identifier data-table-sort-key="code" data-table-sort-asc="code" data-table-sort-desc="code"><spring:message code="gl.code"/></th>
-    <th scope="col" data-table-sort-key="name" data-table-sort-asc="name" data-table-sort-desc="name"><spring:message code="common.name"/></th>
-    <th scope="col" data-table-sort-key="classification" data-table-sort-asc="classification" data-table-sort-desc="classification"><spring:message code="gl.classification"/></th>
-    <th scope="col" data-table-sort-key="parent" data-table-sort-asc="parent" data-table-sort-desc="parent"><spring:message code="gl.parent"/></th>
-    <th scope="col" data-table-sort-key="normal" data-table-sort-asc="normal" data-table-sort-desc="normal"><spring:message code="gl.normal"/></th>
-    <th scope="col" data-table-sort-key="status" data-table-sort-asc="status" data-table-sort-desc="status"><spring:message code="common.status"/></th>
-   </tr></thead>
-   <tbody>
-    <c:forEach items="${grouped.groups()}" var="accountGroup">
-     <c:set var="groupKey" value="${accountGroup.classification()}"/>
-     <tr class="grouped-resource-heading" data-grouped-heading="${groupKey}" data-group-total="${accountGroup.total()}">
-      <td class="resource-table-selection"><input type="checkbox" data-grouped-select="${groupKey}" aria-label="<spring:message code='gl.group.select'/> <spring:message code='gl.class.${groupKey}'/>"></td>
-      <th scope="row" colspan="6">
-       <button type="button" class="grouped-resource-toggle" data-grouped-toggle="${groupKey}" aria-expanded="true" aria-label="<spring:message code='gl.group.collapse'/> <spring:message code='gl.class.${groupKey}'/>">
-        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 11L12 5H4L8 11Z"/></svg><span data-grouped-name><spring:message code="gl.class.${groupKey}"/></span>
-       </button> <span class="app-table-count" data-grouped-count>(${accountGroup.total()})</span>
-      </th>
-     </tr>
-     <c:forEach items="${accountGroup.accounts().rows()}" var="row">
-      <tr data-account-group="${groupKey}" data-account-id="${row.id()}">
-       <td class="resource-table-selection"><input type="checkbox" data-grouped-account="${row.id()}" aria-label="<spring:message code='gl.group.select'/> <c:out value='${row.code()}'/>"></td>
-       <td class="grouped-resource-code"><a class="resource-table-id-link" href="<c:url value='/accounting/accounts/${row.id()}'/>"><c:out value="${row.code()}"/></a></td>
-       <td><c:out value="${row.name()}"/></td><td><spring:message code="gl.class.${row.classification()}"/></td>
-       <td><c:out value="${row.parentName()}"/></td><td><spring:message code="gl.${row.normalBalance()}"/></td>
-       <td><spring:message code="status.${row.active()?'ACTIVE':'INACTIVE'}"/></td>
-      </tr>
-     </c:forEach>
-     <c:if test="${accountGroup.accounts().hasNext() or accountGroup.accounts().page()>0}">
-      <tr data-account-group="${groupKey}" class="grouped-resource-more"><td></td><td colspan="6">
-       <c:if test="${accountGroup.accounts().page()>0}">
-        <c:url var="previousGroupUrl" value="${baseUrl}"><c:param name="group" value="${groupKey}"/><c:param name="groupPage" value="${accountGroup.accounts().page()-1}"/><c:param name="parentId" value="${parentId}"/><c:param name="search" value="${query.search}"/><c:param name="status" value="${query.status}"/><c:param name="size" value="${query.size}"/><c:param name="sort" value="${query.sort}"/><c:param name="direction" value="${query.direction}"/></c:url>
-        <a class="resource-table-id-link" data-grouped-previous href="<c:out value='${previousGroupUrl}'/>"><spring:message code="common.previous"/></a>
-       </c:if>
-       <c:if test="${accountGroup.accounts().hasNext()}">
-        <c:url var="moreGroupUrl" value="${baseUrl}"><c:param name="group" value="${groupKey}"/><c:param name="groupPage" value="${accountGroup.accounts().page()+1}"/><c:param name="parentId" value="${parentId}"/><c:param name="search" value="${query.search}"/><c:param name="status" value="${query.status}"/><c:param name="size" value="${query.size}"/><c:param name="sort" value="${query.sort}"/><c:param name="direction" value="${query.direction}"/></c:url>
-        <a class="resource-table-id-link" data-grouped-more="${groupKey}" href="<c:out value='${moreGroupUrl}'/>"><spring:message code="gl.group.loadMore"/></a>
-       </c:if>
-       <span class="fcms-error" role="alert" data-grouped-error></span>
-      </td></tr>
-     </c:if>
-    </c:forEach>
-    <c:if test="${empty grouped.groups()}"><tr><td colspan="7"><spring:message code="${empty query.search and empty query.status and empty parentId?'common.noRecords':'table.noMatches'}"/></td></tr></c:if>
-   </tbody>
-  </table>
- </div>
+ <%@ include file="/WEB-INF/jsp/accounting/account-filters.jspf" %>
+ <span class="sr-only" role="status" aria-live="polite" data-coa-status></span>
+ <div class="erp-table-scroll"><table class="erp-table coa-table">
+  <colgroup><col class="coa-selection-column"><col class="coa-code-column"><col><col class="coa-parent-column"><col class="coa-class-column"><col class="coa-kind-column"><col class="coa-balance-column"><col class="coa-status-column"></colgroup>
+  <thead><tr><th scope="col" class="resource-table-selection"><span class="sr-only"><spring:message code="gl.group.select"/></span></th>
+   <c:forTokens items="code,name,parent,classification,kind,normal,status" delims="," var="column">
+    <c:url var="sortUrl" value="${baseUrl}"><c:param name="parentId" value="${parentId}"/><c:param name="search" value="${query.search}"/><c:param name="classification" value="${query.classification}"/><c:param name="kind" value="${query.kind}"/><c:param name="status" value="${query.status}"/><c:param name="sort" value="${column}"/><c:param name="direction" value="${query.sort==column and query.direction=='asc'?'desc':'asc'}"/><c:param name="size" value="${query.size}"/></c:url>
+    <th scope="col" data-table-sort-key="${column}" data-table-sort-asc="${column}" data-table-sort-desc="${column}" aria-sort="${query.sort==column?(query.direction=='asc'?'ascending':'descending'):'none'}"><a data-table-sort href="<c:out value='${sortUrl}'/>"><spring:message code="gl.coa.column.${column}"/></a></th>
+   </c:forTokens>
+  </tr></thead>
+  <tbody><%@ include file="/WEB-INF/jsp/accounting/account-rows.jsp" %><c:if test="${empty records.rows()}"><tr><td colspan="8"><spring:message code="${query.filtered()?'table.noMatches':empty parentId?'common.noRecords':'gl.coa.emptyChildren'}"/></td></tr></c:if></tbody>
+ </table></div>
+ <%@ include file="/WEB-INF/jsp/reusableuicomponents/register-pager.jspf" %>
 </section>
-<script defer src="<c:url value='/js/grouped-resource-table.js?v=20261103-grouped2'/>"></script>
+</div>
+<script defer src="<c:url value='/js/grouped-resource-table.js?v=20261117-coa-review'/>"></script>
 <%@ include file="/WEB-INF/jsp/shared/footer.jspf" %>

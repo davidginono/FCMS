@@ -1,8 +1,6 @@
 package com.foresight.fcms.accounting.dto;
 
 public class ActivityForm {
-    @jakarta.validation.constraints.NotBlank
-    @jakarta.validation.constraints.Pattern(regexp = "[A-Za-z0-9][A-Za-z0-9_.-]{0,39}")
     private String code = "";
 
     public String getCode() {

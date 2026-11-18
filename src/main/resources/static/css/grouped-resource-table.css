@@ -1,29 +1,29 @@
-/* Grouped-resource behavior composes the shared ERP table surface and preferences. */
-[data-grouped-resources] .grouped-resource-heading > td,
-[data-grouped-resources] .grouped-resource-heading > th {
-    background: #f2f3f3;
-    border-bottom: 1px solid #d5dbdb;
-}
-[data-grouped-resources] .grouped-resource-heading th { font-weight: 700; }
-.aws-console [data-grouped-resources] .grouped-resource-heading th { position: static; }
-.grouped-resource-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 3px 0;
-    color: inherit;
-    font: inherit;
-    background: transparent;
-    border: 0;
-    cursor: pointer;
-}
-.grouped-resource-toggle svg { width: 16px; height: 16px; fill: currentColor; flex: none; }
-.grouped-resource-toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
-.grouped-resource-toggle:focus-visible { outline: 2px solid #0972d3; outline-offset: 3px; }
-[data-grouped-resources] .grouped-resource-code { padding-inline-start: 36px; }
-[data-grouped-resources] .grouped-resource-more td { padding-block: 12px; }
-[data-grouped-resources] [data-grouped-previous] { margin-inline-end: 16px; }
-[data-grouped-resources] .grouped-resource-more .fcms-error:not(:empty) { display: block; margin-top: 8px; }
-[data-grouped-resources] tr[hidden] { display: none; }
+.accounting-resource-workspace {display:grid;min-width:0;gap:16px;}
+.coa-selection-column {width:40px;}
+.coa-code-column {width:120px;}
+.coa-class-column {width:150px;}
+.coa-parent-column {width:180px;}
+.coa-balance-column {width:130px;}
+.coa-status-column {width:100px;}
+.aws-console .coa-filters > .erp-table-toolbar__search {flex:2 1 240px;}
+.aws-console .coa-filters > .erp-table-toolbar__control {flex:1 1 160px;}
+.coa-filters > .erp-table-toolbar__actions {display:flex;align-items:center;gap:6px;flex:0 0 auto;}
+@media(max-width:767px){.aws-console .coa-filters > :is(.erp-table-toolbar__search,.erp-table-toolbar__control){flex-basis:100%;}}
 
-[data-grouped-resources] .grouped-resource-more .app-loading-spinner { width:16px; height:16px; vertical-align:middle; margin-inline-start:8px; }
+/* COA parent-account tree. Only the table canvas scrolls horizontally. */
+.aws-console [data-coa-tree] .erp-table.coa-table {min-width:64rem;}
+[data-coa-tree] tr[hidden] {display:none;}
+.coa-kind-column {width:140px;}
+.coa-tree-code {display:flex;align-items:center;gap:6px;padding-inline-start:calc(var(--coa-depth,0) * 18px);min-height:32px;white-space:nowrap;}
+.coa-tree-toggle {display:inline-flex;align-items:center;justify-content:center;flex:none;width:32px;height:32px;color:inherit;border-radius:4px;}
+.coa-tree-toggle svg {width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round;}
+.coa-tree-toggle[aria-expanded="true"] svg {transform:rotate(90deg);}
+.coa-tree-code:not(:has(.coa-tree-toggle)) {padding-inline-start:calc(var(--coa-depth,0) * 18px + 38px);}
+.coa-tree-toggle:focus-visible {outline:2px solid #0972d3;outline-offset:2px;}
+.aws-console [data-coa-tree] .coa-group-row > td {background:#fafafa;}
+.coa-tree-message {padding:12px 20px;}
+.coa-tree-message > :is(button,.app-loading-spinner) {margin-inline-start:12px;}
+[data-coa-tree] .resource-table-filters {flex-wrap:wrap;}
+.aws-console [data-coa-tree] .coa-filters > .erp-table-toolbar__search {flex:1.5 1 180px;}
+.aws-console [data-coa-tree] .coa-filters > .erp-table-toolbar__control {flex:1 1 125px;}
+@media(max-width:767px){.aws-console [data-coa-tree] .coa-filters > :is(.erp-table-toolbar__search,.erp-table-toolbar__control){flex-basis:100%;}}

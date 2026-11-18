@@ -1,0 +1,116 @@
+/* Cloudscape Alert/Flashbar adaptation for FCMS JSPs and dynamic feedback.
+ * Status artwork: Cloudscape Design System, Apache-2.0.
+ * Retained license and notice: ../js/vendor/cloudscape-icons.LICENSE and .NOTICE. */
+:root {
+    --fcms-icon-success:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%3E%3Ccircle%20cx%3D%228%22%20cy%3D%228%22%20r%3D%227%22%2F%3E%3Cpath%20d%3D%22M4.5%207.5L7%2010L11%205%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");
+    --fcms-icon-error:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%3E%3Ccircle%20cx%3D%228%22%20cy%3D%228%22%20r%3D%227%22%2F%3E%3Cpath%20d%3D%22M5.5%205.5L10.5%2010.5M10.5%205.5L5.5%2010.5%22%2F%3E%3C%2Fsvg%3E");
+    --fcms-icon-warning:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22M8%205V9M8%2010L8%2012M6.52%201.88L1.19%2011.64C1.06%2011.87%201%2012.14%201%2012.4C1%2013.28%201.71%2013.99%202.59%2013.99H13.4C14.28%2013.99%2014.99%2013.28%2014.99%2012.4C14.99%2012.13%2014.92%2011.87%2014.8%2011.64L9.48%201.88C9.18%201.34%208.62%201%208%201C7.38%201%206.82%201.34%206.52%201.88Z%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");
+    --fcms-icon-info:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%3E%3Ccircle%20cx%3D%228%22%20cy%3D%228%22%20r%3D%227%22%2F%3E%3Cpath%20d%3D%22M8%2012V7M8%206V4%22%2F%3E%3C%2Fsvg%3E");
+}
+body :is(.fcms-alert,.console-message,.app-loading-error,.workspace-navigation-error,.fs-tab-status[role=alert]) {
+    --fcms-notice-color:#d13212;
+    --fcms-notice-background:#fff7f7;
+    --fcms-notice-icon:var(--fcms-icon-error);
+    position:relative;
+    box-sizing:border-box;
+    min-width:0;
+    min-height:48px;
+    border:1px solid var(--fcms-notice-color);
+    border-radius:0;
+    padding:12px 16px 12px 46px;
+    background:var(--fcms-notice-background);
+    color:#16191f;
+    font-size:14px;
+    font-weight:400;
+    line-height:22px;
+    overflow-wrap:anywhere;
+    box-shadow:none;
+}
+body :is(.fcms-alert[role=status],.console-message:not([role=alert])) {
+    --fcms-notice-color:#0972d3;
+    --fcms-notice-background:#f2f8fd;
+    --fcms-notice-icon:var(--fcms-icon-info);
+}
+body :is(.fcms-alert,.console-message,.app-loading-error,.workspace-navigation-error,.fs-tab-status[role=alert])[data-message-type=success] {
+    --fcms-notice-color:#037f0c;
+    --fcms-notice-background:#f2fcf3;
+    --fcms-notice-icon:var(--fcms-icon-success);
+}
+body :is(.fcms-alert,.console-message,.app-loading-error,.workspace-navigation-error,.fs-tab-status[role=alert])[data-message-type=warning] {
+    --fcms-notice-color:#8d6605;
+    --fcms-notice-background:#fffce9;
+    --fcms-notice-icon:var(--fcms-icon-warning);
+}
+body :is(.fcms-alert,.console-message,.app-loading-error,.workspace-navigation-error,.fs-tab-status[role=alert])[data-message-type=info] {
+    --fcms-notice-color:#0972d3;
+    --fcms-notice-background:#f2f8fd;
+    --fcms-notice-icon:var(--fcms-icon-info);
+}
+body :is(.fcms-alert,.console-message,.app-loading-error,.workspace-navigation-error,.fs-tab-status[role=alert])[data-message-type=error] {
+    --fcms-notice-color:#d13212;
+    --fcms-notice-background:#fff7f7;
+    --fcms-notice-icon:var(--fcms-icon-error);
+}
+body :is(.fcms-alert,.console-message,.app-loading-error,.workspace-navigation-error,.fs-tab-status[role=alert])::before {
+    content:"";
+    position:absolute;
+    inset-inline-start:16px;
+    top:14px;
+    width:20px;
+    height:20px;
+    background-color:var(--fcms-notice-color);
+    -webkit-mask:var(--fcms-notice-icon) center/contain no-repeat;
+    mask:var(--fcms-notice-icon) center/contain no-repeat;
+}
+body :is(.fcms-alert,.console-message) {margin:0 0 16px;}
+body .console-message {display:flex;align-items:flex-start;gap:12px;}
+body .console-message[data-resource-notice] {padding-inline-end:52px;}
+.console-message__content {display:flex;flex:1;flex-wrap:wrap;align-items:baseline;gap:4px 12px;min-width:0;overflow-wrap:anywhere;}
+.console-message [data-dismiss-notice] {position:absolute;inset-inline-end:8px;top:8px;display:flex;align-items:center;justify-content:center;width:32px;height:32px;padding:8px;border:0;background:transparent;color:var(--fcms-notice-color);cursor:pointer;}
+.console-message [data-dismiss-notice] svg {width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;}
+.console-message [data-dismiss-notice]:hover {background:rgba(0,0,0,.05);}
+body :is(.fcms-alert,.console-message,.app-loading-error,.workspace-navigation-error,.fs-tab-status[role=alert]) a {color:#0972d3;text-decoration:underline;}
+body :is(.fcms-alert,.console-message,.app-loading-error,.workspace-navigation-error,.fs-tab-status[role=alert]):focus-visible,
+.console-message [data-dismiss-notice]:focus-visible {outline:2px solid #0972d3;outline-offset:2px;}
+body :is(.app-loading-error,.workspace-navigation-error,.fs-tab-status[role=alert]) > span {flex:1 1 16rem;min-width:0;}
+body :is(.app-loading-error,.workspace-navigation-error,.fs-tab-status[role=alert]) > :is(button,a.app-btn) {flex:0 0 auto;}
+body .fs-tab-status[role=alert] {inset:auto;}
+/* Field feedback stays next to its control, without an Alert surface. */
+body :is(.fcms-error,.neo-select-empty[role=alert],.coa-tree-message > [role=alert]):not(:empty) {
+    position:relative;
+    box-sizing:border-box;
+    min-width:0;
+    min-height:18px;
+    padding-inline-start:22px;
+    color:#d13212;
+    font-size:14px;
+    font-weight:400;
+    line-height:18px;
+    overflow-wrap:anywhere;
+}
+body :is(.fcms-error,.neo-select-empty[role=alert],.coa-tree-message > [role=alert]):not(:empty)::before {
+    content:"";
+    position:absolute;
+    inset-inline-start:0;
+    top:1px;
+    width:16px;
+    height:16px;
+    background-color:#d13212;
+    -webkit-mask:var(--fcms-icon-warning) center/contain no-repeat;
+    mask:var(--fcms-icon-warning) center/contain no-repeat;
+}
+body .neo-select-empty[role=alert]:not(:empty) {padding:6px 8px 6px 30px;text-align:start;}
+body .neo-select-empty[role=alert]:not(:empty)::before {inset-inline-start:8px;top:7px;}
+body :is(.fcms-alert,.console-message,.app-loading-error,.workspace-navigation-error,.fs-tab-status[role=alert]):is([hidden],.hidden,:empty) {display:none!important;}
+@media(max-width:600px) {
+    body :is(.fcms-alert,.console-message,.app-loading-error,.workspace-navigation-error,.fs-tab-status[role=alert]) {padding:12px 12px 12px 40px;}
+    body :is(.fcms-alert,.console-message,.app-loading-error,.workspace-navigation-error,.fs-tab-status[role=alert])::before {inset-inline-start:12px;width:18px;height:18px;}
+    body .console-message[data-resource-notice] {padding-inline-end:52px;}
+}
+@media(forced-colors:active) {
+    body :is(.fcms-alert,.console-message,.app-loading-error,.workspace-navigation-error,.fs-tab-status[role=alert]) {border-color:CanvasText;background:Canvas;color:CanvasText;}
+    body :is(.fcms-alert,.console-message,.app-loading-error,.workspace-navigation-error,.fs-tab-status[role=alert],.fcms-error,.neo-select-empty[role=alert],.coa-tree-message > [role=alert])::before {forced-color-adjust:none;background-color:CanvasText;}
+}
+@media print {
+    body :is(.console-message,.app-loading-error,.workspace-navigation-error,.fs-tab-status[role=alert]) {display:none!important;}
+}

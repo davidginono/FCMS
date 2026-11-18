@@ -1,5 +1,7 @@
 package com.foresight.fcms.auth.controller;
 
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.foresight.fcms.shared.controller.ResourceFeedback;
 import com.foresight.fcms.auth.service.AccountService;
 
 import jakarta.validation.Valid;
@@ -27,10 +29,10 @@ public class AccountController {
 
     @PostMapping
     public String profile(
-            @Valid @ModelAttribute("form") AccountService.Profile f, BindingResult b) {
+            @Valid @ModelAttribute("form") AccountService.Profile f, BindingResult b, RedirectAttributes redirect) {
         if (b.hasErrors()) return "account/profile";
         accounts.profile(f);
-        return "redirect:/account?saved";
+        return ResourceFeedback.success(redirect, "/account", "feedback.saved", null);
     }
 
     @GetMapping("/password")
@@ -61,10 +63,10 @@ public class AccountController {
 
     @PostMapping("/photo")
     public String photo(
-            @RequestParam org.springframework.web.multipart.MultipartFile photo, Model m) {
+            @RequestParam org.springframework.web.multipart.MultipartFile photo, Model m, RedirectAttributes redirect) {
         try {
             accounts.photo(photo);
-            return "redirect:/account?saved";
+            return ResourceFeedback.success(redirect, "/account", "feedback.saved", null);
         } catch (IllegalArgumentException e) {
             m.addAttribute(
                     "photoError",

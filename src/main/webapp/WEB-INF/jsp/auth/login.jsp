@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<%@ taglib prefix="ui" tagdir="/WEB-INF/tags" %>
 <!doctype html>
 <html lang="${pageContext.response.locale.language}">
 <head>
@@ -9,7 +10,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FCMS</title>
 <link rel="stylesheet" href="<c:url value='/css/app.css'/>">
-<link rel="stylesheet" href="<c:url value='/css/workspaces.css'/>">
+<link rel="stylesheet" href="<c:url value='/css/workspaces.css?v=20261116-password-eye1'/>">
+<script defer src="<c:url value='/js/password-visibility.js?v=20261116-password-eye1'/>"></script>
+<link rel="stylesheet" href="<c:url value='/css/notifications.css?v=20261117-cloudscape-notices1'/>">
 </head>
 <body>
 <main class="app-auth-shell">
@@ -24,12 +27,12 @@
 </div>
 </c:if>
 <c:if test="${param.logout!=null}">
-<div role="status">
+<div class="fcms-alert" data-message-type="success" role="status">
 <spring:message code="auth.loggedOut" />
 </div>
 </c:if>
 <c:if test="${param.passwordChanged!=null}">
-<div role="status">
+<div class="fcms-alert" data-message-type="success" role="status">
 <spring:message code="auth.changed" />
 </div>
 </c:if>
@@ -45,7 +48,10 @@
 <label for="password">
 <spring:message code="common.password" />
 </label>
+<div class="fcms-password-control" data-password-visibility>
 <input type="password" id="password" name="password" required autocomplete="current-password">
+<ui:passwordToggle inputId="password" />
+</div>
 </div>
 <div class="fcms-form-actions">
 <button class="app-btn btn-neutral" type="submit">

@@ -166,10 +166,10 @@ public class ActivityTransactionService {
     @Transactional
     public long createActivity(@jakarta.validation.Valid ActivityForm f) {
         var actor = access.require("accounting.setup");
-        String code = code(f.getCode()),
+        String code,
                 name = f.getName().trim(),
                 description = text(f.getDescription());
-        String hash = signature(code, name, description);
+        String hash = signature(name, description);
         lockRequest("ACTIVITY", actor.id(), f.getRequestKey());
         var existing =
                 db.queryForList(
@@ -182,6 +182,7 @@ public class ActivityTransactionService {
                 throw new IllegalArgumentException("error.conflict");
             return ((Number) existing.getFirst().get("id")).longValue();
         }
+        code = nextCode(false);
         long id =
                 db.queryForObject(
                         "insert into"
@@ -225,7 +226,10 @@ public class ActivityTransactionService {
     public void activityState(long id, long version, boolean active, String reason) {
         var actor = access.require("accounting.setup");
         AccountingService.requireReason(reason);
+        db.queryForList("select id from gl_activities where id=? for update",Long.class,id);
         var old = activity(id);
+        if (!active && Boolean.TRUE.equals(db.queryForObject("select exists(select 1 from gl_transactions where activity_id=? and active)",Boolean.class,id)))
+            throw new IllegalArgumentException("voucher.error.activeTransactions");
         if (db.update(
                         "update gl_activities set active=?,version=version+1 where id=? and"
                                 + " version=?",
@@ -318,18 +322,17 @@ public class ActivityTransactionService {
     @Transactional
     public long createTransaction(@jakarta.validation.Valid TransactionConfigForm f) {
         var actor = access.require("accounting.setup");
-        String code = code(f.getCode()),
-                name = f.getName().trim(),
-                description = text(f.getDescription());
+        f.setEvent("MANUAL_JOURNAL");
+        if(f.getRules().size()!=1 || !"TOTAL".equals(f.getRules().getFirst().getComponent()))
+            throw new com.foresight.fcms.shared.validation.FieldValidationException("voucher.error.components","rules");
+        String code, name=f.getName().trim(), description=text(f.getDescription());
         String hash =
                 signature(
                         f.getActivityId(),
-                        code,
                         name,
                         description,
                         f.getEvent(),
-                        f.getDebitAccountId(),
-                        f.getCreditAccountId(),
+                        PostingMappingService.fingerprint(f),
                         f.getVoucherKind(),
                         f.getCashFlow(),
                         text(f.getPolicyReference()));
@@ -349,6 +352,7 @@ public class ActivityTransactionService {
                 "select id from gl_activities where id=? for share", Long.class, f.getActivityId());
         if (!activity(f.getActivityId()).active())
             throw new IllegalArgumentException("config.error.inactive");
+        code = nextCode(true);
         long id =
                 db.queryForObject(
                         "insert into"
@@ -392,6 +396,11 @@ public class ActivityTransactionService {
             throw new OptimisticLockingFailureException("stale");
         if (!transaction.active() || !transaction.activityActive())
             throw new IllegalArgumentException("config.error.inactive");
+        var priorTemplate=templates.latest(id);
+        var components=priorTemplate.map(p->templates.rules(p.id()).stream().map(PostingMappingService.Rule::component).collect(java.util.stream.Collectors.toSet())).orElse(Set.of("TOTAL"));
+        var submitted=f.getRules().stream().map(PostingMappingForm.RuleForm::getComponent).collect(java.util.stream.Collectors.toSet());
+        if(f.getRules().size()!=components.size() || !submitted.equals(components))
+            throw new com.foresight.fcms.shared.validation.FieldValidationException("voucher.error.components","rules");
         var pending = templates.pending(id, new RegisterQuery());
         if (pending.hasNext() || pending.rows().stream().anyMatch(p -> p.makerId() != actor.id()))
             throw new IllegalArgumentException("config.error.pending");
@@ -456,6 +465,17 @@ public class ActivityTransactionService {
         db.queryForList(
                 "select pg_advisory_xact_lock(hashtextextended(?,0))",
                 "FCMS_CONFIG/" + kind + "/" + actor + "/" + request);
+    }
+
+    private String nextCode(boolean transaction) {
+        String prefix=transaction?"TXN-":"ACT-", table=transaction?"gl_transactions":"gl_activities";
+        String sequence=transaction?"gl_transaction_code_sequence":"gl_activity_code_sequence";
+        String value;
+        do {
+            long number=db.queryForObject("select nextval(?::regclass)",Long.class,sequence);
+            value=prefix+String.format(Locale.ROOT,"%06d",number);
+        } while(Boolean.TRUE.equals(db.queryForObject("select exists(select 1 from "+table+" where code=?)",Boolean.class,value)));
+        return value;
     }
 
     private static String code(String value) {

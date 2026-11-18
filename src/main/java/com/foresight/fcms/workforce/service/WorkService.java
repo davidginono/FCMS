@@ -1,5 +1,6 @@
 package com.foresight.fcms.workforce.service;
 
+import com.foresight.fcms.shared.validation.FieldValidationException;
 import com.foresight.fcms.audit.service.AuditService;
 import com.foresight.fcms.auth.service.*;
 import com.foresight.fcms.client.service.ClientDirectoryService;
@@ -86,8 +87,8 @@ public class WorkService {
         boolean all = a.has(k.claim + ".read.all");
         String sql =
                 SELECT
-                        + " where w.kind=? and (? or w.owner_id=? or exists(select 1 from"
-                        + " work_participants p where p.work_id=w.id and p.user_id=?) or (? and"
+                        + " where w.kind=? and (? or w.owner_id=? or (? and exists(select 1 from"
+                        + " work_participants p where p.work_id=w.id and p.user_id=?)) or (? and"
                         + " w.created_by=?)) and (?::bigint is null or w.owner_id=?::bigint or (?"
                         + " and exists(select 1 from work_participants selected where"
                         + " selected.work_id=w.id and selected.user_id=?::bigint))) and (?::bigint"
@@ -122,6 +123,7 @@ public class WorkService {
                         k.name(),
                         all,
                         a.id(),
+                        !a.has("workspace.staff"),
                         a.id(),
                         canAssign(a, k),
                         a.id(),
@@ -150,13 +152,14 @@ public class WorkService {
                 .query(
                         SELECT
                                 + " where w.id=? and w.kind=? and (? or w.owner_id=? or"
-                                + " exists(select 1 from work_participants p where p.work_id=w.id"
-                                + " and p.user_id=?) or (? and w.created_by=?))",
+                                + " (? and exists(select 1 from work_participants p where p.work_id=w.id"
+                                + " and p.user_id=?)) or (? and w.created_by=?))",
                         this::row,
                         id,
                         k.name(),
                         a.has(k.claim + ".read.all"),
                         a.id(),
+                        !a.has("workspace.staff"),
                         a.id(),
                         canAssign(a, k),
                         a.id())
@@ -190,7 +193,7 @@ public class WorkService {
                                         && form.getParticipants().contains(c.id()))
                         .toList(),
                 "clients",
-                k == WorkKind.LEAVE || !actor.has("client.read")
+                k == WorkKind.LEAVE || !(actor.has("client.read") || actor.has("client.lookup"))
                         ? List.of()
                         : clients.saccos("", form.getClientId()));
     }
@@ -289,7 +292,7 @@ public class WorkService {
                         .contains(existing.status()))
             throw new IllegalArgumentException("error.invalid");
         if (form.getEndAt().isBefore(form.getStartAt()))
-            throw new IllegalArgumentException("error.dates");
+            throw new FieldValidationException("error.dates", "endAt");
         long owner =
                 canAssign(actor, kind) && form.getOwnerId() != null
                         ? form.getOwnerId()
@@ -300,11 +303,11 @@ public class WorkService {
         if (canAssign(actor, kind)) users.requireActive(List.of(owner));
         if (form.getClientId() != null) clients.requireSaccos(form.getClientId());
         if (kind == WorkKind.TASK && form.getClientId() == null)
-            throw new IllegalArgumentException("error.invalid");
+            throw new FieldValidationException("form.required", "clientId");
         if (kind == WorkKind.REPORT
                 && "INCOMPLETE".equals(form.getOutcome())
                 && form.getExplanation().isBlank())
-            throw new IllegalArgumentException("error.invalid");
+            throw new FieldValidationException("form.required", "explanation");
         if (!Set.of("", "COMPLETED", "INCOMPLETE", "IN_PROGRESS").contains(form.getOutcome()))
             throw new IllegalArgumentException("error.invalid");
         if (kind == WorkKind.REPORT) {
@@ -316,7 +319,7 @@ public class WorkService {
         Set<Long> team = new HashSet<>(form.getParticipants());
         if (kind == WorkKind.REPORT && form.getWorkType().equals("GROUP")) {
             team.add(owner);
-            if (team.size() < 2) throw new IllegalArgumentException("error.invalid");
+            if (team.size() < 2) throw new FieldValidationException("form.participantsRequired", "participants");
             users.requireActive(team);
         } else team.clear();
         if (id == null) {
@@ -570,7 +573,7 @@ public class WorkService {
                 "filterStaff",
                 List.copyOf(staff.values()),
                 "filterClients",
-                kind == WorkKind.LEAVE || !actor.has("client.read")
+                kind == WorkKind.LEAVE || !(actor.has("client.read") || actor.has("client.lookup"))
                         ? List.of()
                         : clients.saccos("", query.getClientId()));
     }
@@ -580,12 +583,13 @@ public class WorkService {
         var a = access.require(k.claim + ".read");
         return db.queryForObject(
                 "select count(*) from work_items w where kind=? and (? or owner_id=?"
-                        + " or exists (select 1 from work_participants p where p.work_id=w.id"
-                        + " and p.user_id=?) or (? and w.created_by=?))",
+                        + " or (? and exists (select 1 from work_participants p where p.work_id=w.id"
+                        + " and p.user_id=?)) or (? and w.created_by=?))",
                 Long.class,
                 k.name(),
                 a.has(k.claim + ".read.all"),
                 a.id(),
+                !a.has("workspace.staff"),
                 a.id(),
                 canAssign(a, k),
                 a.id());
@@ -628,7 +632,7 @@ public class WorkService {
             readOnly = true,
             isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
     public java.util.List<WorkView> report(WorkKind kind, RegisterQuery query) {
-        access.require(kind.claim + ".read");
+        var actor = access.require(kind.claim + ".read");
         int original = query.getPage();
         int size = query.getSize();
         try {
@@ -641,7 +645,7 @@ public class WorkService {
                 if (rows.size() > 1000) throw new IllegalArgumentException("error.narrowReport");
                 if (!page.hasNext())
                     return kind == WorkKind.REPORT
-                            ? activityRows(rows, query.getOwnerId())
+                            ? activityRows(rows, actor.has("workspace.staff") ? Long.valueOf(actor.id()) : query.getOwnerId())
                             : java.util.List.copyOf(rows);
             }
             throw new IllegalArgumentException("error.narrowReport");

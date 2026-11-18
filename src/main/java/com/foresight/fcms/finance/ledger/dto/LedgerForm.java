@@ -1,6 +1,10 @@
 package com.foresight.fcms.finance.ledger.dto;
 
 public class LedgerForm {
+    @jakarta.validation.constraints.Pattern(regexp = "|STOCK_PURCHASE|CLIENT_SALE|DEPOSIT|WITHDRAWAL")
+    private String operation = "";
+    public String getOperation() { return operation; }
+    public void setOperation(String value) { operation = value == null ? "" : value; }
     @jakarta.validation.constraints.NotNull
     private java.time.LocalDate date = com.foresight.fcms.shared.time.ApplicationCalendar.today();
 

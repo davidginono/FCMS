@@ -5,10 +5,9 @@ import static org.mockito.Mockito.*;
 
 import com.foresight.fcms.auth.service.AccessService;
 import com.foresight.fcms.client.service.ClientRevenueService;
-import com.foresight.fcms.finance.expense.service.ExpenseCategoryService;
+import com.foresight.fcms.accounting.service.AccountingSummaryService;
 import com.foresight.fcms.finance.ledger.model.LedgerKind;
 import com.foresight.fcms.finance.ledger.service.LedgerService;
-import com.foresight.fcms.finance.report.service.FinancialReportService;
 import com.foresight.fcms.reference.FinancialYearRepository;
 import com.foresight.fcms.workforce.service.WorkService;
 
@@ -25,14 +24,15 @@ class DashboardServiceTests {
         var clients = mock(ClientRevenueService.class);
         var years = mock(FinancialYearRepository.class);
         var ledger = mock(LedgerService.class);
-        var expenses = mock(ExpenseCategoryService.class);
-        var finance = mock(FinancialReportService.class);
+        var accounting = mock(AccountingSummaryService.class);
         when(access.require("dashboard.read"))
                 .thenReturn(
                         new AccessService.Actor(
                                 9,
                                 Set.of(
                                         "dashboard.read",
+                                        "workspace.accounting",
+                                        "accounting.report",
                                         "finance.read",
                                         "client.read",
                                         "expense.read",
@@ -40,7 +40,7 @@ class DashboardServiceTests {
         when(years.findTop1001ByOrderByFyearDesc()).thenReturn(List.of());
         when(ledger.balance(LedgerKind.PETTY))
                 .thenReturn(new LedgerService.Balance(new BigDecimal("25.01"), 0));
-        var service = new DashboardService(access, work, clients, years, ledger, expenses, finance);
+        var service = new DashboardService(access, work, clients, years, ledger, accounting);
         var view = service.overview(null);
         assertNull(view.selected());
         assertTrue(view.portfolios().isEmpty());
@@ -52,7 +52,7 @@ class DashboardServiceTests {
                 assertNull(metric.href());
             }
         }
-        verifyNoInteractions(clients, expenses, finance, work);
+        verifyNoInteractions(clients, accounting, work);
         verify(ledger).balance(LedgerKind.PETTY);
         verifyNoMoreInteractions(ledger);
     }

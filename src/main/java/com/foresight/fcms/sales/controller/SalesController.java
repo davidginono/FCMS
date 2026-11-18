@@ -1,5 +1,8 @@
 package com.foresight.fcms.sales.controller;
 
+import com.foresight.fcms.shared.controller.FormErrors;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.foresight.fcms.shared.controller.ResourceFeedback;
 import com.foresight.fcms.sales.dto.SalesForm;
 import com.foresight.fcms.sales.dto.SalesItem;
 import com.foresight.fcms.sales.model.SalesKind;
@@ -161,19 +164,19 @@ public class SalesController {
             @PathVariable(required = false) Long id,
             @Valid @ModelAttribute("form") SalesForm f,
             BindingResult b,
-            Model m) {
+            Model m, RedirectAttributes redirect) {
         var k = SalesKind.from(workspace);
         sales.formAccess(k);
         if (!b.hasErrors())
             try {
-                sales.save(k, id, f);
-                return "redirect:" + k.getRoute() + "?saved";
+                long saved = sales.save(k, id, f);
+                return ResourceFeedback.success(redirect, k.getRoute(), id != null ? "feedback.saved" : k == SalesKind.PROSPECT ? "feedback.proformaCreated" : "feedback.invoiceCreated", k.getRoute() + "/" + saved);
             } catch (OptimisticLockingFailureException e) {
                 b.reject("error.stale");
-            } catch (DataIntegrityViolationException e) {
-                b.reject("error.conflict");
+            } catch (org.springframework.dao.DataAccessException e) {
+                FormErrors.conflict(b, e, java.util.Map.of("sales_documents_kind_document_number_key", "documentNumber"));
             } catch (IllegalArgumentException e) {
-                b.reject(
+                FormErrors.reject(b, e,
                         List.of("error.dates", "sales.error.items", "error.conflict")
                                         .contains(e.getMessage())
                                 ? e.getMessage()

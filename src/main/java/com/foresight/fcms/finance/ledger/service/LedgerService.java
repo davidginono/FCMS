@@ -1,5 +1,6 @@
 package com.foresight.fcms.finance.ledger.service;
 
+import com.foresight.fcms.shared.validation.FieldValidationException;
 import com.foresight.fcms.audit.service.AuditService;
 import com.foresight.fcms.auth.service.AccessService;
 import com.foresight.fcms.client.service.ClientDirectoryService;
@@ -34,11 +35,47 @@ public class LedgerService {
         this.clients = clients;
     }
 
-    private static final String SELECT =
-            "select e.*,u.first_name||' '||u.last_name as actor,coalesce(c.saccos_name,'') as"
-                + " client,(select r.id from ledger_entries r where r.reversal_of=e.id) as"
-                + " reversed_by from ledger_entries e join iam_staff_directory u on u.id=e.actor_id"
-                + " left join client_saccos_directory c on c.id=e.client_id";
+    private static final String FILTER =
+            " where e.kind=? and lower(e.description||' '||e.reference||' '||e.category) like ?"
+                + " escape '!' and (?::date is null or e.transaction_date>=?::date) and (?::date is"
+                + " null or e.transaction_date<=?::date) and (?='' or e.category=?)";
+
+    private String selection(LedgerKind kind) {
+        // Apply search/date/category filters after the chronological balance, so earlier movements
+        // remain included.
+        String source =
+                kind == LedgerKind.PETTY
+                        ? "(select l.*,sum(amount_delta) over(order by transaction_date,id rows"
+                              + " unbounded preceding) running_balance from ledger_entries l where"
+                              + " kind='PETTY')"
+                        : "ledger_entries";
+        return "select e.*,"
+                + (kind == LedgerKind.PETTY ? "e.running_balance" : "e.balance_after")
+                + " as display_balance,u.first_name||' '||u.last_name as"
+                + " actor,coalesce(c.saccos_name,'') as client,(select r.id from ledger_entries r"
+                + " where r.reversal_of=e.id) as reversed_by from "
+                + source
+                + " e join iam_staff_directory u on u.id=e.actor_id left join"
+                + " client_saccos_directory c on c.id=e.client_id";
+    }
+
+    private List<Object> parameters(LedgerKind kind, RegisterQuery q) {
+        q.validate();
+        var from = q.getFrom();
+        var to = q.getTo();
+        String category = "";
+        if (q instanceof LedgerQuery filter) {
+            category = kind == LedgerKind.BULK ? filter.getCategory() : "";
+            if (!filter.getYear().isEmpty()) {
+                var first = java.time.LocalDate.of(Integer.parseInt(filter.getYear()), 1, 1);
+                var last = first.plusYears(1).minusDays(1);
+                from = from == null || from.isBefore(first) ? first : from;
+                to = to == null || to.isAfter(last) ? last : to;
+            }
+        }
+        return new ArrayList<>(
+                Arrays.asList(kind.name(), q.pattern(), from, from, to, to, category, category));
+    }
 
     private LedgerView row(java.sql.ResultSet r, int n) throws java.sql.SQLException {
         return new LedgerView(
@@ -51,7 +88,7 @@ public class LedgerService {
                 r.getString("payment_mode"),
                 r.getBigDecimal("amount_delta"),
                 r.getLong("units_delta"),
-                r.getBigDecimal("balance_after"),
+                r.getBigDecimal("display_balance"),
                 r.getLong("units_after"),
                 r.getLong("actor_id"),
                 r.getString("actor"),
@@ -63,42 +100,80 @@ public class LedgerService {
     @Transactional(readOnly = true)
     public RegisterPage<LedgerView> list(LedgerKind k, RegisterQuery q) {
         access.require("finance.read");
-        q.validate();
+        var args = parameters(k, q);
+        args.add(q.getSize() + 1);
+        args.add(q.offset());
+        String order =
+                q.order(
+                        Map.ofEntries(
+                                Map.entry("id", "e.id"),
+                                Map.entry("date", "e.transaction_date"),
+                                Map.entry("description", "e.description"),
+                                Map.entry("category", "e.category"),
+                                Map.entry("reference", "e.reference"),
+                                Map.entry("amount", "e.amount_delta"),
+                                Map.entry("amountIn", "greatest(e.amount_delta,0)"),
+                                Map.entry("amountOut", "greatest(-e.amount_delta,0)"),
+                                Map.entry("units", "e.units_delta"),
+                                Map.entry("unitsIn", "greatest(e.units_delta,0)"),
+                                Map.entry("unitsOut", "greatest(-e.units_delta,0)"),
+                                Map.entry("unitsBefore", "e.units_after-e.units_delta"),
+                                Map.entry("unitsAfter", "e.units_after"),
+                                Map.entry("balance", "display_balance"),
+                                Map.entry("actor", "actor")));
         return RegisterPage.of(
                 db.query(
-                        SELECT
-                                + " where e.kind=? and lower(e.description||' '||e.reference||'"
-                                + " '||e.category) like ? escape '!' and (?::date is null or"
-                                + " e.transaction_date>=?::date) and (?::date is null or"
-                                + " e.transaction_date<=?::date) order by "
-                                + q.order(
-                                        Map.ofEntries(
-                                                Map.entry("id", "e.id"),
-                                                Map.entry("date", "e.transaction_date"),
-                                                Map.entry("description", "e.description"),
-                                                Map.entry("category", "e.category"),
-                                                Map.entry("reference", "e.reference"),
-                                                Map.entry("amount", "e.amount_delta"),
-                                                Map.entry("units", "e.units_delta"),
-                                                Map.entry("balance", "e.balance_after"),
-                                                Map.entry("actor", "actor")))
-                                + " limit ? offset ?",
+                        selection(k) + FILTER + " order by " + order + " limit ? offset ?",
                         this::row,
-                        k.name(),
-                        q.pattern(),
-                        q.getFrom(),
-                        q.getFrom(),
-                        q.getTo(),
-                        q.getTo(),
-                        q.getSize() + 1,
-                        q.offset()),
+                        args.toArray()),
                 q);
+    }
+
+    public record Totals(BigDecimal amountIn, BigDecimal amountOut, long unitsIn, long unitsOut) {
+        public BigDecimal profit() {
+            return amountIn.subtract(amountOut);
+        }
+    }
+
+    public record Workspace(
+            RegisterPage<LedgerView> records,
+            Balance balance,
+            Totals totals,
+            List<Integer> years) {}
+
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public Workspace workspace(LedgerKind kind, LedgerQuery q) {
+        access.require("finance.read");
+        var totals =
+                db.queryForObject(
+                        "select"
+                            + " coalesce(sum(greatest(amount_delta,0)),0),coalesce(sum(greatest(-amount_delta,0)),0),coalesce(sum(greatest(units_delta,0)),0),coalesce(sum(greatest(-units_delta,0)),0)"
+                            + " from ledger_entries e"
+                                + FILTER,
+                        (r, n) ->
+                                new Totals(
+                                        r.getBigDecimal(1),
+                                        r.getBigDecimal(2),
+                                        r.getLong(3),
+                                        r.getLong(4)),
+                        parameters(kind, q).toArray());
+        var years =
+                db.queryForList(
+                        "select y from (select distinct extract(year from transaction_date)::int y"
+                            + " from ledger_entries where kind=? union select ?::int) years order"
+                            + " by y desc limit 102",
+                        Integer.class,
+                        kind.name(),
+                        com.foresight.fcms.shared.time.ApplicationCalendar.today().getYear());
+        return new Workspace(list(kind, q), balance(kind), totals, years);
     }
 
     @Transactional(readOnly = true)
     public LedgerView find(LedgerKind k, long id) {
         access.require("finance.read");
-        return db.query(SELECT + " where e.kind=? and e.id=?", this::row, k.name(), id).stream()
+        return db
+                .query(selection(k) + " where e.kind=? and e.id=?", this::row, k.name(), id)
+                .stream()
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("error.missing"));
     }
@@ -130,12 +205,32 @@ public class LedgerService {
     @Transactional
     public long post(LedgerKind k, @jakarta.validation.Valid LedgerForm f) {
         var a = access.require("finance.write");
+        if (k == LedgerKind.BULK) {
+            String operation = f.getOperation();
+            if (operation.isEmpty()) {
+                operation = f.getUnitDirection().equals("IN") ? "STOCK_PURCHASE" : "CLIENT_SALE";
+                if (f.getAmount().signum() != 0
+                        && !f.getDirection()
+                                .equals(operation.equals("STOCK_PURCHASE") ? "OUT" : "IN"))
+                    throw new IllegalArgumentException("error.invalid");
+            }
+            if (!Set.of("STOCK_PURCHASE", "CLIENT_SALE").contains(operation))
+                throw new IllegalArgumentException("error.invalid");
+            f.setDirection(operation.equals("STOCK_PURCHASE") ? "OUT" : "IN");
+            f.setUnitDirection(operation.equals("STOCK_PURCHASE") ? "IN" : "OUT");
+            f.setCategory(operation);
+        } else if (k == LedgerKind.PETTY && !f.getOperation().isEmpty()) {
+            if (!Set.of("DEPOSIT", "WITHDRAWAL").contains(f.getOperation()))
+                throw new IllegalArgumentException("error.invalid");
+            f.setDirection(f.getOperation().equals("DEPOSIT") ? "IN" : "OUT");
+        }
         db.queryForList(
                 "select pg_advisory_xact_lock_shared(hashtextextended('FCMS_FINANCE_CUTOVER',0))");
-        if (f.getDate().isAfter(com.foresight.fcms.shared.time.ApplicationCalendar.today())
-                || f.getAmount().signum() < 0
+        if (f.getDate().isAfter(com.foresight.fcms.shared.time.ApplicationCalendar.today()))
+            throw new FieldValidationException("error.invalid", "date");
+        if (f.getAmount().signum() < 0
                 || (f.getAmount().signum() == 0 && (k != LedgerKind.BULK || f.getUnits() == 0))
-                || f.getAmount().scale() > 2) throw new IllegalArgumentException("error.invalid");
+                || f.getAmount().scale() > 2) throw new FieldValidationException("error.invalid", "amount");
         if (!Set.of("IN", "OUT").contains(f.getDirection())
                 || !Set.of("IN", "OUT").contains(f.getUnitDirection())
                 || !Set.of("CASH", "BANK", "MOBILE", "CHEQUE").contains(f.getPaymentMode()))
@@ -183,7 +278,7 @@ public class LedgerService {
                         "select count(*) from finance_gl_cutover where ?<starts_on",
                         Integer.class,
                         f.getDate())
-                != 0) throw new IllegalArgumentException("error.cutover");
+                != 0) throw new FieldValidationException("error.cutover", "date");
         BigDecimal next = locked.amount().add(delta);
         long nextUnits = Math.addExact(locked.units(), units);
         checkBalance(k, next, nextUnits);

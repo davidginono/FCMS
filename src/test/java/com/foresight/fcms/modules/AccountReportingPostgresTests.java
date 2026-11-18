@@ -159,7 +159,7 @@ class AccountReportingPostgresTests {
         f.getLines().get(0).setDebit(new BigDecimal(amount));
         f.getLines().get(1).setAccountId(credit);
         f.getLines().get(1).setCredit(new BigDecimal(amount));
-        long id = journals.save(null, f);
+        long id = journals.createDraft(f);
         journals.transition(id, 0, "submit", "");
         actor("admin@fcms.local");
         journals.transition(id, 1, "post", "Independent reporting fixture review");
@@ -167,8 +167,10 @@ class AccountReportingPostgresTests {
 
     @BeforeAll
     void fixtures() throws Exception {
+        OperationalTestClaims.enable(db);
         makerId = user(maker, 1);
         readerId = user(reader, 2);
+        db.update("insert into user_claims(user_id,claim) values (?,'workspace.admin')", readerId);
         user(staff, 2);
         reviewerId = user(reviewer, 1);
         db.update(
@@ -177,19 +179,9 @@ class AccountReportingPostgresTests {
                 readerId,
                 readerId);
         actor(maker);
-        var book = new BookForm();
-        book.setOpeningDate(opening);
-        book.setOpeningMode("ZERO");
-        book.setPolicyReference("Synthetic reporting cutover");
-        accounts.configure(book);
-        actor("admin@fcms.local");
-        accounts.approveBooks(0, "Independent reporting book review");
+        AccountingHistoryFixtures.books(db, opening, "ZERO", maker, "admin@fcms.local");
         for (int year = opening.getYear(); year <= today.getYear(); year++) {
-            var p = new PeriodForm();
-            p.setName("Reporting " + year);
-            p.setStartsOn(LocalDate.of(year, 1, 1));
-            p.setEndsOn(LocalDate.of(year, 12, 31));
-            accounts.createPeriod(p);
+            AccountingHistoryFixtures.period(db, "Reporting " + year, LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31), maker);
         }
         actor(maker);
         cash = account("111001", "Bank", "ASSET", true);
@@ -370,7 +362,7 @@ class AccountReportingPostgresTests {
                                                                                 .parentId()))
                         .findFirst()
                         .orElseThrow();
-        assertEquals(List.of("111000", "Bank 3", "1", "780.00", "580.00"), cashLine.cells());
+        assertEquals(List.of("111000", "Cash and Bank", "1", "780.00", "580.00"), cashLine.cells());
         var notes =
                 presentation.statement(
                         "notes", statements.comparison("notes", start, today), Locale.ENGLISH);
@@ -918,14 +910,11 @@ class AccountReportingPostgresTests {
         assertEquals(403, post(web, base, csrf).statusCode());
         var saved = post(web, base, f);
         assertEquals(302, saved.statusCode());
-        assertEquals(
-                saved.headers().firstValue("Location"),
-                post(web, base, f).headers().firstValue("Location"));
-        String location = saved.headers().firstValue("Location").orElseThrow();
-        long id = Long.parseLong(location.substring(location.lastIndexOf('/') + 1).split("\\?")[0]);
-        var detail = get(web, location);
+        String resource = CreationFeedback.follow(web, saved);
+        assertEquals(resource, CreationFeedback.follow(web, post(web, base, f)));
+        long id = Long.parseLong(resource.substring(resource.lastIndexOf('/') + 1));
+        var detail = get(web, resource);
         assertEquals(200, detail.statusCode());
-        assertTrue(detail.body().contains("data-message-type=\"success\""));
         assertTrue(detail.body().contains("PENDING") || detail.body().contains("Pending"));
         var self = hidden(detail.body());
         self.put("version", "0");

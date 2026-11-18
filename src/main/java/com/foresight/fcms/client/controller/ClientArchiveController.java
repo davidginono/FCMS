@@ -1,5 +1,7 @@
 package com.foresight.fcms.client.controller;
 
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.foresight.fcms.shared.controller.ResourceFeedback;
 import com.foresight.fcms.client.service.ClientArchiveService;
 import com.foresight.fcms.shared.dto.RegisterQuery;
 
@@ -47,10 +49,10 @@ public class ClientArchiveController {
             @RequestParam long version,
             @RequestParam boolean visible,
             @RequestParam String reason,
-            Model m) {
+            Model m, RedirectAttributes redirect) {
         try {
             archive.visibility(slug, id, version, visible, reason);
-            return "redirect:/clients/" + slug + (visible ? "/" + id : "/archive") + "?saved";
+            return ResourceFeedback.success(redirect, "/clients/" + slug + (visible ? "/" + id : "/archive"), "feedback.saved", null);
         } catch (org.springframework.dao.OptimisticLockingFailureException e) {
             m.addAttribute("actionError", "error.stale");
         } catch (IllegalArgumentException e) {

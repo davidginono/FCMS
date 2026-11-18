@@ -21,12 +21,13 @@ public final class AccountingViews {
             boolean active,
             long version) {}
 
-    public record AccountGroup(
-            String classification,
-            long total,
-            com.foresight.fcms.shared.dto.RegisterPage<Account> accounts) {}
+    public record CoaRow(
+            Account account, String kind, boolean expandable, boolean addGroup,
+            boolean addPosting, boolean editable, boolean lifecycle, boolean ledger) {}
 
-    public record GroupedAccounts(List<AccountGroup> groups, long total) {}
+    public record CoaChart(
+            com.foresight.fcms.shared.dto.RegisterPage<CoaRow> records,
+            List<Account> path, long total) {}
 
     public record Book(
             LocalDate openingDate,
@@ -37,14 +38,6 @@ public final class AccountingViews {
             Long checkerId,
             long version,
             boolean ready) {}
-
-    public record Period(
-            long id,
-            String name,
-            LocalDate startsOn,
-            LocalDate endsOn,
-            String state,
-            long version) {}
 
     public record Line(
             long accountId,

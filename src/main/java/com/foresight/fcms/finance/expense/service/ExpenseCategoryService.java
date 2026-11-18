@@ -36,6 +36,12 @@ public class ExpenseCategoryService {
 
     public record Export(List<Category> rows, BigDecimal total) {}
 
+    @Transactional(readOnly = true)
+    public long ownCount() {
+        var actor = access.require("expense.read");
+        return db.queryForObject("select count(*) from expenses where user_id=?", Long.class, actor.id());
+    }
+
     private Object[] parameters(ExpenseQuery q) {
         var actor = access.require("expense.read");
         q.validate();

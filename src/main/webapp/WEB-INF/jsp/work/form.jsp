@@ -6,14 +6,14 @@
 </h1>
 </div>
 <c:url var="saveUrl" value="${formAction}" />
-<form:form modelAttribute="form" method="post" action="${saveUrl}" cssClass="fcms-form" data-resource-form-page="true">
+<form:form modelAttribute="form" method="post" action="${saveUrl}" cssClass="fcms-form" data-resource-create="${formAction == baseUrl}" data-resource-form-page="true">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
 <form:hidden path="version"/>
 <form:hidden path="requestKey"/>
-<fieldset class="fcms-form-section">
-<legend>
+<section class="erp-resource-section" aria-labelledby="work-form-section-1">
+<h2 id="work-form-section-1">
 <spring:message code="common.details" />
-</legend>
+</h2><div class="fcms-section-body">
 <div class="fcms-field">
 <label for="subject">
 <spring:message code="work.subject" />
@@ -38,7 +38,7 @@
 </c:if>
 <c:if test="${kind.name()!='TASK' and not (kind.name()=='REPORT' and permissions.contains('staff-report.assign'))}"><form:hidden path="ownerId"/></c:if>
 <c:if test="${kind.name()!='LEAVE'}">
-<c:choose><c:when test="${permissions.contains('client.read')}">
+<c:choose><c:when test="${permissions.contains('client.read') or permissions.contains('client.lookup')}">
 <div class="fcms-field">
 <label for="clientId">
 <spring:message code="common.client" />
@@ -155,14 +155,14 @@
 <form:errors path="amount" cssClass="fcms-error" />
 </div>
 </c:if>
-</fieldset>
+</div></section>
 <form:errors path="" element="div" cssClass="fcms-alert" role="alert" />
-<div class="fcms-form-actions">
+<form:errors path="version" element="div" cssClass="fcms-alert" role="alert"/><form:errors path="requestKey" element="div" cssClass="fcms-alert" role="alert"/><div class="fcms-form-actions">
 <a class="app-btn btn-neutral" href="<c:url value='${baseUrl}' />">
 <spring:message code="common.cancel" />
 </a>
 <button class="app-btn btn-launch" type="submit">
-<spring:message code="common.save" />
+<spring:message code="${formAction == baseUrl ? 'common.create' : 'common.save'}" />
 </button>
 </div>
 </form:form>

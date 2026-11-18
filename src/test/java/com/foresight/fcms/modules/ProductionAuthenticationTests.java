@@ -175,7 +175,7 @@ class ProductionAuthenticationTests {
         assertTrue(accepted.headers().firstValue("location").orElseThrow().endsWith("/dashboard"));
         String authenticated = cookie(accepted);
         assertNotEquals(session, authenticated);
-        assertEquals(200, get("/dashboard", authenticated).statusCode());
+        assertEquals(302, get("/dashboard", authenticated).statusCode());
     }
 
     @Test
@@ -288,11 +288,12 @@ class ProductionAuthenticationTests {
                 db.queryForObject("select to_jsonb(u)::text from users u where id=1", String.class);
         assertTrue(get("/admin/users/new", session).body().contains("Create user"));
         var details = get("/admin/users/1", session);
-        assertTrue(details.body().contains("User details"));
-        assertTrue(details.body().contains("erp-resource-section"));
+        assertEquals(302, details.statusCode());
+        assertEquals("/admin/users/1/edit", URI.create(details.headers().firstValue("Location").orElseThrow()).getPath());
         var form = get("/admin/users/1/edit", session);
         assertEquals(200, form.statusCode());
         assertTrue(form.body().contains("Edit user"));
+        assertTrue(form.body().contains("erp-resource-section"));
         String body =
                 "_csrf="
                         + csrf(form.body())
@@ -311,7 +312,7 @@ class ProductionAuthenticationTests {
                 before,
                 db.queryForObject(
                         "select to_jsonb(u)::text from users u where id=1", String.class));
-        assertEquals(200, get("/dashboard", session).statusCode());
+        assertEquals(302, get("/dashboard", session).statusCode());
         form = get("/account/password", session);
         body =
                 "_csrf="
@@ -333,7 +334,7 @@ class ProductionAuthenticationTests {
                 before,
                 db.queryForObject(
                         "select to_jsonb(u)::text from users u where id=1", String.class));
-        assertEquals(200, get("/dashboard", session).statusCode());
+        assertEquals(302, get("/dashboard", session).statusCode());
     }
 
     HttpResponse<String> post(String route, String body, String session) throws Exception {

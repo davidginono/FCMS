@@ -1,5 +1,7 @@
 package com.foresight.fcms.backup.controller;
 
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.foresight.fcms.shared.controller.ResourceFeedback;
 import com.foresight.fcms.backup.service.*;
 
 import org.springframework.core.io.Resource;
@@ -33,9 +35,13 @@ public class BackupController {
     }
 
     @PostMapping
-    public String create() {
-        catalog.request();
-        return "redirect:/backups";
+    public String create(RedirectAttributes redirect) {
+        try {
+            catalog.request();
+            return ResourceFeedback.info(redirect, "/backups", "feedback.backupQueued");
+        } catch (IllegalArgumentException | org.springframework.dao.DataAccessException failure) {
+            return ResourceFeedback.failure(redirect, "/backups", "feedback.backupFailed");
+        }
     }
 
     @GetMapping("/{id}/download")

@@ -1,6 +1,5 @@
 package com.foresight.fcms.client.saccos.controller;
 
-import com.foresight.fcms.client.saccos.model.SaccosReportType;
 import com.foresight.fcms.reference.service.LegacyYearFilterService;
 
 import org.springframework.stereotype.Controller;
@@ -60,21 +59,15 @@ public class SaccosCompatibilityController {
 
     @GetMapping({
         "/update_saccos.php",
-        "/user_update_saccos.php",
-        "/update_contract.php",
-        "/user_update_contract.php"
+        "/user_update_saccos.php"
     })
     public String legacyEdit(@RequestParam(name = "id", required = false) Long id) {
         return id == null ? "redirect:/clients/saccos" : "redirect:/clients/saccos/" + id + "/edit";
     }
 
-    @GetMapping("/saccos_revenues.php")
-    public String legacyReports(
-            @RequestParam(name = "fyear_id", required = false) Long financialYearId,
-            RedirectAttributes redirectAttributes) {
-        addYear(redirectAttributes, financialYearId, null);
-        redirectAttributes.addAttribute("view", "revenue");
-        return "redirect:/clients/saccos";
+    @GetMapping({"/update_contract.php", "/user_update_contract.php"})
+    public String legacyContract(@RequestParam(name="id", required=false) Long id) {
+        return id == null ? "redirect:/clients/saccos" : "redirect:/clients/saccos/"+id+"/contract/edit";
     }
 
     @RequestMapping(
@@ -123,30 +116,6 @@ public class SaccosCompatibilityController {
         return "redirect:/clients/saccos/unpaid/print.pdf";
     }
 
-    @PostMapping("/print_saccosreport.php")
-    public String legacyPrintReport(
-            @RequestParam(name = "fyear", required = false) String fyear,
-            @RequestParam(name = "report_type", required = false) String reportType,
-            @RequestParam(name = "status", required = false) String status,
-            RedirectAttributes redirectAttributes) {
-        addYear(redirectAttributes, null, fyear);
-        addStatus(redirectAttributes, status);
-        addReportType(redirectAttributes, reportType);
-        return "redirect:/clients/saccos/revenues/print.pdf";
-    }
-
-    @PostMapping("/print_saccosreport_excel.php")
-    public String legacyExportReport(
-            @RequestParam(name = "fyear", required = false) String fyear,
-            @RequestParam(name = "report_type", required = false) String reportType,
-            @RequestParam(name = "status", required = false) String status,
-            RedirectAttributes redirectAttributes) {
-        addYear(redirectAttributes, null, fyear);
-        addStatus(redirectAttributes, status);
-        addReportType(redirectAttributes, reportType);
-        return "redirect:/clients/saccos/revenues/export.csv";
-    }
-
     @GetMapping("/upload_tamplate.php")
     public String legacyImport() {
         return "redirect:/clients/saccos/import";
@@ -187,9 +156,4 @@ public class SaccosCompatibilityController {
         }
     }
 
-    private void addReportType(RedirectAttributes attributes, String reportType) {
-        if (reportType != null && !reportType.isBlank()) {
-            attributes.addAttribute("reportType", SaccosReportType.from(reportType).getKey());
-        }
-    }
 }

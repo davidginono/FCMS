@@ -35,6 +35,9 @@ spring:
       cache:
         period: 365d
 server:
+  tomcat:
+    # 500 split entries plus 50 transaction headers fit within a bounded form.
+    max-parameter-count: 2000
   error:
     include-message: never
     include-stacktrace: never
@@ -55,6 +58,9 @@ logging:
   level:
     org.hibernate.SQL: warn
 fcms:
+  backup:
+    pg-dump: ${FCMS_BACKUP_PG_DUMP:pg_dump}
+    interval: ${FCMS_BACKUP_INTERVAL:10000}
   upload-scan:
     enabled: ${FCMS_UPLOAD_SCAN_ENABLED:false}
     port: ${FCMS_UPLOAD_SCAN_PORT:3310}

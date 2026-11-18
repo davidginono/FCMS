@@ -67,6 +67,7 @@ class SaccosImportIntegrationTests {
 
     @BeforeEach
     void owner() {
+        OperationalTestClaims.enable(db);
         email = "csv-" + UUID.randomUUID() + "@test.invalid";
         owner = user(email, 1);
         actor(email);
@@ -257,6 +258,7 @@ class SaccosImportIntegrationTests {
         db.update("insert into user_claims(user_id,claim) values (?,'client.import')", id);
         assertThrows(AccessDeniedException.class, () -> imports.formAccess());
         db.update("insert into user_claims(user_id,claim) values (?,'client.write')", id);
+        db.update("insert into user_claims(user_id,claim) values (?,'workspace.admin'),(?,'client.read')", id, id);
         assertDoesNotThrow(() -> imports.formAccess());
         assertThrows(
                 IllegalArgumentException.class, () -> imports.preview(token, new RegisterQuery()));
@@ -523,7 +525,7 @@ class SaccosImportIntegrationTests {
         }
         var web = browser();
         for (String family : List.of("saccos", "amcos")) {
-            for (String kind : List.of("/export.csv", "/revenues/export.csv")) {
+            for (String kind : List.of("/export.csv")) {
                 var response =
                         web.send(
                                 request(
@@ -585,7 +587,7 @@ class SaccosImportIntegrationTests {
                 name);
         var web = browser();
         for (String family : List.of("saccos", "amcos"))
-            for (String kind : List.of("/export.csv", "/revenues/export.csv")) {
+            for (String kind : List.of("/export.csv")) {
                 var response =
                         web.send(
                                 request(
@@ -693,9 +695,10 @@ class SaccosImportIntegrationTests {
         assertEquals(before, count("saccos"));
         var uploaded = upload(web, csrf, key, HEADER + row("Native Client"));
         assertEquals(302, uploaded.statusCode());
-        String location = uploaded.headers().firstValue("location").orElseThrow();
+        String destination = uploaded.headers().firstValue("location").orElseThrow();
+        String location = URI.create(destination).getPath();
         var preview =
-                web.send(request(location).GET().build(), HttpResponse.BodyHandlers.ofString());
+                web.send(request(destination).GET().build(), HttpResponse.BodyHandlers.ofString());
         assertEquals(200, preview.statusCode());
         assertTrue(preview.body().contains("Native Client"));
         assertTrue(preview.body().contains("100.11"));

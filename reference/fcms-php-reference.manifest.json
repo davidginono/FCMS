@@ -1,6 +1,6 @@
 {
-  "snapshotDate": "2026-11-15",
-  "sourceFiles": 1403,
+  "snapshotDate": "2026-11-16",
+  "sourceFiles": 1408,
   "excludedByReason": {
     "generated-document-archive-or-non-source": 51,
     "local-configuration-or-log": 6,
@@ -104,10 +104,6 @@
       "reason": "credential-or-mail-identity-redaction",
       "changes": 1
     },
-    "index.php": {
-      "reason": "credential-or-mail-identity-redaction",
-      "changes": 1
-    },
     "PHPMailer/get_oauth_token.php": {
       "reason": "credential-or-mail-identity-redaction",
       "changes": 2
@@ -127,9 +123,13 @@
     "tests/fixtures/client_connect.php": {
       "reason": "credential-or-mail-identity-redaction",
       "changes": 1
+    },
+    "tests/user_workspace_test.php": {
+      "reason": "credential-or-mail-identity-redaction",
+      "changes": 1
     }
   },
   "archive": "fcms-php-reference.zip",
-  "archiveBytes": 48993097,
-  "sha256": "d3643a5a1352f62785502b662b15d8b1427f16cd3144173338b854ffff58dbff"
+  "archiveBytes": 48987163,
+  "sha256": "4831435618e6fa9c0b49be54831cb0a32c4194a7d85f0afcde8190d5503ada58"
 }

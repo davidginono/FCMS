@@ -1,5 +1,7 @@
 package com.foresight.fcms.client.saccos.controller;
 
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.foresight.fcms.shared.controller.ResourceFeedback;
 import com.foresight.fcms.client.saccos.dto.*;
 import com.foresight.fcms.client.saccos.service.SaccosImportService;
 import com.foresight.fcms.shared.dto.RegisterQuery;
@@ -67,15 +69,15 @@ public class SaccosImportController {
             BindingResult binding,
             Model model,
             Locale locale,
-            HttpServletResponse response) {
+            HttpServletResponse response, RedirectAttributes redirect) {
         imports.formAccess();
         if (binding.hasErrors())
             model.addAttribute(
                     "formError", messages.getMessage("import.error.request", null, locale));
         else
             try {
-                return "redirect:/clients/saccos/import/"
-                        + imports.stage(form.getFile(), form.getRequestKey());
+                return ResourceFeedback.info(redirect, "/clients/saccos/import/"
+                        + imports.stage(form.getFile(), form.getRequestKey()), "feedback.importPreviewReady");
             } catch (IllegalArgumentException error) {
                 model.addAttribute(
                         Set.of(
@@ -105,11 +107,12 @@ public class SaccosImportController {
 
     @PostMapping("/{token}/commit")
     public String commit(
-            @PathVariable UUID token, Model model, Locale locale, HttpServletResponse response) {
+            @PathVariable UUID token, Model model, Locale locale, HttpServletResponse response, RedirectAttributes redirect) {
         try {
-            return "redirect:/clients/saccos/import/"
-                    + token
-                    + (imports.commit(token) ? "?saved" : "");
+            if (imports.commit(token))
+                return ResourceFeedback.success(redirect, "/clients/saccos", "feedback.clientsImported", "/clients/saccos/import/" + token);
+            model.addAttribute("actionError", messages.getMessage("import.error.expired", null, locale));
+            response.setStatus(409);
         } catch (IllegalArgumentException error) {
             model.addAttribute("actionError", error(error, locale));
             response.setStatus(409);

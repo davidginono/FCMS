@@ -89,4 +89,14 @@ public class UserForm {
     public void setClaims(java.util.List<String> v) {
         claims = v;
     }
+
+    private boolean permissionsSubmitted;
+
+    public boolean isPermissionsSubmitted() {
+        return permissionsSubmitted;
+    }
+
+    public void setPermissionsSubmitted(boolean permissionsSubmitted) {
+        this.permissionsSubmitted = permissionsSubmitted;
+    }
 }

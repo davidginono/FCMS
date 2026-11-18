@@ -1,7 +1,6 @@
 package com.foresight.fcms.client.category.controller;
 
 import com.foresight.fcms.client.category.model.ClientCategory;
-import com.foresight.fcms.client.category.model.ClientCategoryReportType;
 import com.foresight.fcms.reference.service.LegacyYearFilterService;
 
 import org.springframework.stereotype.Controller;
@@ -85,17 +84,6 @@ public class ClientCategoryCompatibilityController {
         return redirect(ClientCategory.OTHERS);
     }
 
-    @GetMapping({"/union_revenues.php", "/microfinance_report.php", "/other_report.php"})
-    public String legacyReport(
-            @RequestParam(name = "fyear_id", required = false) Long financialYearId,
-            RedirectAttributes redirectAttributes,
-            jakarta.servlet.http.HttpServletRequest request) {
-        ClientCategory category = categoryFromReportPath(request.getRequestURI());
-        addYear(redirectAttributes, financialYearId, null);
-        redirectAttributes.addAttribute("view", "revenue");
-        return redirect(category);
-    }
-
     @GetMapping({"/add_union.php", "/add_microfinance.php", "/add_other_client.php"})
     public String legacyAdd(jakarta.servlet.http.HttpServletRequest request) {
         return "redirect:" + categoryFromAddPath(request.getRequestURI()).getRoute() + "/new";
@@ -111,7 +99,7 @@ public class ClientCategoryCompatibilityController {
                 : "redirect:" + category.getRoute() + "/" + id + "/edit";
     }
 
-    @GetMapping({"/view_union.php", "/view_microfinance.php", "/view_other_client.php"})
+    @GetMapping({"/view_union.php", "/view_microfinance.php", "/view_other_client.php", "/view_others.php"})
     public String legacyView(
             @RequestParam(name = "id", required = false) Long id,
             jakarta.servlet.http.HttpServletRequest request) {
@@ -159,42 +147,6 @@ public class ClientCategoryCompatibilityController {
         return "redirect:" + category.getRoute() + "/export.csv";
     }
 
-    @PostMapping({
-        "/print_unionreport.php",
-        "/print_microfinance_report.php",
-        "/print_other_report.php"
-    })
-    public String legacyPrintReport(
-            @RequestParam(name = "fyear", required = false) String fyear,
-            @RequestParam(name = "report_type", required = false) String reportType,
-            @RequestParam(name = "status", required = false) String status,
-            RedirectAttributes redirectAttributes,
-            jakarta.servlet.http.HttpServletRequest request) {
-        ClientCategory category = categoryFromReportPath(request.getRequestURI());
-        addYear(redirectAttributes, null, fyear);
-        addStatus(redirectAttributes, status);
-        addReportType(redirectAttributes, reportType, category);
-        return "redirect:" + category.getRoute() + "/revenues/print.pdf";
-    }
-
-    @PostMapping({
-        "/print_unionreport_excel.php",
-        "/print_microfinance_report_excel.php",
-        "/print_other_report_excel.php"
-    })
-    public String legacyExportReport(
-            @RequestParam(name = "fyear", required = false) String fyear,
-            @RequestParam(name = "report_type", required = false) String reportType,
-            @RequestParam(name = "status", required = false) String status,
-            RedirectAttributes redirectAttributes,
-            jakarta.servlet.http.HttpServletRequest request) {
-        ClientCategory category = categoryFromReportPath(request.getRequestURI());
-        addYear(redirectAttributes, null, fyear);
-        addStatus(redirectAttributes, status);
-        addReportType(redirectAttributes, reportType, category);
-        return "redirect:" + category.getRoute() + "/revenues/export.csv";
-    }
-
     private String redirect(ClientCategory category) {
         return "redirect:" + category.getRoute();
     }
@@ -222,24 +174,6 @@ public class ClientCategoryCompatibilityController {
         if (paymentStatusId != null) {
             attributes.addAttribute("paymentStatusId", paymentStatusId);
         }
-    }
-
-    private void addReportType(
-            RedirectAttributes attributes, String reportType, ClientCategory category) {
-        if (reportType != null && !reportType.isBlank()) {
-            attributes.addAttribute(
-                    "reportType", ClientCategoryReportType.from(reportType, category).getKey());
-        }
-    }
-
-    private ClientCategory categoryFromReportPath(String path) {
-        if (path.contains("microfinance")) {
-            return ClientCategory.MICROFINANCE;
-        }
-        if (path.contains("other")) {
-            return ClientCategory.OTHERS;
-        }
-        return ClientCategory.UNIONS;
     }
 
     private ClientCategory categoryFromAddPath(String path) {

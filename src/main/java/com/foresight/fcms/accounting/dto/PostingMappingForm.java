@@ -18,11 +18,30 @@ public class PostingMappingForm {
     @NotBlank
     @Pattern(
             regexp =
-                    "INCOME_IN|PETTY_IN|PETTY_OUT|CLOUD_IN|CLOUD_OUT|BULK_IN|BULK_OUT|EXPENSE_PAYMENT|INCOME_OPENING_REVERSAL|PETTY_OPENING_REVERSAL|CLOUD_OPENING_REVERSAL|BULK_OPENING_REVERSAL|EXPENSE_OPENING_REVERSAL")
+                    "MANUAL_JOURNAL|INCOME_IN|PETTY_IN|PETTY_OUT|CLOUD_IN|CLOUD_OUT|BULK_IN|BULK_OUT|EXPENSE_PAYMENT|INCOME_OPENING_REVERSAL|PETTY_OPENING_REVERSAL|CLOUD_OPENING_REVERSAL|BULK_OPENING_REVERSAL|EXPENSE_OPENING_REVERSAL")
     private String event = "INCOME_IN";
 
-    @NotNull @Positive private Long debitAccountId;
-    @NotNull @Positive private Long creditAccountId;
+    @Positive private Long debitAccountId;
+    @Positive private Long creditAccountId;
+
+    @NotNull @jakarta.validation.Valid @Size(max = 5)
+    private java.util.List<RuleForm> rules = new java.util.ArrayList<>();
+
+    public java.util.List<RuleForm> getRules() { return rules; }
+    public void setRules(java.util.List<RuleForm> value) { rules = value; }
+
+    public static class RuleForm {
+        @NotBlank @Pattern(regexp="TOTAL|PRINCIPAL|INTEREST|FEES|TAX")
+        private String component = "TOTAL";
+        @NotNull @Positive private Long debitAccountId;
+        @NotNull @Positive private Long creditAccountId;
+        public String getComponent() { return component; }
+        public void setComponent(String value) { component=value; }
+        public Long getDebitAccountId() { return debitAccountId; }
+        public void setDebitAccountId(Long value) { debitAccountId=value; }
+        public Long getCreditAccountId() { return creditAccountId; }
+        public void setCreditAccountId(Long value) { creditAccountId=value; }
+    }
 
     @NotBlank
     @Pattern(regexp = "JOURNAL|RECEIPT|PAYMENT")

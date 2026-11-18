@@ -90,9 +90,11 @@ class StaffReportAssignmentParityIntegrationTests {
 
     @BeforeAll
     void seed() throws Exception {
+        OperationalTestClaims.enable(db);
         db.update("insert into roles(role_id,role_name) values (98,'Synthetic report claims')");
         owner = user("report-owner", 2);
         member = user("report-member", 2);
+        db.update("insert into user_claims(user_id,claim) values (?,'workspace.admin'),(?,'workspace.admin')", owner, member);
         maker = user("report-maker", 1);
         preparer = user("report-preparer", 1);
         reviewer = user("report-reviewer", 1);
@@ -104,6 +106,7 @@ class StaffReportAssignmentParityIntegrationTests {
                         "staff-report.read",
                         "staff-report.write",
                         "staff-report.assign",
+                        "workspace.admin",
                         "dashboard.read"))
             db.update("insert into user_claims(user_id,claim) values (?,?)", limited, claim);
         for (long id : List.of(owner, member))
@@ -349,7 +352,7 @@ class StaffReportAssignmentParityIntegrationTests {
                     s.setString(3, hash);
                 });
         long readOnly = user("report-readonly", 98);
-        for (String claim : List.of("staff-report.read", "staff-report.read.all"))
+        for (String claim : List.of("workspace.admin", "staff-report.read", "staff-report.read.all"))
             db.update("insert into user_claims(user_id,claim) values (?,?)", readOnly, claim);
         actor("report-readonly");
         assertFalse(users.staff("").stream().anyMatch(c -> c.id() == owner));

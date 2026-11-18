@@ -1,11 +1,13 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ include file="/WEB-INF/jsp/shared/header.jspf" %>
-<div class="app-page-header"><h1 class="app-page-title"><spring:message code="gl.account.details"/></h1></div>
+<div class="app-page-header"><h1 class="app-page-title"><spring:message code="gl.account.details"/></h1>
 <div class="app-actions">
 <c:if test="${permissions.contains('accounting.setup') and account.depth()>1}"><a class="app-btn btn-neutral" href="<c:url value='/accounting/accounts/${account.id()}/edit'/>"><spring:message code="common.edit"/></a></c:if>
 <c:if test="${account.depth()<4}"><a class="app-btn btn-neutral" href="<c:url value='/accounting/accounts?parentId=${account.id()}'/>"><spring:message code="gl.childAccounts"/></a><c:if test="${permissions.contains('accounting.setup') and account.active()}"><a class="app-btn btn-launch" href="<c:url value='/accounting/accounts/new?parentId=${account.id()}'/>"><spring:message code="gl.account.create"/></a></c:if></c:if>
 <c:if test="${permissions.contains('accounting.report') and account.depth()==4}"><a class="app-btn btn-neutral" href="<c:url value='/accounting/accounts/${account.id()}/ledger'/>"><spring:message code="gl.generalLedger"/></a></c:if>
 </div>
+</div>
+
 <section class="erp-resource-section"><h2><spring:message code="common.details"/></h2><div class="fcms-section-body"><dl class="fcms-details">
 <div><dt><spring:message code="gl.code"/></dt><dd><c:out value="${account.code()}"/></dd></div>
 <div><dt><spring:message code="common.name"/></dt><dd><c:out value="${account.name()}"/></dd></div>

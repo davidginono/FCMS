@@ -17,7 +17,7 @@
 <c:param name="direction" value="${query.direction}"/>
 </c:url>
 <a class="app-btn btn-neutral" data-table-export="pdf" href="<c:out value='${pdfUrl}'/>">
-<spring:message code="common.pdf" />
+<ui:reportExport format="pdf"/>
 </a>
 <c:if test="${permissions.contains(kind.claim.concat('.write'))}">
 <a class="app-btn btn-launch" href="<c:url value='${baseUrl}/new'/>">

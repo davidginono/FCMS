@@ -1,4 +1,4 @@
-/* Microfinance view-settings behavior; native FCMS links own navigation. */
+/* Microfinance view settings; the shared workspace navigation owns report requests. */
 (() => {
  'use strict';
  const year=document.querySelector('[data-fs-year]');
@@ -6,6 +6,9 @@
  const boundControls=new WeakSet();
  function applyViewSettings(root,saveSettings=false){
   const paper=root.querySelector('[data-fs-paper]');
+  const comparisonSetting=root.querySelector('[data-fs-comparison-setting]');
+  if(comparisonSetting)comparisonSetting.hidden=!paper || !['income-statement','balance-sheet','cash-flow','notes'].includes(paper.dataset.kind);
+  const settings=root.querySelector('.fs-view-settings');if(settings)settings.hidden=!paper;
   if(!paper)return;
   const key=`fcms-statement-view:${paper.dataset.kind}`;
   let prefs={};
@@ -27,5 +30,10 @@
   if(saveSettings)save();
  }
  applyViewSettings(document);
+ document.addEventListener('workspace:report-navigated',()=>{
+  applyViewSettings(document);
+  window.refreshEnhancedSelects?.(document.querySelector('.fs-toolbar'));
+  window.ResourceTable?.init(document.querySelector('[data-fs-report-section]'));
+ });
 
 })();

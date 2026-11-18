@@ -28,3 +28,9 @@ The activity/transaction table selection, modal creation and editable template c
 Financial-statement extension: AccountingStationery ports the original AccountingPdfDocument statement/equity/trial styles to the installed OpenPDF API. StatementDocument and StatementPresentation prepare FCMS account rows, exact comparisons, equity components and provenance for the original preview structure. Copy/adaptation provenance and original-renderer verification are in docs/financial-statement-facsimiles.md. No PDFBox dependency was added to production.
 
 Journal export extension: JournalStationery ports VoucherPdfService.Layout journal geometry. Its input preserves independent FCMS ledger lines rather than importing paired-transaction semantics. Source/reference adaptation and complete acceptance evidence are in docs/journal-export-facsimiles.md.
+
+## Shared navigation and report actions
+
+The breadcrumb chevron and report export SVGs follow the bundled Microfinance shell and `reportExport.tag` reference. FCMS adapts them in the shared header, `workspaces.css` and `/WEB-INF/tags/reportExport.tag`. Existing PDF, print and CSV endpoints retain their native formats; Excel icon support is available to future real Excel exports. Accounting navigation separates transaction configuration, vouchers and financial statements. Global page actions use the Cloudscape page-header action stripe with native forms, financial eligibility checks, CSRF and version fields retained.
+
+The workspace navigation/lifecycle and contextual loading port also consult the original Microfinance shell and UI skills. FCMS retains its own shell identity, authorized navigation, forms and financial policies. Filled disclosure triangles, contextual expanding-arc spinners and no-reload GET/tab navigation are documented in [workspace navigation](workspace-navigation.md), including Cloudscape provenance, deliberate accessibility/size adaptations and verification limits.

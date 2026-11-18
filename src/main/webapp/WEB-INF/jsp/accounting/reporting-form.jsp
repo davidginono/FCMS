@@ -2,7 +2,7 @@
 <%@ include file="/WEB-INF/jsp/shared/header.jspf" %>
 <div class="app-page-header"><h1 class="app-page-title"><spring:message code="gl.reporting.propose"/></h1></div>
 <c:url var="saveUrl" value="/accounting/accounts/${account.id()}/reporting"/>
-<form:form modelAttribute="form" method="post" action="${saveUrl}" cssClass="fcms-form" data-resource-form-page="true">
+<form:form modelAttribute="form" method="post" action="${saveUrl}" cssClass="fcms-form" data-resource-create="true" data-resource-form-page="true">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"><form:hidden path="requestKey"/><form:hidden path="accountVersion"/><form:hidden path="baseId"/>
 <section class="erp-resource-section"><h2><spring:message code="gl.account"/></h2><div class="fcms-section-body"><dl class="fcms-details">
 <div><dt><spring:message code="gl.code"/></dt><dd><c:out value="${account.code()}"/></dd></div><div><dt><spring:message code="common.name"/></dt><dd><c:out value="${account.name()}"/></dd></div><div><dt><spring:message code="gl.classification"/></dt><dd><spring:message code="gl.class.${account.classification()}"/></dd></div>
@@ -16,6 +16,6 @@
 <div class="fcms-field"><label for="reason"><spring:message code="common.reason"/></label><form:textarea path="reason" id="reason" rows="2" maxlength="500" required="required"/><form:errors path="reason" cssClass="fcms-error"/></div>
 </div></section>
 <form:errors path="" element="div" cssClass="fcms-alert" role="alert"/>
-<div class="fcms-form-actions"><a class="app-btn btn-neutral" href="<c:url value='/accounting/accounts/${account.id()}'/>"><spring:message code="common.cancel"/></a><button class="app-btn btn-launch" type="submit" ${account.active()?'':'disabled'}><spring:message code="gl.reporting.submit"/></button></div>
+<form:errors path="requestKey" element="div" cssClass="fcms-alert" role="alert"/><form:errors path="accountVersion" element="div" cssClass="fcms-alert" role="alert"/><form:errors path="baseId" element="div" cssClass="fcms-alert" role="alert"/><div class="fcms-form-actions"><a class="app-btn btn-neutral" href="<c:url value='/accounting/accounts/${account.id()}'/>"><spring:message code="common.cancel"/></a><button class="app-btn btn-launch" type="submit" ${account.active()?'':'disabled'}><spring:message code="gl.reporting.submit"/></button></div>
 </form:form>
 <%@ include file="/WEB-INF/jsp/shared/footer.jspf" %>

@@ -1,0 +1,31 @@
+<section class="voucher-row" data-voucher-row aria-labelledby="voucher-row-title-${n.index}">
+
+<div class="voucher-row-toolbar"><h3 id="voucher-row-title-${n.index}"><spring:message code="voucher.transaction"/> <span data-row-number>${n.index+1}</span></h3><button type="button" class="app-btn btn-neutral" data-remove-voucher-row><spring:message code="common.remove"/></button></div>
+
+<div class="voucher-grid">
+
+<div class="fcms-field" data-configured-row data-error-scope="mapping-${n.index}" ${empty voucherForm.activityId?'hidden':''}><label for="mapping-${n.index}"><spring:message code="config.transaction"/></label>
+
+<select id="mapping-${n.index}" data-voucher-mapping data-choice-url="${pageContext.request.contextPath}${baseUrl}/choices?activityId=${voucherForm.activityId}" data-choice-voucher="true"><option value=""><spring:message code="voucher.chooseTransaction"/></option><c:forEach items="${mappingChoices}" var="option"><option value="${option.id()}:${option.component()}" data-debit="${option.debitAccountId()}" data-credit="${option.creditAccountId()}" data-flow="${option.cashFlow()}" ${row.mappingId==option.id() and row.component==option.component()?'selected':''}><c:out value="${option.name()}"/> · <spring:message code="voucher.component.${option.component()}"/></option></c:forEach></select>
+
+<form:hidden path="rows[${n.index}].mappingId"/><form:hidden path="rows[${n.index}].component"/><form:errors path="rows[${n.index}].mappingId" cssClass="fcms-error"/><form:errors path="rows[${n.index}].component" cssClass="fcms-error"/></div>
+
+<div class="fcms-field" data-manual-description ${not empty voucherForm.activityId?'hidden':''}><label for="description-${n.index}"><spring:message code="common.description"/></label><form:input path="rows[${n.index}].description" id="description-${n.index}" disabled="${not empty voucherForm.activityId}" maxlength="500" required="required"/><form:errors path="rows[${n.index}].description" cssClass="fcms-error"/></div>
+
+<div class="fcms-field" data-configured-amount ${empty voucherForm.activityId?'hidden':''}><label for="amount-${n.index}"><spring:message code="common.amount"/></label><form:input path="rows[${n.index}].amount" id="amount-${n.index}" type="${empty voucherForm.activityId?'hidden':'number'}" disabled="${empty voucherForm.activityId}" min="0.01" max="999999999999.99" step="0.01" inputmode="decimal" required="required" data-voucher-amount="true"/><form:errors path="rows[${n.index}].amount" cssClass="fcms-error"/></div>
+
+
+
+</div>
+<div data-manual-row ${not empty voucherForm.activityId?'hidden':''}>
+<div data-split-list><c:forEach items="${row.entries}" var="entry" varStatus="e"><div class="voucher-split-entry" data-split-entry>
+<form:hidden path="rows[${n.index}].entries[${e.index}].side" data-entry-field="side"/>
+<div class="fcms-field"><label for="entry-account-${n.index}-${e.index}"><spring:message code="gl.mapping.${entry.side=='DEBIT'?'debit':'credit'}Account"/></label><form:select path="rows[${n.index}].entries[${e.index}].accountId" id="entry-account-${n.index}-${e.index}" data-entry-field="accountId" data-choice-url="${pageContext.request.contextPath}${baseUrl}/accounts?purpose=${voucherKind=='JOURNAL'?'':(voucherKind=='RECEIPT' and entry.side=='DEBIT') or (voucherKind=='PAYMENT' and entry.side=='CREDIT')?'MONEY':'OTHER'}"><form:option value=""/><form:options items="${accounts}" itemValue="id" itemLabel="name"/></form:select><form:errors path="rows[${n.index}].entries[${e.index}].accountId" cssClass="fcms-error"/></div>
+<div class="fcms-field"><label for="entry-amount-${n.index}-${e.index}"><spring:message code="common.amount"/></label><form:input path="rows[${n.index}].entries[${e.index}].amount" id="entry-amount-${n.index}-${e.index}" data-entry-field="amount" type="number" min="0.01" max="999999999999.99" step="0.01" inputmode="decimal" required="required"/><form:errors path="rows[${n.index}].entries[${e.index}].amount" cssClass="fcms-error"/></div>
+<button type="button" class="app-btn btn-neutral" data-remove-entry><spring:message code="common.remove"/></button>
+</div></c:forEach></div>
+<div class="voucher-entry-actions"><button type="button" class="app-btn btn-neutral" data-add-entry="DEBIT"><spring:message code="voucher.addDebit"/></button><button type="button" class="app-btn btn-neutral" data-add-entry="CREDIT"><spring:message code="voucher.addCredit"/></button></div>
+<div data-error-scope="entries-${n.index}"><form:errors path="rows[${n.index}].entries" cssClass="fcms-error"/></div>
+</div>
+
+</section>

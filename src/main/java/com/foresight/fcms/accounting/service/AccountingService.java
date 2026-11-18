@@ -1,5 +1,6 @@
 package com.foresight.fcms.accounting.service;
 
+import com.foresight.fcms.shared.validation.FieldValidationException;
 import com.foresight.fcms.accounting.dto.*;
 import com.foresight.fcms.accounting.dto.AccountingViews.*;
 import com.foresight.fcms.audit.service.AuditService;
@@ -20,20 +21,14 @@ public class AccountingService {
     private final JdbcTemplate db;
     private final AccessService access;
     private final AuditService audit;
-    private final SourceCoverageService coverage;
-    private final com.foresight.fcms.finance.service.FinanceCutoverService cutover;
 
     public AccountingService(
             JdbcTemplate db,
             AccessService access,
-            AuditService audit,
-            com.foresight.fcms.finance.service.FinanceCutoverService cutover,
-            SourceCoverageService coverage) {
+            AuditService audit) {
         this.db = db;
         this.access = access;
         this.audit = audit;
-        this.cutover = cutover;
-        this.coverage = coverage;
     }
 
     private static final String ACCOUNTS =
@@ -94,91 +89,94 @@ public class AccountingService {
                 q);
     }
 
-    private static final String ACCOUNT_FILTER =
-            " where (?::bigint is null or a.parent_id=?::bigint)"
-                    + " and lower(a.code||' '||a.name) like ? escape '!'"
-                    + " and (?='' or a.active=(?='ACTIVE'))";
-    private static final Set<String> CLASSIFICATIONS =
-            Set.of("ASSET", "LIABILITY", "EQUITY", "INCOME", "EXPENSE");
-
-    @Transactional(
-            readOnly = true,
-            isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
-    public GroupedAccounts groupedAccounts(
-            RegisterQuery q, Long parent, String group, int groupPage) {
-        access.require("accounting.read");
+    @Transactional(readOnly = true, isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
+    public CoaChart chart(CoaQuery q, Long parent) {
+        var actor = access.require("accounting.read");
         q.validate();
-        if (!Set.of("", "ACTIVE", "INACTIVE").contains(q.getStatus())
-                || parent != null && parent < 1
-                || groupPage < 0
-                || groupPage > 10000
-                || group != null && !CLASSIFICATIONS.contains(group))
-            throw new IllegalArgumentException("error.invalid");
-        var counts =
-                db.query(
-                        "select a.classification,count(*) from gl_accounts a"
-                                + ACCOUNT_FILTER
-                                + " group by a.classification order by "
-                                + (Objects.equals(q.getSort(), "classification")
-                                        ? "a.classification " + q.getDirection()
-                                        : "min(a.code) asc"),
-                        (r, n) ->
-                                new AbstractMap.SimpleImmutableEntry<>(
-                                        r.getString(1), r.getLong(2)),
-                        parent,
-                        parent,
-                        q.pattern(),
-                        q.getStatus(),
-                        q.getStatus());
-        String order =
-                q.order(
-                        Map.of(
-                                "id",
-                                "a.id",
-                                "code",
-                                "a.code",
-                                "name",
-                                "a.name",
-                                "classification",
-                                "a.classification",
-                                "normal",
-                                "a.normal_balance",
-                                "status",
-                                "a.active",
-                                "parent",
-                                "parent_name"));
-        var groups = new ArrayList<AccountGroup>();
-        for (var count : counts) {
-            int page = count.getKey().equals(group) ? groupPage : 0;
-            var rows =
-                    db.query(
-                            ACCOUNTS
-                                    + ACCOUNT_FILTER
-                                    + " and a.classification=? order by "
-                                    + order
-                                    + " limit ? offset ?",
-                            this::row,
-                            parent,
-                            parent,
-                            q.pattern(),
-                            q.getStatus(),
-                            q.getStatus(),
-                            count.getKey(),
-                            q.getSize() + 1,
-                            (long) page * q.getSize());
-            groups.add(
-                    new AccountGroup(
-                            count.getKey(),
-                            count.getValue(),
-                            new RegisterPage<>(
-                                    List.copyOf(
-                                            rows.subList(0, Math.min(q.getSize(), rows.size()))),
-                                    page,
-                                    q.getSize(),
-                                    rows.size() > q.getSize())));
+        var path = parent == null ? List.<Account>of() : chartPath(parent, false);
+        String where = " where lower(a.code||' '||a.name) like ? escape '!'"
+                + " and (?='' or a.active=(?='ACTIVE'))"
+                + " and (?='' or a.classification=?)"
+                + " and (?='' or (case when a.depth=4 then 'POSTING' else 'GROUP' end)=?)";
+        var args = new ArrayList<Object>(List.of(q.pattern(), q.getStatus(), q.getStatus(),
+                q.getClassification(), q.getClassification(), q.getKind(), q.getKind()));
+        if (parent != null) {
+            where += " and a.parent_id=?";
+            args.add(parent);
+        } else if (!q.filtered()) where += " and a.parent_id is null";
+        long total = db.queryForObject("select count(*) from gl_accounts a" + where, Long.class, args.toArray());
+        String column = Map.of("code", "a.code", "name", "a.name", "parent", "p.name",
+                "classification", "a.classification", "kind", "case when a.depth=4 then 'POSTING' else 'GROUP' end",
+                "normal", "a.normal_balance", "status", "a.active").get(q.getSort());
+        args.add(q.getSize() + 1);
+        args.add(q.offset());
+        String select = "select a.id,a.code,a.name,a.description,a.classification,a.normal_balance,"
+                + "a.depth,a.parent_id,a.cash_account,a.active,a.version,coalesce(p.code||' '||p.name,'') parent_name,"
+                + "case when a.depth=4 then true else not exists(select 1 from gl_accounts c"
+                + " where c.parent_id=a.id and c.active) end no_active_children,"
+                + "coalesce(p.active,false) parent_active from gl_accounts a left join gl_accounts p on p.id=a.parent_id";
+        var rows = db.query(select + where + " order by " + column + " " + q.getDirection()
+                + ", a.id " + q.getDirection() + " limit ? offset ?",
+                (r, n) -> coaRow(row(r, n), actor, r.getBoolean("no_active_children"), r.getBoolean("parent_active")), args.toArray());
+        var records = rows.stream().limit(q.getSize()).toList();
+        return new CoaChart(new RegisterPage<>(records, q.getPage(), q.getSize(), rows.size() > q.getSize()), path, total);
+    }
+
+    private CoaRow coaRow(Account a, AccessService.Actor actor, boolean noActiveChildren, boolean parentActive) {
+        boolean group = a.depth() < 4, setup = actor.has("accounting.setup");
+        return new CoaRow(a, group ? "GROUP" : "POSTING", group,
+                setup && a.active() && a.depth() < 3,
+                setup && a.active() && a.depth() == 3,
+                setup && a.depth() > 1, setup && a.depth() > 1 && (a.active() ? noActiveChildren : parentActive),
+                !group && actor.has("accounting.report"));
+    }
+
+    // At most four ancestors; validate the actual chain as well as readable code prefixes.
+    private List<Account> chartPath(long id, boolean active) {
+        if (id < 1) throw new IllegalArgumentException("error.invalid");
+        var path = db.query("with recursive path as (select a.*,0 hops from gl_accounts a where id=?"
+                + " union all select a.*,p.hops+1 from gl_accounts a join path p on a.id=p.parent_id"
+                + " where p.hops<4) select path.*,coalesce(p.code||' '||p.name,'') parent_name"
+                + " from path left join gl_accounts p on p.id=path.parent_id order by hops desc limit 5", this::row, id);
+        if (path.isEmpty() || path.size() > 4 || path.getFirst().depth() != 1
+                || path.getFirst().parentId() != null || path.getLast().depth() == 4)
+            throw new IllegalArgumentException("gl.error.parent");
+        String[] types = {"ASSET", "LIABILITY", "EQUITY", "EXPENSE", "INCOME"};
+        Account previous = null;
+        for (var a : path) {
+            boolean codeValid = a.depth() == 1 ? a.code().matches("[1-5]00000")
+                    : a.code().matches("[1-5][1-9]" + (a.depth() == 2 ? "0000" : "[1-9]000"));
+            if (!codeValid || a.depth() != (previous == null ? 1 : previous.depth() + 1)
+                    || !a.classification().equals(types[a.code().charAt(0) - '1'])
+                    || active && !a.active()
+                    || previous != null && (!Objects.equals(a.parentId(), previous.id())
+                        || !a.code().startsWith(previous.code().substring(0, previous.depth()))
+                        || !a.normalBalance().equals(previous.normalBalance())))
+                throw new IllegalArgumentException("gl.error.parent");
+            previous = a;
         }
-        return new GroupedAccounts(
-                List.copyOf(groups), counts.stream().mapToLong(Map.Entry::getValue).sum());
+        return List.copyOf(path);
+    }
+
+    @Transactional(readOnly = true)
+    public String nextAccountCode(long parentId, String mode) {
+        access.require("accounting.setup");
+        var parent = creationParent(parentId, mode);
+        int step = parent.depth() == 1 ? 10000 : parent.depth() == 2 ? 1000 : 1;
+        int base = Integer.parseInt(parent.code());
+        return db.query("select n::text from generate_series(?,?,?) n where not exists"
+                + " (select 1 from gl_accounts where code=n::text) order by n limit 1",
+                (r, n) -> r.getString(1), base + step, base + (parent.depth() == 3 ? 999 : 9 * step), step)
+                .stream().findFirst().orElse("");
+    }
+
+    private Account creationParent(long id, String mode) {
+        if (!Set.of("", "GROUP", "POSTING").contains(mode)) throw new IllegalArgumentException("error.invalid");
+        var path = chartPath(id, true);
+        var parent = path.getLast();
+        if ("GROUP".equals(mode) && parent.depth() >= 3 || "POSTING".equals(mode) && parent.depth() != 3)
+            throw new IllegalArgumentException("gl.error.parent");
+        return parent;
     }
 
     @Transactional(readOnly = true)
@@ -191,14 +189,21 @@ public class AccountingService {
 
     @Transactional(readOnly = true)
     public ChoicePage<Choice> choices(String search, int page, boolean posting) {
+        return choices(search, page, posting, "");
+    }
+
+    @Transactional(readOnly = true)
+    public ChoicePage<Choice> choices(String search, int page, boolean posting, String parentMode) {
         access.require("accounting.read");
+        if (!Set.of("", "GROUP", "POSTING").contains(parentMode) || posting && !parentMode.isEmpty())
+            throw new IllegalArgumentException("error.invalid");
         if (search == null || search.length() > 100 || page < 0 || page > 1000)
             throw new IllegalArgumentException("error.invalid");
         return ChoicePage.from(
                 db.query(
                         "select id,code||' '||name,depth,classification,normal_balance from"
                                 + " gl_accounts where active and "
-                                + (posting ? "depth=4" : "depth<4")
+                                + (posting ? "depth=4" : "GROUP".equals(parentMode) ? "depth<3" : "POSTING".equals(parentMode) ? "depth=3" : "depth<4")
                                 + " and lower(code||' '||name) like ? escape '!' order by code,id"
                                 + " limit 26 offset ?",
                         (r, n) ->
@@ -260,17 +265,17 @@ public class AccountingService {
             audit.record(actor.id(), "accounting.account.edit", "gl_accounts", id, old.code());
             return id;
         }
-        if (!p.active() || p.depth() >= 4) throw new IllegalArgumentException("error.invalid");
+        p = creationParent(p.id(), f.getMode());
         int depth = p.depth() + 1;
         if (f.getCashAccount() && (depth != 4 || !p.classification().equals("ASSET")))
-            throw new IllegalArgumentException("accounting.error.cashAccount");
+            throw new FieldValidationException("accounting.error.cashAccount", "cashAccount");
         String code = f.getCode();
         if (!code.startsWith(p.code().substring(0, p.depth()))
                 || (depth < 4
                         && !code.matches(
                                 "[1-5][0-9]{" + (depth - 2) + "}[1-9]0{" + (6 - depth) + "}"))
                 || (depth == 4 && code.endsWith("000")))
-            throw new IllegalArgumentException("error.invalid");
+            throw new FieldValidationException("error.invalid", "code");
         String normal = depth < 4 ? p.normalBalance() : f.getNormalBalance();
         long created =
                 db.queryForObject(
@@ -331,169 +336,6 @@ public class AccountingService {
                                         r.getBoolean("ready")))
                 .stream()
                 .findFirst();
-    }
-
-    @Transactional
-    public void configure(@jakarta.validation.Valid BookForm f) {
-        var actor = access.require("accounting.setup");
-        db.queryForList("select id from gl_books where id=true for update");
-        var old = books();
-        if (old.isPresent()) {
-            if (old.get().state().equals("APPROVED") || old.get().makerId() != actor.id())
-                throw new IllegalArgumentException("error.invalid");
-            if (db.update(
-                            "update gl_books set"
-                                + " opening_date=?,policy_reference=?,opening_mode=?,version=version+1"
-                                + " where id=true and version=?",
-                            f.getOpeningDate(),
-                            f.getPolicyReference().trim(),
-                            f.getOpeningMode(),
-                            f.getVersion())
-                    != 1) throw new OptimisticLockingFailureException("stale");
-        } else
-            db.update(
-                    "insert into"
-                        + " gl_books(id,opening_date,policy_reference,opening_mode,state,maker_id)"
-                        + " values (true,?,?,?,'PENDING',?)",
-                    f.getOpeningDate(),
-                    f.getPolicyReference().trim(),
-                    f.getOpeningMode(),
-                    actor.id());
-        audit.record(
-                actor.id(),
-                "accounting.books.configure",
-                "gl_books",
-                null,
-                f.getPolicyReference().trim());
-    }
-
-    @Transactional
-    public void approveBooks(long version, String reason) {
-        var actor = access.require("accounting.review");
-        requireReason(reason);
-        db.queryForList("select id from gl_books where id=true for update");
-        var b = books().orElseThrow(() -> new IllegalArgumentException("error.invalid"));
-        if (!b.state().equals("PENDING") || b.makerId() == actor.id())
-            throw new IllegalArgumentException("error.invalid");
-        var cutoverAt = cutover.approve(b.openingDate(), b.policyReference());
-        if (db.update(
-                        "update gl_books set"
-                                + " state='APPROVED',checker_id=?,approved_at=?,version=version+1"
-                                + " where id=true and version=?",
-                        actor.id(),
-                        java.sql.Timestamp.from(cutoverAt),
-                        version)
-                != 1) throw new OptimisticLockingFailureException("stale");
-        audit.record(actor.id(), "accounting.books.approve", "gl_books", null, reason);
-    }
-
-    @Transactional(readOnly = true)
-    public RegisterPage<Period> periods(RegisterQuery q) {
-        access.require("accounting.read");
-        q.validate();
-        return RegisterPage.of(
-                db.query(
-                        "select * from gl_periods where lower(name) like ? escape '!' and (?='' or"
-                                + " state=?) order by "
-                                + q.order(
-                                        Map.of(
-                                                "id",
-                                                "id",
-                                                "name",
-                                                "name",
-                                                "from",
-                                                "starts_on",
-                                                "to",
-                                                "ends_on",
-                                                "status",
-                                                "state"))
-                                + " limit ? offset ?",
-                        (r, n) ->
-                                new Period(
-                                        r.getLong("id"),
-                                        r.getString("name"),
-                                        r.getObject("starts_on", java.time.LocalDate.class),
-                                        r.getObject("ends_on", java.time.LocalDate.class),
-                                        r.getString("state"),
-                                        r.getLong("version")),
-                        q.pattern(),
-                        q.getStatus(),
-                        q.getStatus(),
-                        q.getSize() + 1,
-                        q.offset()),
-                q);
-    }
-
-    @Transactional
-    public long createPeriod(@jakarta.validation.Valid PeriodForm f) {
-        var actor = access.require("accounting.setup");
-        if (f.getEndsOn().isBefore(f.getStartsOn())
-                || java.time.temporal.ChronoUnit.DAYS.between(f.getStartsOn(), f.getEndsOn()) > 366)
-            throw new IllegalArgumentException("error.dates");
-        long id =
-                db.queryForObject(
-                        "insert into gl_periods(name,starts_on,ends_on,created_by) values (?,?,?,?)"
-                                + " returning id",
-                        Long.class,
-                        f.getName().trim(),
-                        f.getStartsOn(),
-                        f.getEndsOn(),
-                        actor.id());
-        audit.record(actor.id(), "accounting.period.create", "gl_periods", id, f.getName().trim());
-        return id;
-    }
-
-    @Transactional(readOnly = true)
-    public Period period(long id) {
-        access.require("accounting.read");
-        return db
-                .query(
-                        "select * from gl_periods where id=?",
-                        (r, n) ->
-                                new Period(
-                                        r.getLong("id"),
-                                        r.getString("name"),
-                                        r.getObject("starts_on", java.time.LocalDate.class),
-                                        r.getObject("ends_on", java.time.LocalDate.class),
-                                        r.getString("state"),
-                                        r.getLong("version")),
-                        id)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("error.missing"));
-    }
-
-    @Transactional
-    public void periodState(long id, long version, boolean close, String reason) {
-        var actor = access.require("accounting.period.close");
-        requireReason(reason);
-        var states =
-                db.queryForList(
-                        "select state from gl_periods where id=? for update", String.class, id);
-        if (states.isEmpty() || states.getFirst().equals(close ? "CLOSED" : "OPEN"))
-            throw new IllegalArgumentException("error.invalid");
-        var current = period(id);
-        cutover.periodState(id, current.startsOn(), current.endsOn(), close, reason);
-        if (close
-                && (!books().map(Book::ready).orElse(false)
-                        || !coverage.through(current.endsOn()).complete()))
-            throw new IllegalArgumentException("gl.source.incomplete");
-        if (db.update(
-                        "update gl_periods set"
-                            + " state=?,closed_by=?,closed_at=current_timestamp,close_reason=?,version=version+1"
-                            + " where id=? and version=?",
-                        close ? "CLOSED" : "OPEN",
-                        actor.id(),
-                        reason,
-                        id,
-                        version)
-                != 1) throw new OptimisticLockingFailureException("stale");
-        audit.record(
-                actor.id(),
-                close ? "accounting.period.close" : "accounting.period.reopen",
-                "gl_periods",
-                id,
-                reason);
     }
 
     public static void requireReason(String reason) {
